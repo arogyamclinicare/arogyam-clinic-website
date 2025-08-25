@@ -25,10 +25,8 @@ export const CONTACT_INFO = {
 };
 
 export const SOCIAL_LINKS = [
-  { name: 'Facebook', href: '#', color: 'from-blue-500 to-blue-600' },
-  { name: 'Twitter', href: '#', color: 'from-blue-400 to-blue-500' },
-  { name: 'Instagram', href: '#', color: 'from-pink-500 to-pink-600' },
-  { name: 'Linkedin', href: '#', color: 'from-blue-600 to-blue-700' }
+  { name: 'Facebook', href: 'https://www.facebook.com/share/173LGpN1eN/', color: 'from-blue-500 to-blue-600' },
+  { name: 'Instagram', href: 'https://www.instagram.com/arogyamhomeo?igsh=ZXhzbGMzaGQ5OXVn', color: 'from-pink-500 to-pink-600' }
 ];
 
 export const SERVICES = [

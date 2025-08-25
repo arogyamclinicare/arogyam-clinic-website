@@ -1,11 +1,9 @@
-import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Facebook, Instagram } from 'lucide-react';
 import { SOCIAL_LINKS } from '../constants/contactInfo';
 
 const iconMap = {
   Facebook,
-  Twitter, 
-  Instagram,
-  Linkedin
+  Instagram
 };
 
 export function SocialIcons() {
