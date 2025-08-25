@@ -254,26 +254,27 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-1 sm:p-2 lg:p-4 bg-black/70 backdrop-blur-xl">
-      <div className="card-premium rounded-xl sm:rounded-2xl lg:rounded-3xl max-w-3xl w-full max-h-[99vh] sm:max-h-[95vh] overflow-hidden shadow-2xl animate-scale-in border-0 relative flex flex-col">
+      <div className="card-premium rounded-xl sm:rounded-2xl lg:rounded-3xl max-w-3xl w-full max-h-[98vh] sm:max-h-[95vh] overflow-hidden shadow-2xl animate-scale-in border-0 relative flex flex-col">
         {/* Premium Header - Fixed positioning */}
-        <div className="glass-dark rounded-t-2xl sm:rounded-t-3xl border-b border-white/10 p-2 sm:p-4 lg:p-6 flex-shrink-0">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-3 lg:space-y-4">
-            <div className="space-y-2 sm:space-y-3 lg:space-y-4 flex-1">
-              <div className="flex items-center justify-between space-x-2 sm:space-x-3 lg:space-x-4">
-                <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-1 min-w-0">
-                   <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg sm:rounded-xl lg:rounded-2xl flex items-center justify-center animate-glow flex-shrink-0">
-                     <Calendar className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
-                   </div>
-                   <div className="flex-1 min-w-0">
-                     <h2 className="text-sm sm:text-lg lg:text-2xl xl:text-3xl font-display font-bold text-white leading-tight break-words hyphens-auto">
-                       {currentStep === 'booking' ? (
-                         <span className="whitespace-normal break-words hyphens-auto">
-                           Book Your FREE Consultation
-                         </span>
-                       ) : (
-                         getStepTitle()
-                       )}
-                     </h2>
+        <div className="glass-dark rounded-t-2xl sm:rounded-t-3xl border-b border-white/10 p-3 sm:p-4 lg:p-6 flex-shrink-0 mt-2 sm:mt-1 lg:mt-0">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-2 sm:space-y-3 lg:space-y-4 pt-2 sm:pt-2 lg:pt-0">
+            <div className="space-y-2 sm:space-y-3 lg:space-y-4 flex-1 min-w-0">
+              <div className="flex items-start justify-between space-x-2 sm:space-x-3 lg:space-x-4">
+                <div className="flex items-start space-x-2 sm:space-x-3 lg:space-x-4 flex-1 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg sm:rounded-xl lg:rounded-2xl flex items-center justify-center animate-glow flex-shrink-0 mt-0.5">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0 pt-3 sm:pt-2 lg:pt-0">
+                    <h2 className="text-xs sm:text-base lg:text-xl xl:text-2xl font-display font-bold text-white leading-relaxed break-words max-w-full overflow-visible whitespace-normal">
+                      {currentStep === 'booking' ? (
+                        <span className="block w-full">
+                          <span className="hidden sm:inline">Book Your FREE Consultation</span>
+                          <span className="sm:hidden">Book Consultation</span>
+                        </span>
+                      ) : (
+                        getStepTitle()
+                      )}
+                    </h2>
                      <p className="text-cyan-100 text-xs sm:text-sm lg:text-lg hidden sm:block">
                        {currentStep === 'booking' && 'Experience world-class homeopathic care'}
                        {currentStep === 'confirmation' && 'Your premium consultation is confirmed!'}
@@ -334,7 +335,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
         {/* Content - Scrollable area */}
         <div className="p-3 sm:p-4 lg:p-6 overflow-y-auto flex-1 modal-content-scrollable" style={{ scrollBehavior: 'smooth' }}>
           {currentStep === 'booking' && (
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 animate-fade-in-up">
+            <form onSubmit={handleSubmit} className="pt-2 sm:pt-4 lg:pt-6 space-y-4 sm:space-y-6 animate-fade-in-up">
               {/* Selected Treatment - Optimized spacing */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4 lg:p-5 flex items-center space-x-3 sm:space-x-4">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
