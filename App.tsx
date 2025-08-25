@@ -58,7 +58,7 @@ function AppContent() {
 
   // Always render the SimpleRouter - it will handle all routing internally
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-900 via-indigo-900 to-blue-900">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-900 via-indigo-900 to-blue-900 transition-all duration-300">
       {/* Skip Navigation for Accessibility */}
       <a
         href="#main-content"

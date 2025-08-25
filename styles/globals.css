@@ -9,6 +9,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Instant website display - no white flash */
+html {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #1e3a8a 100%);
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #1e3a8a 100%);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+#root {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #1e3a8a 100%);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Loading state removed for instant website display */
+
 /* Custom animations for Patient Portal */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }

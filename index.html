@@ -12,6 +12,17 @@
     <meta name="theme-color" content="#0284c7" />
     <meta name="color-scheme" content="light" />
     
+    <!-- Critical CSS for instant display -->
+    <style>
+      html, body, #root {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #1e3a8a 100%) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      body { overflow-x: hidden !important; }
+      #root { min-height: 100vh !important; }
+    </style>
+    
     <!-- Enhanced SEO Meta Tags -->
     <title>Dr. Kajal Kumari - Expert Homeopathy Treatment in Manpur, Gaya | Arogyam Clinic</title>
     <meta name="description" content="Get expert homeopathic treatment from Dr. Kajal Kumari (BHMS) at Arogyam Clinic, Manpur. Specialized care for skin conditions, respiratory issues, women's health, and chronic diseases. Book consultation online or visit our clinic." />
@@ -97,9 +108,9 @@
     <!-- Content Security Policy - Development friendly (will be more restrictive in production) -->
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data:; style-src * 'unsafe-inline' https://fonts.googleapis.com; font-src * https://fonts.gstatic.com; img-src * data: https: blob:; connect-src * https: ws: wss: blob: data:; frame-src *; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src * blob:; child-src * blob:; media-src * blob:;" />
   </head>
-  <body>
-    <!-- Skip to main content for accessibility -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-md z-50">
+  <body class="bg-gray-50">
+    <!-- Skip to main content for accessibility (completely hidden) -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-md z-50 opacity-0 focus:opacity-100 transition-opacity duration-200" style="display: none;">
       Skip to main content
     </a>
     
