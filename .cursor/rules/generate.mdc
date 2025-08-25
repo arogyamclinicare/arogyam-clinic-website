@@ -1,0 +1,61 @@
+# Generate Rules for Context Engineering
+
+## Purpose
+This file contains rules for generating comprehensive project documentation and structure for the Arogyam Clinic project.
+
+## Project Overview
+- **Project Name**: Arogyam Clinic - Homeopathic Healthcare Platform
+- **Type**: Full-stack web application with admin panel
+- **Tech Stack**: React + TypeScript + Tailwind CSS (Frontend), Supabase (Backend)
+- **Scope**: Complete application development, not just MVP
+
+## Generation Rules
+
+### 1. Project Requirements Document (PRD)
+- Generate comprehensive PRD covering all features
+- Include admin panel requirements
+- Specify mobile-first design requirements
+- Include performance optimization requirements
+- Define user roles (patients, doctors, admins)
+
+### 2. Implementation Plan
+- Create detailed implementation stages
+- Include setup, core features, and advanced features
+- Estimate timeline: 3-4 weeks for full app
+- Break down into manageable tasks
+- Include testing and deployment phases
+
+### 3. Project Structure
+- Define folder organization
+- Include frontend and backend structure
+- Specify shared utilities and components
+- Include configuration files
+
+### 4. UI/UX Documentation
+- Define design system and components
+- Include mobile-first responsive design
+- Specify accessibility requirements (WCAG 2.1 AA)
+- Include performance optimization guidelines
+
+### 5. Bug Tracking
+- Create comprehensive bug tracking system
+- Include known issues and solutions
+- Define testing procedures
+- Include performance monitoring
+
+## Generation Process
+1. Start with PRD generation
+2. Create implementation plan based on PRD
+3. Generate project structure
+4. Create UI/UX documentation
+5. Set up bug tracking system
+
+## Quality Standards
+- All generated content must be comprehensive
+- Include practical examples and code snippets
+- Ensure consistency across all documents
+- Focus on maintainability and scalability
+description:
+globs:
+alwaysApply: false
+---

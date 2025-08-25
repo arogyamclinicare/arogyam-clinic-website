@@ -1,0 +1,319 @@
+/* Mobile Performance Optimizations */
+
+/* Performance-based CSS classes */
+.no-animations * {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+.no-transitions * {
+  transition: none !important;
+}
+
+.no-shadows * {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.no-blur * {
+  backdrop-filter: none !important;
+  filter: blur(0) !important;
+}
+
+.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Hardware acceleration optimizations */
+.hardware-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform;
+}
+
+/* Mobile-specific performance optimizations */
+@media (max-width: 768px) {
+  /* Reduce complex selectors for better performance */
+  .mobile-optimized * {
+    contain: layout style paint;
+  }
+  
+  /* Optimize images for mobile */
+  .mobile-image {
+    max-width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+  
+  /* Reduce shadow complexity on mobile */
+  .mobile-card {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Optimize animations for mobile */
+  .mobile-animation {
+    animation-duration: 0.3s;
+    animation-timing-function: ease-out;
+  }
+  
+  /* Reduce blur effects on mobile */
+  .mobile-blur {
+    backdrop-filter: blur(4px);
+  }
+}
+
+/* Low-end device optimizations */
+@media (max-width: 480px) {
+  .low-end-optimized * {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+  
+  .low-end-optimized .mobile-card {
+    border: 1px solid #e5e7eb;
+  }
+}
+
+/* Network-based optimizations */
+@media (prefers-reduced-data: reduce) {
+  .data-optimized * {
+    background-image: none !important;
+    background-color: #f3f4f6 !important;
+  }
+  
+  .data-optimized img {
+    display: none !important;
+  }
+}
+
+/* Battery-based optimizations */
+@media (prefers-reduced-motion: reduce) {
+  .battery-optimized * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Touch optimization */
+@media (pointer: coarse) {
+  .touch-optimized {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .touch-optimized button,
+  .touch-optimized [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Performance monitoring styles */
+.performance-indicator {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: monospace;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.performance-indicator.high {
+  background: rgba(34, 197, 94, 0.8);
+}
+
+.performance-indicator.medium {
+  background: rgba(251, 191, 36, 0.8);
+}
+
+.performance-indicator.low {
+  background: rgba(239, 68, 68, 0.8);
+}
+
+/* Loading states */
+.skeleton-loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Progressive enhancement */
+.progressive-enhancement {
+  /* Base styles for all devices */
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Enhanced styles for capable devices */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .progressive-enhancement {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  .progressive-enhancement:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Critical rendering path optimization */
+.critical-content {
+  contain: layout style paint;
+  content-visibility: auto;
+}
+
+/* Non-critical content */
+.non-critical {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
+}
+
+/* Image optimization classes */
+.image-optimized {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: cover;
+}
+
+.image-placeholder {
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* Animation performance classes */
+.animation-optimized {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.animation-reduced {
+  animation-duration: 0.15s !important;
+  transition-duration: 0.15s !important;
+}
+
+/* Scroll performance */
+.scroll-optimized {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Memory optimization */
+.memory-optimized {
+  contain: layout style paint;
+  content-visibility: auto;
+}
+
+/* GPU acceleration hints */
+.gpu-accelerated {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Performance monitoring overlay */
+.performance-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: 9999;
+  display: none;
+}
+
+.performance-overlay.active {
+  display: block;
+}
+
+.performance-overlay .metric {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: monospace;
+}
+
+.performance-overlay .fps {
+  top: 10px;
+  left: 10px;
+}
+
+.performance-overlay .memory {
+  top: 10px;
+  right: 10px;
+}
+
+.performance-overlay .network {
+  bottom: 10px;
+  left: 10px;
+}
+
+/* Responsive performance adjustments */
+@media (max-width: 320px) {
+  /* Very small screens */
+  .ultra-mobile * {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+  }
+  
+  .ultra-mobile .container {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+}
+
+@media (max-width: 480px) and (orientation: landscape) {
+  /* Landscape mobile */
+  .landscape-mobile * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpi-optimized {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Print optimizations */
+@media print {
+  .print-optimized * {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    color: black !important;
+  }
+}

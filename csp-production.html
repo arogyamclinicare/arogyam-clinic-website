@@ -1,0 +1,24 @@
+<!-- PRODUCTION CSP - More restrictive and secure -->
+<!-- Replace the development CSP in index.html with this when deploying to production -->
+
+<!-- Content Security Policy - Production (more restrictive) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self'; child-src 'self'; media-src 'self';" />
+
+<!-- 
+PRODUCTION CSP EXPLANATION:
+- default-src 'self': Only allow resources from same origin
+- script-src 'self' 'unsafe-inline': Allow scripts from same origin and inline scripts
+- style-src 'self' 'unsafe-inline' https://fonts.googleapis.com: Allow styles from same origin, inline styles, and Google Fonts
+- font-src 'self' https://fonts.gstatic.com: Allow fonts from same origin and Google Fonts
+- img-src 'self' data: https:: Allow images from same origin, data URLs, and HTTPS sources
+- connect-src 'self' https:: Allow connections to same origin and HTTPS sources
+- frame-src 'none': Block all iframes for security
+- object-src 'none': Block all objects for security
+- base-uri 'self': Restrict base URI to same origin
+- form-action 'self': Restrict form submissions to same origin
+- worker-src 'self': Allow web workers from same origin
+- child-src 'self': Allow child frames from same origin
+- media-src 'self': Allow media from same origin
+
+This CSP is much more secure than the development version and should be used in production.
+-->

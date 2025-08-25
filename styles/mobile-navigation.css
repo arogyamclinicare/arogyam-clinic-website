@@ -1,0 +1,526 @@
+/* Mobile Navigation Optimizations
+ * Performance-focused styles for smooth mobile navigation
+ * Reduces jank and improves responsiveness on lower-end devices
+ */
+
+/* Performance-optimized mobile menu animations */
+.mobile-menu {
+  /* Use transform3d for hardware acceleration */
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  
+  /* Optimize for mobile devices */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  
+  /* Smooth transitions with performance considerations */
+  transition: 
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Performance-based animation classes */
+.mobile-menu.performance-low {
+  transition-duration: 0.15s;
+}
+
+.mobile-menu.performance-medium {
+  transition-duration: 0.2s;
+}
+
+.mobile-menu.performance-high {
+  transition-duration: 0.3s;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu {
+    transition: none;
+  }
+  
+  .mobile-menu-btn {
+    transition: none;
+  }
+  
+  .mobile-menu button {
+    transition: none;
+  }
+}
+
+/* Mobile menu entrance animations */
+.mobile-menu.entering {
+  transform: translate3d(0, 100%, 0);
+  opacity: 0;
+}
+
+.mobile-menu.entered {
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+}
+
+.mobile-menu.exiting {
+  transform: translate3d(0, 100%, 0);
+  opacity: 0;
+}
+
+/* Optimized backdrop */
+.mobile-backdrop {
+  /* Use transform3d for hardware acceleration */
+  transform: translate3d(0, 0, 0);
+  will-change: opacity;
+  
+  /* Smooth fade in/out */
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Prevent touch events from bubbling */
+  touch-action: none;
+}
+
+/* Mobile menu button optimizations */
+.mobile-menu-btn {
+  /* Ensure proper touch target size */
+  min-width: 44px;
+  min-height: 44px;
+  
+  /* Hardware acceleration */
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  
+  /* Smooth transitions */
+  transition: 
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Touch optimizations */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  
+  /* Prevent text selection */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Mobile menu button hover states */
+@media (hover: hover) {
+  .mobile-menu-btn:hover {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+}
+
+/* Mobile menu button active states */
+.mobile-menu-btn:active {
+  transform: translate3d(0, 0, 0) scale(0.95);
+  transition-duration: 0.1s;
+}
+
+/* Mobile menu item optimizations */
+.mobile-menu button {
+  /* Ensure proper touch target size */
+  min-height: 52px;
+  min-width: 44px;
+  
+  /* Hardware acceleration */
+  transform: translate3d(0, 0, 0);
+  will-change: transform, background-color;
+  
+  /* Smooth transitions */
+  transition: 
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Touch optimizations */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  
+  /* Prevent text selection */
+  user-select: none;
+  -webkit-user-select: none;
+  
+  /* Focus states for accessibility */
+  outline: none;
+  
+  /* Ensure content stays within bounds */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  
+  /* Proper positioning and sizing */
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Mobile menu item hover states */
+@media (hover: hover) {
+  .mobile-menu button:hover {
+    transform: translate3d(0, 0, 0) translateX(4px);
+  }
+}
+
+/* Mobile menu item active states */
+.mobile-menu button:active {
+  transform: translate3d(0, 0, 0) scale(0.98);
+  transition-duration: 0.1s;
+}
+
+/* Focus states for accessibility - ensure borders stay within bounds */
+.mobile-menu button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  outline-width: 2px;
+  outline-style: solid;
+  outline-color: #3b82f6;
+}
+
+/* Active/selected state styling - ensure borders stay within bounds */
+.mobile-menu button.active,
+.mobile-menu button[aria-current="true"] {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 2px solid #3b82f6;
+  border-radius: 0.75rem;
+  /* Ensure border doesn't overflow */
+  box-sizing: border-box;
+  margin: 0 0.75rem;
+  width: calc(100% - 1.5rem);
+}
+
+/* Ensure mobile menu items are properly contained */
+.mobile-menu button {
+  /* Ensure proper spacing and containment */
+  margin: 0 0.75rem 0.25rem 0.75rem;
+  width: calc(100% - 1.5rem);
+  max-width: calc(100% - 1.5rem);
+  box-sizing: border-box;
+  
+  /* Prevent text overflow */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  
+  /* Ensure proper padding */
+  padding: 1rem 1.5rem;
+  
+  /* Proper border handling */
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  
+  /* Smooth transitions */
+  transition: all 0.2s ease;
+}
+
+/* Active state styling with proper containment */
+.mobile-menu button.active {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-color: #3b82f6;
+  /* Ensure border stays within bounds */
+  box-sizing: border-box;
+  /* Adjust width to account for border */
+  width: calc(100% - 1.5rem);
+  max-width: calc(100% - 1.5rem);
+}
+
+/* Hover state styling */
+.mobile-menu button:hover:not(.active) {
+  background-color: #f8fafc;
+  color: #1e40af;
+}
+
+/* Focus state styling */
+.mobile-menu button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  /* Ensure outline doesn't overflow */
+  box-sizing: border-box;
+}
+
+/* Mobile menu container overflow handling */
+.mobile-menu {
+  /* Ensure content stays within bounds */
+  overflow: hidden;
+  box-sizing: border-box;
+  
+  /* Proper positioning */
+  position: fixed;
+  top: 4.5rem;
+  left: 0.5rem;
+  right: 0.5rem;
+  height: calc(100vh - 4.5rem);
+  
+  /* Ensure proper z-index */
+  z-index: 9999;
+}
+
+/* Mobile menu content scrolling */
+.mobile-menu-content {
+  /* Enable vertical scrolling only */
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  /* Ensure proper height */
+  height: 100%;
+  
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile menu container - ensure proper overflow handling */
+.mobile-menu {
+  /* Use transform3d for hardware acceleration */
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  
+  /* Optimize for mobile devices */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  
+  /* Smooth transitions with performance considerations */
+  transition: 
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Ensure content stays within bounds */
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Mobile menu content - ensure proper layout */
+.mobile-menu-content {
+  /* Optimize for mobile rendering */
+  contain: layout style paint;
+  
+  /* Smooth scrolling */
+  -webkit-overflow-scrolling: touch;
+  
+  /* Prevent layout shifts */
+  min-height: 100%;
+  
+  /* Ensure proper overflow handling */
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  /* Proper box sizing */
+  box-sizing: border-box;
+}
+
+/* Navigation items container */
+.mobile-menu .flex-1 {
+  /* Ensure proper spacing and containment */
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Individual menu items container */
+.mobile-menu button {
+  /* Ensure proper spacing and containment */
+  margin: 0 0.75rem 0.25rem 0.75rem;
+  width: calc(100% - 1.5rem);
+  max-width: calc(100% - 1.5rem);
+  box-sizing: border-box;
+}
+
+/* Mobile menu item animations with staggered delays */
+.mobile-menu button[data-index="0"] { animation-delay: 0ms; }
+.mobile-menu button[data-index="1"] { animation-delay: 30ms; }
+.mobile-menu button[data-index="2"] { animation-delay: 60ms; }
+.mobile-menu button[data-index="3"] { animation-delay: 90ms; }
+.mobile-menu button[data-index="4"] { animation-delay: 120ms; }
+.mobile-menu button[data-index="5"] { animation-delay: 150ms; }
+
+/* Performance-optimized keyframe animations */
+@keyframes mobileMenuSlideIn {
+  from {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes mobileMenuSlideOut {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes mobileMenuItemFadeIn {
+  from {
+    transform: translate3d(20px, 0, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+/* Apply animations based on performance mode */
+.mobile-menu.performance-low .mobile-menu-item {
+  animation: mobileMenuItemFadeIn 0.15s ease-out forwards;
+}
+
+.mobile-menu.performance-medium .mobile-menu-item {
+  animation: mobileMenuItemFadeIn 0.2s ease-out forwards;
+}
+
+.mobile-menu.performance-high .mobile-menu-item {
+  animation: mobileMenuItemFadeIn 0.3s ease-out forwards;
+}
+
+/* Landscape orientation optimizations */
+@media (max-width: 767px) and (orientation: landscape) {
+  .mobile-menu {
+    height: 100vh !important;
+    top: 0 !important;
+    border-radius: 0;
+  }
+  
+  .mobile-menu-btn {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+/* Small screen optimizations */
+@media (max-width: 375px) {
+  .mobile-menu {
+    left: 0.5rem;
+    right: 0.5rem;
+  }
+  
+  .mobile-menu button {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .mobile-menu {
+    /* Ensure crisp rendering on high DPI displays */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* iOS Safari specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  .mobile-menu {
+    /* iOS-specific viewport fixes */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent iOS bounce scrolling */
+    overscroll-behavior: none;
+  }
+  
+  .mobile-menu-btn {
+    /* Fix iOS button tap highlights */
+    -webkit-tap-highlight-color: transparent;
+    /* iOS-specific button appearance */
+    -webkit-appearance: none;
+  }
+}
+
+/* Android Chrome specific optimizations */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .mobile-menu-btn {
+    /* Android-specific button fixes */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+}
+
+/* Performance monitoring indicators (for development) - Hidden by default */
+.mobile-menu.performance-low::before {
+  content: "Low Performance Mode";
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #ef4444;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  z-index: 1;
+  display: none; /* Hidden by default */
+}
+
+.mobile-menu.performance-medium::before {
+  content: "Medium Performance Mode";
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #f59e0b;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  z-index: 1;
+  display: none; /* Hidden by default */
+}
+
+.mobile-menu.performance-high::before {
+  content: "High Performance Mode";
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #10b981;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  z-index: 1;
+  display: none; /* Hidden by default */
+}
+
+/* Show performance indicators only in development mode */
+@media (min-width: 1024px) {
+  .mobile-menu::before {
+    display: none;
+  }
+}
+
+/* Development mode override - uncomment to show performance indicators */
+/* 
+.mobile-menu.performance-low::before,
+.mobile-menu.performance-medium::before,
+.mobile-menu.performance-high::before {
+  display: block !important;
+}
+*/
+
+/* Touch gesture optimizations */
+.mobile-menu {
+  /* Enable touch gestures */
+  touch-action: pan-y;
+  
+  /* Prevent horizontal scrolling */
+  overflow-x: hidden;
+  
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+}
+
+/* Mobile menu footer optimizations */
+.mobile-menu-footer {
+  /* Stick to bottom */
+  position: sticky;
+  bottom: 0;
+  
+  /* Background blur for better readability */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
+  /* Ensure proper z-index */
+  z-index: 1;
+}

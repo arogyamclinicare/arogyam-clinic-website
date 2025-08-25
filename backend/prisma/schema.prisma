@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  age           Int?
+  gender        String?
+  address       String?
+  isVerified    Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  role          UserRole  @default(PATIENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  consultations Consultation[]
+  refreshTokens RefreshToken[]
+  profile       PatientProfile?
+
+  @@map("users")
+}
+
+model PatientProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  bloodGroup        String?
+  allergies         String[]
+  medicalHistory    String?
+  currentMedications String[]
+  emergencyContact  String?
+  insuranceInfo     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("patient_profiles")
+}
+
+model Consultation {
+  id              String              @id @default(cuid())
+  userId          String
+  date            DateTime
+  time            String
+  type            ConsultationType
+  status          ConsultationStatus  @default(SCHEDULED)
+  symptoms        String
+  prescription    String?
+  doctorNotes     String?
+  followUpDate    DateTime?
+  isEmergency     Boolean             @default(false)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("consultations")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         AdminRole @default(STAFF)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admin_users")
+}
+
+// Enums
+enum UserRole {
+  PATIENT
+  DOCTOR
+  STAFF
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  STAFF
+}
+
+enum ConsultationType {
+  VIDEO
+  PHONE
+  IN_PERSON
+}
+
+enum ConsultationStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}

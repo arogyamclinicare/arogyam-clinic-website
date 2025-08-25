@@ -1,0 +1,401 @@
+import { useState, useEffect } from 'react';
+import { Button } from '../ui/button';
+import { 
+  X, 
+  Pill, 
+  Stethoscope,
+  Save,
+  Trash2,
+  FileText,
+  AlertCircle
+} from 'lucide-react';
+import type { Consultation, ConsultationUpdate } from '../../lib/supabase';
+import { CONSULTATION_STATUS, STATUS_LABELS } from '../../lib/constants';
+
+interface ConsultationEditModalProps {
+  consultation: Consultation | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (updates: Partial<ConsultationUpdate>) => Promise<{ success: boolean; error?: string }>;
+  onDelete: () => Promise<{ success: boolean; error?: string }>;
+}
+
+export function ConsultationEditModal({ 
+  consultation, 
+  isOpen, 
+  onClose, 
+  onSave, 
+  onDelete 
+}: ConsultationEditModalProps) {
+  const [formData, setFormData] = useState<Partial<ConsultationUpdate>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'details' | 'prescription' | 'notes'>('details');
+
+  // Initialize form data when consultation changes
+  useEffect(() => {
+    if (consultation) {
+      setFormData({
+        status: consultation.status,
+        prescription: consultation.prescription || '',
+        notes: consultation.notes || '',
+        follow_up_date: consultation.follow_up_date || '',
+        follow_up_notes: consultation.follow_up_notes || '',
+        treatment_plan: consultation.treatment_plan || '',
+        symptoms: consultation.symptoms || '',
+        diagnosis: consultation.diagnosis || '',
+        medicines_prescribed: consultation.medicines_prescribed || null,
+        dosage_instructions: consultation.dosage_instructions || '',
+        next_appointment_date: consultation.next_appointment_date || '',
+        patient_concerns: consultation.patient_concerns || '',
+        doctor_observations: consultation.doctor_observations || ''
+      });
+    }
+  }, [consultation]);
+
+  const handleInputChange = (field: keyof ConsultationUpdate, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    if (!consultation) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Clean up empty date fields to prevent database errors
+      const cleanedFormData = { ...formData };
+      
+      // Convert empty strings to null for date fields
+      if (cleanedFormData.follow_up_date === '') {
+        cleanedFormData.follow_up_date = null;
+      }
+      if (cleanedFormData.next_appointment_date === '') {
+        cleanedFormData.next_appointment_date = null;
+      }
+      
+      // Convert empty strings to null for text fields
+      if (cleanedFormData.patient_concerns === '') {
+        cleanedFormData.patient_concerns = null;
+      }
+      if (cleanedFormData.doctor_observations === '') {
+        cleanedFormData.doctor_observations = null;
+      }
+      if (cleanedFormData.diagnosis === '') {
+        cleanedFormData.diagnosis = null;
+      }
+      if (cleanedFormData.symptoms === '') {
+        cleanedFormData.symptoms = null;
+      }
+      if (cleanedFormData.treatment_plan === '') {
+        cleanedFormData.treatment_plan = null;
+      }
+      if (cleanedFormData.notes === '') {
+        cleanedFormData.notes = null;
+      }
+      if (cleanedFormData.follow_up_notes === '') {
+        cleanedFormData.follow_up_notes = null;
+      }
+      if (cleanedFormData.dosage_instructions === '') {
+        cleanedFormData.dosage_instructions = null;
+      }
+      
+      const result = await onSave(cleanedFormData);
+      
+      if (result.success) {
+        onClose();
+      } else {
+        setError(result.error || 'Failed to save changes');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!consultation || !confirm('Are you sure you want to delete this consultation? This action cannot be undone.')) {
+      return;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const result = await onDelete();
+      
+      if (result.success) {
+        onClose();
+      } else {
+        setError(result.error || 'Failed to delete consultation');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isOpen || !consultation) return null;
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-xl">
+      <div className="card-premium rounded-2xl sm:rounded-3xl max-w-4xl w-full max-h-[98vh] sm:max-h-[95vh] overflow-hidden shadow-2xl animate-scale-in border-0 relative flex flex-col">
+        {/* Header */}
+        <div className="glass-dark rounded-t-2xl sm:rounded-t-3xl border-b border-white/10 p-3 sm:p-6 lg:p-8 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">
+                  Edit Consultation
+                </h2>
+                <p className="text-blue-100 text-sm">
+                  {consultation.name} - {consultation.treatment_type}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 sm:w-10 sm:h-10 glass rounded-lg hover:bg-white/20 transition-all duration-300"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex space-x-1 mt-4">
+            {[
+              { id: 'details', name: 'Details', icon: FileText },
+              { id: 'prescription', name: 'Prescription', icon: Pill },
+              { id: 'notes', name: 'Notes', icon: Stethoscope }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    activeTab === tab.id
+                      ? 'bg-blue-600 text-white'
+                      : 'text-blue-100 hover:bg-white/10'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{tab.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-3 sm:p-4 lg:p-6 overflow-y-auto flex-1">
+          {activeTab === 'details' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                     <select
+                     value={formData.status || ''}
+                     onChange={(e) => handleInputChange('status', e.target.value)}
+                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                   >
+                     <option value={CONSULTATION_STATUS.PENDING}>{STATUS_LABELS[CONSULTATION_STATUS.PENDING]}</option>
+                     <option value={CONSULTATION_STATUS.CONFIRMED}>{STATUS_LABELS[CONSULTATION_STATUS.CONFIRMED]}</option>
+                     <option value={CONSULTATION_STATUS.IN_PROGRESS}>{STATUS_LABELS[CONSULTATION_STATUS.IN_PROGRESS]}</option>
+                     <option value={CONSULTATION_STATUS.COMPLETED}>{STATUS_LABELS[CONSULTATION_STATUS.COMPLETED]}</option>
+                     <option value={CONSULTATION_STATUS.CANCELLED}>{STATUS_LABELS[CONSULTATION_STATUS.CANCELLED]}</option>
+                     <option value={CONSULTATION_STATUS.FOLLOW_UP}>{STATUS_LABELS[CONSULTATION_STATUS.FOLLOW_UP]}</option>
+                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Next Appointment Date</label>
+                  <input
+                    type="date"
+                    value={formData.next_appointment_date || ''}
+                    onChange={(e) => handleInputChange('next_appointment_date', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Patient Concerns</label>
+                <textarea
+                  rows={3}
+                  value={formData.patient_concerns || ''}
+                  onChange={(e) => handleInputChange('patient_concerns', e.target.value)}
+                  placeholder="Document patient's main concerns..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Doctor's Observations</label>
+                <textarea
+                  rows={3}
+                  value={formData.doctor_observations || ''}
+                  onChange={(e) => handleInputChange('doctor_observations', e.target.value)}
+                  placeholder="Document your clinical observations..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'prescription' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Prescription & Treatment</h3>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Diagnosis</label>
+                <input
+                  type="text"
+                  value={formData.diagnosis || ''}
+                  onChange={(e) => handleInputChange('diagnosis', e.target.value)}
+                  placeholder="Enter diagnosis..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Symptoms</label>
+                <textarea
+                  rows={2}
+                  value={formData.symptoms || ''}
+                  onChange={(e) => handleInputChange('symptoms', e.target.value)}
+                  placeholder="Document symptoms..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Medicines Prescribed</label>
+                <textarea
+                  rows={4}
+                  value={formData.medicines_prescribed || ''}
+                  onChange={(e) => handleInputChange('medicines_prescribed', e.target.value)}
+                  placeholder="Enter medicines with details, one per line or as needed..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Dosage Instructions</label>
+                <textarea
+                  rows={3}
+                  value={formData.dosage_instructions || ''}
+                  onChange={(e) => handleInputChange('dosage_instructions', e.target.value)}
+                  placeholder="Enter detailed dosage instructions..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Treatment Plan</label>
+                <textarea
+                  rows={3}
+                  value={formData.treatment_plan || ''}
+                  onChange={(e) => handleInputChange('treatment_plan', e.target.value)}
+                  placeholder="Enter treatment plan..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'notes' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Notes & Follow-up</h3>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">General Notes</label>
+                <textarea
+                  rows={4}
+                  value={formData.notes || ''}
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
+                  placeholder="Enter general consultation notes..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Follow-up Notes</label>
+                <textarea
+                  rows={3}
+                  value={formData.follow_up_notes || ''}
+                  onChange={(e) => handleInputChange('follow_up_notes', e.target.value)}
+                  placeholder="Enter follow-up instructions..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Follow-up Date</label>
+                <input
+                  type="date"
+                  value={formData.follow_up_date || ''}
+                  onChange={(e) => handleInputChange('follow_up_date', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+                <p className="text-red-700">{error}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-3 sm:p-4 lg:p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+          <div className="flex flex-col sm:flex-row gap-3 justify-between">
+            <div className="flex gap-3">
+              <Button
+                onClick={handleDelete}
+                disabled={isLoading}
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </Button>
+            </div>
+            
+            <div className="flex gap-3">
+              <Button
+                onClick={onClose}
+                variant="outline"
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={isLoading}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isLoading ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
