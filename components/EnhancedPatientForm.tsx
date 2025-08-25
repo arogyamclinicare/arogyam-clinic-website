@@ -319,7 +319,7 @@ export function EnhancedPatientForm({
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              placeholder={isLogin ? "demo@patient.com" : "your@email.com"}
+              placeholder="your@email.com"
               required
               autoComplete="email"
               className={`w-full px-4 py-4 border-2 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-sage-500 ${
@@ -350,7 +350,7 @@ export function EnhancedPatientForm({
               name="password"
               value={formData.password}
               onChange={handleInputChange}
-              placeholder={isLogin ? "demo123" : "Create a secure password"}
+              placeholder="Create a secure password"
               autoComplete={isLogin ? "current-password" : "new-password"}
               required
               className={`w-full px-4 py-4 pr-16 border-2 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-sage-500 ${

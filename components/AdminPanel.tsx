@@ -3,9 +3,9 @@ import { AdminLoginPage } from './AdminLoginPage';
 import { AdminDashboard } from './AdminDashboard';
 
 export function AdminPanel() {
-  const { isAuthenticated, loading, user, session } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
-  console.log('🔍 AdminPanel render:', { isAuthenticated, loading, user: user?.email, session: !!session });
+  // AdminPanel render
 
   // Show loading while checking authentication
   if (loading) {

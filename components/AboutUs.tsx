@@ -52,11 +52,11 @@ export function AboutUs() {
             <span className="text-blue-700 font-medium text-sm">Meet Our Doctor</span>
           </div>
           
-          <h2 className="text-3xl lg:text-5xl font-display leading-tight text-neutral-900">
+          <h2 className="text-3xl lg:text-5xl font-display leading-tight text-neutral-900 text-transition">
             Dr. Kajal Kumari
           </h2>
           
-          <p className="text-body-large text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-body-large text-neutral-600 max-w-3xl mx-auto leading-relaxed text-transition">
             Highly experienced and qualified homeopathic practitioner with a passion for holistic healing, 
             dedicated to providing personalized treatment for each patient's unique needs.
           </p>
@@ -207,9 +207,9 @@ export function AboutUs() {
                 className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 group transform hover:scale-105 hover:-translate-y-1 relative overflow-hidden"
                 onClick={() => {
                   try {
-                    console.log('🔵 AboutUs: Book Consultation clicked');
+                    // Book Consultation clicked
                     openBooking('General Consultation');
-                    console.log('✅ AboutUs: Booking opened successfully');
+                                          // Booking opened successfully
                   } catch (error) {
                     console.error('❌ AboutUs: Error opening consultation booking:', error);
                   }

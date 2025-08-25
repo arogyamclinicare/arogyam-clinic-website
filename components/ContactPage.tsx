@@ -41,11 +41,11 @@ export function ContactPage() {
               <span className="text-neutral-700 font-medium text-xs lg:text-sm">Get In Touch</span>
             </div>
             
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display leading-tight text-neutral-900 px-2">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display leading-tight text-neutral-900 px-2 text-transition">
               Contact Dr. Kajal Kumari
             </h1>
             
-            <p className="text-sm lg:text-base text-neutral-600 max-w-2xl mx-auto leading-relaxed px-4">
+            <p className="text-sm lg:text-base text-neutral-600 max-w-2xl mx-auto leading-relaxed px-4 text-transition">
               Reach out to schedule your consultation or ask any questions about 
               homeopathic treatment. We're here to support your healing journey.
             </p>
@@ -54,7 +54,7 @@ export function ContactPage() {
             <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 justify-center px-4">
               <Button 
                 size="lg" 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 lg:px-6 lg:py-3 rounded-lg lg:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group text-sm lg:text-base min-h-[40px] lg:min-h-[44px]"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 lg:px-6 lg:py-3 rounded-lg lg:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group text-sm lg:text-base min-h-[40px] lg:min-h-[44px] btn-text-transition"
                 onClick={() => window.open('tel:+919876543210')}
               >
                 <Phone className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
@@ -62,7 +62,7 @@ export function ContactPage() {
               </Button>
               <Button
                 size="lg"
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2.5 lg:px-6 lg:py-3 rounded-lg lg:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-sm lg:text-base min-h-[40px] lg:min-h-[44px]"
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2.5 lg:px-6 lg:py-3 rounded-lg lg:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-sm lg:text-base min-h-[40px] lg:min-h-[44px] btn-text-transition"
                 onClick={handleWhatsAppClick}
               >
                 <MessageCircle className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />

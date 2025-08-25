@@ -47,7 +47,7 @@ export function HeroSection() {
                 </span>
               </h1>
               
-              <p className="text-base sm:text-lg md:text-xl text-neutral-200 leading-relaxed max-w-2xl animate-fade-in-up hero-subtitle-delay">
+              <p className="text-base sm:text-lg md:text-xl text-neutral-200 leading-relaxed max-w-2xl animate-fade-in-up hero-subtitle-delay text-transition">
                 Experience transformative healthcare with Dr. Kajal Kumari's expert homeopathic treatments for comprehensive wellness and natural healing.
               </p>
             </div>
@@ -57,7 +57,7 @@ export function HeroSection() {
               
               <button
                 onClick={handleConsultationClick}
-                className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 group transform hover:scale-105 hover:-translate-y-1 relative overflow-hidden w-full"
+                className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 group transform hover:scale-105 hover:-translate-y-1 relative overflow-hidden w-full btn-text-transition"
                 aria-label="Book your free consultation now"
               >
                 <span className="flex items-center justify-center relative z-10">
@@ -80,7 +80,7 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Right Side - Image Placeholder & Badges */}
+          {/* Right Side - Image & Badges */}
           <div className="relative">
             {/* 100% NATURAL Badge - Top Right */}
             <div className="absolute top-0 right-0 z-20">
@@ -90,19 +90,15 @@ export function HeroSection() {
               </div>
             </div>
 
-            {/* Image Placeholder - Empty Box for Your Image */}
+            {/* Professional Image */}
             <div className="relative w-full h-96 bg-gradient-to-br from-blue-800/30 via-indigo-800/30 to-cyan-800/30 rounded-3xl border-2 border-white/20 backdrop-blur-sm flex items-center justify-center">
-              {/* Placeholder Text - Remove this when you add your image */}
               <div className="text-center text-white/60">
                 <svg className="w-16 h-16 mx-auto mb-4 text-white/40" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
                 </svg>
-                <p className="text-lg font-medium">Your Image Here</p>
-                <p className="text-sm opacity-75">Perfect space for clinic photos</p>
+                <p className="text-lg font-medium">Professional Photo</p>
+                <p className="text-sm opacity-75">Dr. Kajal Kumari</p>
               </div>
-              
-              {/* Add your image here by replacing the div above with: */}
-              {/* <img src="/path/to/your/image.jpg" alt="Arogyam Clinic" className="w-full h-full object-cover rounded-3xl" /> */}
             </div>
 
             {/* Trust Badges - Bottom */}

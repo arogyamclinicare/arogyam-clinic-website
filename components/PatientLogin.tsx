@@ -19,44 +19,41 @@ export function PatientLogin() {
     setError(null);
     setValidationErrors({});
 
-    console.log('🚀 Form submission started');
-    console.log('📝 Form data:', { patientId, password: password.substring(0, 3) + '***' });
+    // Form submission started
+    // Form data logged
 
     try {
       // Validate input data
       const dataToValidate = { patientId, password };
-      console.log('🔍 Validating data...');
+      // Validating data
       patientLoginSchema.parse(dataToValidate);
-      console.log('✅ Validation passed');
+              // Validation passed
 
       // Sanitize inputs
       const sanitizedPatientId = sanitizeInput(patientId);
       const sanitizedPassword = sanitizeInput(password);
-      console.log('🧹 Sanitized data:', { 
-        patientId: sanitizedPatientId, 
-        password: sanitizedPassword.substring(0, 3) + '***' 
-      });
+      // Sanitized data logged
 
-      console.log('🔐 Calling login function...');
+      // Calling login function
       const result = await login(sanitizedPatientId, sanitizedPassword);
-      console.log('📥 Login result:', result);
+      // Login result received
       
       if (!result.success) {
         setError(result.error || 'Login failed');
-        console.log('❌ Login failed:', result.error);
+        // Login failed
       } else {
-        console.log('✅ Login successful!');
+        // Login successful
       }
     } catch (error: any) {
-      console.log('💥 Error in handleSubmit:', error);
+      // Error in handleSubmit
       if (error.errors) {
         // Zod validation error
         const formattedErrors = formatValidationErrors(error);
         setValidationErrors(formattedErrors);
-        console.log('❌ Validation errors:', formattedErrors);
+        // Validation errors
       } else {
         setError('An unexpected error occurred');
-        console.log('❌ Unexpected error:', error);
+        // Unexpected error
       }
     }
   };

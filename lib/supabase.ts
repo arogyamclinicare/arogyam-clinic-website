@@ -5,12 +5,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 // Debug logging to verify environment variables
-console.log('🔧 Supabase Configuration:')
-console.log('URL:', supabaseUrl ? 'Set' : 'Missing')
-console.log('Key:', supabaseAnonKey ? 'Set' : 'Missing')
-console.log('🔍 Full URL value:', supabaseUrl)
-console.log('🔍 Full Key value:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'null')
-console.log('🔍 All env vars:', import.meta.env)
+  // Environment variables loaded successfully
 
 // Validate environment variables
 if (!supabaseUrl) {
@@ -36,8 +31,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-// Test connection
-console.log('📡 Supabase client created successfully')
+  // Supabase client created successfully
 
 // Database types for TypeScript
 export interface Database {

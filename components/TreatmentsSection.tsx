@@ -331,12 +331,12 @@ export function TreatmentsSection() {
               <span className="text-blue-700 font-medium text-xs lg:text-sm">Expert Care</span>
             </div>
             
-            <h2 className="text-2xl sm:text-3xl lg:text-5xl font-display leading-tight text-neutral-900 max-w-4xl mx-auto px-2">
+            <h2 className="text-2xl sm:text-3xl lg:text-5xl font-display leading-tight text-neutral-900 max-w-4xl mx-auto px-2 text-transition">
               Comprehensive{' '}
               <span className="text-blue-600">Homeopathic Treatments</span>
             </h2>
             
-            <p className="text-sm lg:text-body-large text-neutral-600 max-w-3xl mx-auto leading-relaxed px-4">
+            <p className="text-sm lg:text-body-large text-neutral-600 max-w-3xl mx-auto leading-relaxed px-4 text-transition">
               Dr. Kajal Kumari provides expert homeopathic care for a wide range of health conditions. 
               Each treatment is personalized to your unique symptoms and constitution for optimal healing.
             </p>
@@ -437,13 +437,13 @@ export function TreatmentsSection() {
           {/* CTA Section */}
           <div className="text-center mt-16">
             <Button 
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 group transform hover:scale-105 hover:-translate-y-1 relative overflow-hidden"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 group transform hover:scale-105 hover:-translate-y-1 relative overflow-hidden btn-text-transition"
               onClick={() => {
-                try {
-                  console.log('🔵 TreatmentsSection: Book FREE Consultation Now clicked');
-                  openBooking('General Consultation');
-                  console.log('✅ TreatmentsSection: Booking opened successfully');
-                } catch (error) {
+                        try {
+          // Book FREE Consultation Now clicked
+          openBooking('General Consultation');
+          // Booking opened successfully
+        } catch (error) {
                   console.error('❌ TreatmentsSection: Error opening consultation booking:', error);
                 }
               }}
@@ -590,12 +590,12 @@ export function TreatmentsSection() {
                    className="bg-white text-blue-600 hover:bg-blue-50 px-6 sm:px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 group transform hover:scale-105 hover:-translate-y-1 relative overflow-hidden w-full sm:w-auto"
                    onClick={() => {
                      try {
-                       console.log('🔵 TreatmentsSection: Book FREE Consultation Now clicked');
+                       // Book FREE Consultation Now clicked
                        closeModal();
                        setTimeout(() => {
                          openBooking(selectedTreatment?.title || 'General Consultation');
                        }, 300);
-                       console.log('✅ TreatmentsSection: Booking opened successfully');
+                       // Booking opened successfully
                      } catch (error) {
                        console.error('❌ TreatmentsSection: Error opening consultation booking:', error);
                      }

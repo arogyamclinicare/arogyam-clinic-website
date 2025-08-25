@@ -10,13 +10,13 @@ export function SimpleRouter() {
   useEffect(() => {
     // Get the current pathname
     const path = window.location.pathname;
-    console.log('🔍 SimpleRouter - Initial path:', path);
+    // SimpleRouter - Initial path
     setCurrentRoute(path);
 
     // Listen for navigation changes
     const handleRouteChange = () => {
       const newPath = window.location.pathname;
-      console.log('🔍 SimpleRouter - Route changed to:', newPath);
+              // SimpleRouter - Route changed to
       setCurrentRoute(newPath);
     };
 
@@ -30,7 +30,7 @@ export function SimpleRouter() {
 
   // Route rendering logic
   if (currentRoute === '/admin') {
-    console.log('🔐 SimpleRouter - Rendering Admin Panel');
+    // SimpleRouter - Rendering Admin Panel
     return (
       <div className="min-h-screen bg-gray-50">
         <AdminPanel />
@@ -39,7 +39,7 @@ export function SimpleRouter() {
   }
 
   if (currentRoute === '/patient-portal') {
-    console.log('👤 SimpleRouter - Rendering Patient Portal');
+    // SimpleRouter - Rendering Patient Portal
     return (
       <div className="min-h-screen bg-gray-50">
         <PatientPortal />
@@ -48,11 +48,11 @@ export function SimpleRouter() {
   }
 
   if (currentRoute === '/contact') {
-    console.log('📞 SimpleRouter - Rendering Contact Page');
+    // SimpleRouter - Rendering Contact Page
     return <ContactPage />;
   }
 
   // Default to home page
-  console.log('🏠 SimpleRouter - Rendering Home Page');
+      // SimpleRouter - Rendering Home Page
   return <HomePage />;
 }

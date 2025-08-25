@@ -61,7 +61,7 @@ export function Header({
 
   // Optimized navigation handler
   const handleNavClick = useCallback((item: any) => {
-    console.log('🔍 Header: Navigation item clicked:', item.name);
+    // Navigation item clicked
     
     // Close mobile menu first
     if (mobileState.isOpen) {
@@ -70,18 +70,18 @@ export function Header({
 
     if (item.isPage && item.action) {
       // Handle page navigation
-      console.log('🔵 Header: Calling page action for:', item.name);
+      // Calling page action
       item.action();
     } else if (item.isSection && item.href) {
       // Handle section navigation (scroll to section)
-      console.log('🔵 Header: Scrolling to section:', item.href);
+              // Scrolling to section
       
       // Check if we're on the home page
       const isOnHomePage = window.location.pathname === '/' || window.location.pathname === '/home';
       
       if (!isOnHomePage) {
         // If not on home page, navigate back to home first
-        console.log('🔄 Not on home page, navigating to home first...');
+        // Not on home page, navigating to home first
         onHome();
         // After navigating to home, scroll to section
         setTimeout(() => {
@@ -94,7 +94,7 @@ export function Header({
               top: offsetPosition, 
               behavior: 'smooth' 
             });
-            console.log('✅ Scrolled to section after navigation:', item.href);
+            // Scrolled to section after navigation
           }
         }, 100);
         return;
@@ -112,7 +112,7 @@ export function Header({
           behavior: 'smooth' 
         });
         
-        console.log('✅ Scrolled to section:', item.href);
+        // Scrolled to section
       } else {
         console.error('❌ Section not found:', item.href);
       }
@@ -155,7 +155,7 @@ export function Header({
               <button
                 key={item.name}
                 onClick={() => handleNavClick(item)}
-                className={`text-sm font-medium transition-colors duration-200 ${
+                className={`text-sm font-medium transition-colors duration-200 text-transition ${
                   isScrolled 
                     ? 'text-gray-700 hover:text-blue-600' 
                     : 'text-white/90 hover:text-white'
@@ -170,7 +170,7 @@ export function Header({
           <div className="hidden lg:flex items-center space-x-4">
             <Button
               onClick={handleBookConsultation}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl btn-text-transition"
             >
               <Heart className="w-4 h-4 mr-2" />
               Book Consultation
@@ -203,7 +203,7 @@ export function Header({
                 <button
                   key={item.name}
                   onClick={() => handleNavClick(item)}
-                  className="w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 text-gray-700 hover:bg-gray-100"
+                  className="w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 text-gray-700 hover:bg-gray-100 text-transition"
                 >
                   {item.name}
                 </button>
@@ -214,7 +214,7 @@ export function Header({
             <div className="mt-6 pt-4 border-t border-gray-200">
               <Button
                 onClick={handleBookConsultation}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 rounded-lg font-medium transition-all duration-200"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 rounded-lg font-medium transition-all duration-200 btn-text-transition"
               >
                 <Heart className="w-4 h-4 mr-2" />
                 Book Consultation

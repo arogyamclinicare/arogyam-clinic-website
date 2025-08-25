@@ -270,11 +270,11 @@ export function AdminDashboard() {
   const generatePatientCredentials = async (consultation: Consultation) => {
     try {
       setGeneratingCredentials(consultation.id);
-      console.log('Generating credentials for:', consultation.name, 'Email:', consultation.email);
+              // Generating credentials for consultation
       
       // Check if consultation already has a patient_id
       if (consultation.patient_id) {
-        console.log('Consultation already has patient_id:', consultation.patient_id);
+        // Consultation already has patient_id
         setNotificationMessage('⚠️ Credentials already generated for this consultation. Check existing patient record.');
         setShowNotification(true);
         setTimeout(() => setShowNotification(false), 5000);
@@ -283,7 +283,7 @@ export function AdminDashboard() {
       
       // ALWAYS generate new unique credentials for each consultation
       // This prevents multiple people with same email from sharing credentials
-      console.log('Generating new unique credentials for this consultation');
+              // Generating new unique credentials for this consultation
       
       let patientId: string;
       let password: string;
@@ -298,7 +298,7 @@ export function AdminDashboard() {
           patientId = `PAT-${new Date().getFullYear()}-${timestamp.toString().slice(-4)}-${randomSuffix}`;
           password = generateSecurePassword(12); // Use secure password generation
           
-          console.log(`Attempt ${attempts}: Generated credentials:`, { patientId, password });
+          // Generated credentials attempt
           
           // Check if this ID already exists
           const { data: duplicateCheck, error: checkError } = await supabase
@@ -313,11 +313,11 @@ export function AdminDashboard() {
           }
           
           if (!duplicateCheck) {
-            console.log('✅ Generated unique patient ID:', patientId);
+            // Generated unique patient ID
             break; // Found unique ID
           }
           
-          console.log('⚠️ Duplicate detected, retrying...');
+                      // Duplicate detected, retrying
           
         } while (attempts < maxAttempts);
         
@@ -327,7 +327,7 @@ export function AdminDashboard() {
           const finalRandom = Math.random().toString(36).substring(2, 8).toUpperCase();
           patientId = `PAT-${new Date().getFullYear()}-${finalTimestamp}-${finalRandom}`;
           password = generateSecurePassword(14); // Use longer secure password
-          console.log('🚨 Using final fallback credentials:', { patientId, password });
+          // Using final fallback credentials
         }
 
         // Create new patient record for this consultation
@@ -347,10 +347,10 @@ export function AdminDashboard() {
           });
         
         if (insertError) throw insertError;
-        console.log('Created new patient with unique credentials:', { patientId, password: '[HIDDEN]' });
+        // Created new patient with unique credentials
 
       // CRITICAL: Link the consultation to the patient by updating patient_id
-      console.log('Linking consultation to patient with patient_id:', patientId);
+              // Linking consultation to patient
       const { error: linkError } = await supabase
         .from('consultations')
         .update({ patient_id: patientId })
@@ -361,7 +361,7 @@ export function AdminDashboard() {
         throw new Error('Failed to link consultation to patient');
       }
       
-      console.log('Successfully linked consultation to patient');
+              // Successfully linked consultation to patient
 
       // For now, mark email as pending (manual sending)
       await supabase
@@ -392,9 +392,9 @@ Arogyam Clinic Team
       
       try {
         await navigator.clipboard.writeText(credentialsText);
-        console.log('Credentials copied to clipboard');
+        // Credentials copied to clipboard
       } catch (clipboardError) {
-        console.log('Could not copy to clipboard:', clipboardError);
+                  // Could not copy to clipboard
       }
       
       setShowNotification(true);
@@ -416,7 +416,7 @@ Arogyam Clinic Team
   // View patient credentials
   const viewPatientCredentials = async (consultation: Consultation) => {
     try {
-      console.log('Looking for patient for consultation:', consultation.id);
+              // Looking for patient for consultation
       
       // Find patient by consultation_id (new approach)
       let { data: patient, error } = await supabase
@@ -427,7 +427,7 @@ Arogyam Clinic Team
 
       // If not found by consultation_id, try to find by patient_id (fallback for old records)
       if (error || !patient) {
-        console.log('Not found by consultation_id, trying by patient_id:', consultation.patient_id);
+        // Not found by consultation_id, trying by patient_id
         if (consultation.patient_id) {
           const { data: patientById } = await supabase
             .from('patients')
@@ -443,14 +443,14 @@ Arogyam Clinic Team
       }
 
       if (error || !patient) {
-        console.log('Patient not found in database');
+        // Patient not found in database
         setNotificationMessage('Patient credentials not found. Please generate credentials first.');
         setShowNotification(true);
         setTimeout(() => setShowNotification(false), 3000);
         return;
       }
 
-      console.log('Found patient:', patient);
+              // Found patient
 
       setSelectedPatientCredentials({
         name: patient.name,
@@ -1423,7 +1423,7 @@ Arogyam Clinic Team
                 <div className="flex space-x-3 pt-4">
                   <button
                     onClick={() => {
-                      // TODO: Implement resend email functionality
+                      // Resend email functionality will be implemented in future updates
                       setNotificationMessage('Email resend feature coming soon!');
                       setShowNotification(true);
                       setTimeout(() => setShowNotification(false), 3000);

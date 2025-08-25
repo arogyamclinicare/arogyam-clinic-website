@@ -22,7 +22,7 @@ export function AdminLoginPage() {
       
       if (result.success) {
         // Login successful - user will be redirected automatically
-        console.log('✅ Login successful');
+        // Login successful
       } else {
         setError(result.error || 'Login failed. Please try again.');
       }

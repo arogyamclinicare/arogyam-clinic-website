@@ -72,12 +72,12 @@ export function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
   };
 
   const handleBackClick = () => {
-    console.log('Back button clicked in PrivacyPolicy component');
+    // Back button clicked in PrivacyPolicy component
     if (onBack) {
-      console.log('Calling onBack function');
+              // Calling onBack function
       onBack();
     } else {
-      console.log('No onBack function, using browser history');
+              // No onBack function, using browser history
       // Fallback: go back in browser history
       window.history.back();
     }

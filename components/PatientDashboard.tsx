@@ -56,21 +56,21 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
         if (!data || data.length === 0) {
           if (patientCheck && patientCheck[0]?.email) {
             
-            const { data: emailData, error: emailError } = await supabase
+            const { data: emailData } = await supabase
               .from('consultations')
               .select('*')
               .eq('email', patientCheck[0].email)
               .order('created_at', { ascending: false });
             
-            console.log('🔍 Query by email result:', { emailData, emailError, count: emailData?.length || 0 });
+            // Query by email result
             
             if (emailData && emailData.length > 0) {
-              console.log('🔍 Found consultations by email, attempting to link them...');
+              // Found consultations by email, attempting to link them
               
               // Try to link these consultations to the patient
               for (const consultation of emailData) {
                 if (!consultation.patient_id) {
-                  console.log('🔍 Linking consultation', consultation.id, 'to patient_id', user.patient_id);
+                  // Linking consultation to patient_id
                   
                   const { error: linkError } = await supabase
                     .from('consultations')
@@ -80,17 +80,17 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
                   if (linkError) {
                     console.error('❌ Failed to link consultation:', linkError);
                   } else {
-                    console.log('✅ Successfully linked consultation', consultation.id);
+                    // Successfully linked consultation
                   }
                 }
               }
               
               // Also check if consultations already have the right patient_id but different format
               const consultationsWithRightEmail = emailData.filter(c => c.email === patientCheck[0].email);
-              console.log('🔍 Consultations with matching email:', consultationsWithRightEmail);
+              // Consultations with matching email
               
               if (consultationsWithRightEmail.length > 0) {
-                console.log('🔍 Using consultations with matching email directly');
+                // Using consultations with matching email directly
                 data = consultationsWithRightEmail;
                 error = null;
               }
@@ -104,25 +104,25 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
               
               data = linkedData;
               error = linkedError;
-              console.log('🔍 After linking, found consultations:', { data, error, count: data?.length || 0 });
+              // After linking, found consultations
             }
           }
         }
 
-        console.log('🔍 Final consultations result:', { data, error, count: data?.length || 0 });
+        // Final consultations result
 
         if (error) {
           console.error('❌ Error fetching consultations:', error);
           // Don't show sensitive error details to patients
           setConsultations([]);
         } else {
-          console.log('✅ Fetched consultations:', data);
+          // Fetched consultations
           setConsultations(data || []);
         }
         
         // If still no data, try to show consultations by email as a last resort
         if ((!data || data.length === 0) && patientCheck && patientCheck[0]?.email) {
-          console.log('🔍 Last resort: trying to show consultations by email');
+          // Last resort: trying to show consultations by email
           const { data: lastResortData } = await supabase
             .from('consultations')
             .select('*')
@@ -130,7 +130,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
             .order('created_at', { ascending: false });
           
           if (lastResortData && lastResortData.length > 0) {
-            console.log('🔍 Last resort successful:', lastResortData);
+            // Last resort successful
             setConsultations(lastResortData);
           }
         }

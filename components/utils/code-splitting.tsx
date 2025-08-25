@@ -247,8 +247,4 @@ export const LazyEnhancedPatientForm = createFeatureLazyComponent(
   'high'
 );
 
-export const LazyMobileNavigationTester = createFeatureLazyComponent(
-  () => import('../MobileNavigationTester').then(module => ({ default: module.MobileNavigationTester })),
-  'mobile-navigation-tester',
-  'low'
-);
+// MobileNavigationTester component removed for production

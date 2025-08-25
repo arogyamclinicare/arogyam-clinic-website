@@ -98,6 +98,57 @@
 
 /* Staggered delays for sequential animation */
 .hero-text-delay-1 { animation-delay: 0.2s; }
+
+/* Smooth Text Transitions */
+.text-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.text-transition:hover {
+  transform: translateY(-1px);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Link Hover Effects */
+.link-hover {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.link-hover::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background: currentColor;
+  transition: width 0.3s ease;
+}
+
+.link-hover:hover::after {
+  width: 100%;
+}
+
+/* Button Text Transitions */
+.btn-text-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-text-transition:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Card Text Transitions */
+.card-text-transition {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-text-transition:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
 .hero-text-delay-2 { animation-delay: 0.4s; }
 .hero-text-delay-3 { animation-delay: 0.6s; }
 .hero-text-delay-4 { animation-delay: 0.8s; }

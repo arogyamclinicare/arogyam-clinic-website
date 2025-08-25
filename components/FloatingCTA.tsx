@@ -24,9 +24,9 @@ export function FloatingCTA() {
 
   const handleBookConsultation = () => {
     try {
-      console.log('🔵 FloatingCTA: handleBookConsultation called');
+      // handleBookConsultation called
       openBooking('Quick Consultation');
-      console.log('✅ FloatingCTA: Booking opened successfully');
+              // Booking opened successfully
     } catch (error) {
       console.error('❌ FloatingCTA: Error opening consultation booking:', error);
     }
@@ -51,14 +51,14 @@ export function FloatingCTA() {
         </button>
         
         <div className="text-center mb-4">
-          <h3 className="font-semibold text-base lg:text-lg mb-1">Book FREE Consultation</h3>
-          <p className="text-blue-100 text-xs lg:text-sm">Expert homeopathic care available now</p>
+                     <h3 className="font-semibold text-base lg:text-lg mb-1 text-transition">Book FREE Consultation</h3>
+                     <p className="text-blue-100 text-xs lg:text-sm text-transition">Expert homeopathic care available now</p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
           <button
             onClick={handleCall}
-            className="flex-1 bg-white text-blue-600 hover:bg-blue-50 px-3 lg:px-4 py-3 rounded-lg lg:rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg touch-manipulation min-h-[44px] text-sm lg:text-base"
+                         className="flex-1 bg-white text-blue-600 hover:bg-blue-50 px-3 lg:px-4 py-3 rounded-lg lg:rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg touch-manipulation min-h-[44px] text-sm lg:text-base btn-text-transition"
           >
             <Phone className="w-4 h-4" />
             <span>Contact</span>
@@ -66,7 +66,7 @@ export function FloatingCTA() {
           
           <button
             onClick={handleBookConsultation}
-            className="bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 group transform hover:scale-105 hover:-translate-y-1 relative overflow-hidden text-sm lg:text-base min-h-[44px]"
+                         className="bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 group transform hover:scale-105 hover:-translate-y-1 relative overflow-hidden text-sm lg:text-base min-h-[44px] btn-text-transition"
           >
             <span className="flex items-center justify-center relative z-10">
               <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mr-2 group-hover:bg-blue-200 transition-colors duration-300">
