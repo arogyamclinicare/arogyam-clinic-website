@@ -190,7 +190,7 @@ export function EnhancedPatientForm({
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 XXXXX XXXXX"
                     required
                     autoComplete="tel"
                     className={`w-full px-4 py-4 border-2 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-sage-500 ${

@@ -433,7 +433,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                     className={`w-full px-4 py-4 text-base border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 touch-manipulation ${
                       validationErrors.phone ? 'border-red-500 focus:ring-red-500' : 'border-neutral-300'
                     }`}
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 XXXXX XXXXX"
                     aria-describedby="phone-help phone-error"
                     autoComplete="tel"
                     inputMode="tel"
