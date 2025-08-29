@@ -11,7 +11,8 @@ import {
   Baby,
   Zap,
   ArrowRight,
-  Award
+  Award,
+  Droplets
 } from 'lucide-react';
 
 export function AboutUs() {
@@ -21,7 +22,8 @@ export function AboutUs() {
     { name: 'Dermatology', icon: Target, description: 'Skin conditions, acne, eczema' },
     { name: 'Hair Specialist', icon: Zap, description: 'Hair loss, baldness treatment' },
     { name: 'Respiratory Care', icon: Heart, description: 'Asthma, allergic rhinitis' },
-    { name: 'Women\'s Health', icon: Baby, description: 'PCOD, fertility, menstrual issues' }
+    { name: 'Women\'s Health', icon: Baby, description: 'PCOD, fertility, menstrual issues' },
+    { name: 'Kidney Stones', icon: Droplets, description: 'Expert treatment for kidney stones & UTIs' }
   ];
 
   const successStories = [

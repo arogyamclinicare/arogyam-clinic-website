@@ -478,6 +478,65 @@ Arogyam Clinic Team
     setTimeout(() => setShowNotification(false), 2000);
   };
 
+  // Copy complete welcome message with all credentials
+  const copyCompleteWelcomeMessage = () => {
+    if (!selectedPatientCredentials) return;
+    
+    const welcomeMessage = `
+🏥 Welcome to Arogyam Homeopathic Clinic
+
+Dear ${selectedPatientCredentials.name},
+
+Your patient portal access has been successfully created!
+
+🔐 Login Credentials:
+Patient ID: ${selectedPatientCredentials.patientId}
+Password: ${selectedPatientCredentials.password}
+
+🌐 Access Your Portal:
+${window.location.origin}/patient-portal
+
+📱 What You Can Do:
+• View your consultation history
+• Access your prescriptions
+• Schedule follow-up appointments
+• Message the clinic team
+
+🔒 Keep your credentials safe and secure.
+
+Best regards,
+Dr. Kajal Kumari & Team
+Arogyam Homeopathic Clinic
+📞 +91 94300 30564
+📧 arogyambihar@gmail.com
+    `.trim();
+
+    navigator.clipboard.writeText(welcomeMessage);
+    setNotificationMessage('✅ Complete welcome message copied to clipboard!');
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 3000);
+  };
+
+  // Copy quick credentials for easy sharing
+  const copyQuickCredentials = () => {
+    if (!selectedPatientCredentials) return;
+    
+    const quickCredentials = `
+🔐 Arogyam Clinic - Patient Portal Access
+
+Patient ID: ${selectedPatientCredentials.patientId}
+Password: ${selectedPatientCredentials.password}
+Portal: ${window.location.origin}/patient-portal
+
+Keep these credentials safe!
+    `.trim();
+
+    navigator.clipboard.writeText(quickCredentials);
+    setNotificationMessage('⚡ Quick credentials copied to clipboard!');
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 2000);
+  };
+
 
 
   return (
@@ -1383,22 +1442,7 @@ Arogyam Clinic Team
                   </div>
                 </div>
 
-                {/* Portal Link */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-medium text-green-900 mb-2">🌐 Patient Portal Access</h4>
-                  <div className="flex items-center space-x-2">
-                    <code className="flex-1 bg-white px-3 py-2 rounded border border-green-300 text-green-900 font-mono text-sm">
-                      {window.location.origin}/patient-portal
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(`${window.location.origin}/patient-portal`)}
-                      className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                      title="Copy Portal Link"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
+
 
                 {/* Status Info */}
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -1417,6 +1461,74 @@ Arogyam Clinic Team
                       </span>
                     </div>
                   </div>
+                </div>
+
+                {/* Quick Copy All Credentials */}
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="font-medium text-yellow-900 mb-3">⚡ Quick Copy All Credentials</h4>
+                  <p className="text-sm text-yellow-700 mb-3">
+                    Copy just the essential login details for quick sharing
+                  </p>
+                  
+                  {/* Preview of quick credentials */}
+                  <div className="bg-white border border-yellow-200 rounded-lg p-3 mb-3">
+                    <p className="text-xs text-gray-700 whitespace-pre-line">
+                      🔐 Arogyam Clinic - Patient Portal Access{'\n\n'}
+                      Patient ID: {selectedPatientCredentials.patientId}{'\n'}
+                      Password: {selectedPatientCredentials.password}{'\n'}
+                      Portal: {window.location.origin}/patient-portal{'\n\n'}
+                      Keep these credentials safe!
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={() => copyQuickCredentials()}
+                    className="w-full flex items-center justify-center space-x-2 bg-yellow-600 text-white px-4 py-3 rounded-lg hover:bg-yellow-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    <Copy className="w-5 h-5" />
+                    <span className="font-medium">Copy Quick Credentials</span>
+                  </button>
+                </div>
+
+                {/* Copy All Button */}
+                <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-900 mb-3">📋 Copy Complete Welcome Message</h4>
+                  <p className="text-sm text-blue-700 mb-3">
+                    Copy the complete welcome message with all credentials to send to the patient
+                  </p>
+                  
+                  {/* Preview of the welcome message */}
+                  <div className="bg-white border border-blue-200 rounded-lg p-3 mb-3 max-h-32 overflow-y-auto">
+                    <p className="text-xs text-gray-700 whitespace-pre-line">
+                      🏥 Welcome to Arogyam Homeopathic Clinic{'\n\n'}
+                      Dear {selectedPatientCredentials.name},{'\n\n'}
+                      Your patient portal access has been successfully created!{'\n\n'}
+                      🔐 Login Credentials:{'\n'}
+                      Patient ID: {selectedPatientCredentials.patientId}{'\n'}
+                      Password: {selectedPatientCredentials.password}{'\n\n'}
+                      🌐 Access Your Portal:{'\n'}
+                      {window.location.origin}/patient-portal{'\n\n'}
+                      📱 What You Can Do:{'\n'}
+                      • View your consultation history{'\n'}
+                      • Access your prescriptions{'\n'}
+                      • Schedule follow-up appointments{'\n'}
+                      • Message the clinic team{'\n\n'}
+                      🔒 Keep your credentials safe and secure.{'\n\n'}
+                      Best regards,{'\n'}
+                      Dr. Kajal Kumari & Team{'\n'}
+                      Arogyam Homeopathic Clinic{'\n'}
+                      📞 +91 94300 30564{'\n'}
+                      📧 arogyambihar@gmail.com
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={() => copyCompleteWelcomeMessage()}
+                    className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-green-600 text-white px-4 py-3 rounded-lg hover:from-blue-700 hover:to-green-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    <Copy className="w-5 h-5" />
+                    <span className="font-medium">Copy Complete Welcome Message</span>
+                  </button>
                 </div>
 
                 {/* Action Buttons */}

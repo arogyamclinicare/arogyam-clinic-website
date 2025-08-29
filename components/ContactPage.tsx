@@ -22,7 +22,7 @@ export function ContactPage() {
   ];
 
   const handleWhatsAppClick = () => {
-    const phoneNumber = '+919876543210';
+    const phoneNumber = '+919430030564';
     const message = 'Hello Dr. Kajal! I have some questions about homeopathic treatment. Can you help me?';
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
@@ -55,7 +55,7 @@ export function ContactPage() {
               <Button 
                 size="lg" 
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 lg:px-6 lg:py-3 rounded-lg lg:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group text-sm lg:text-base min-h-[40px] lg:min-h-[44px] btn-text-transition"
-                onClick={() => window.open('tel:+919876543210')}
+                onClick={() => window.open('tel:+919430030564')}
               >
                 <Phone className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
                 Call Now
@@ -76,7 +76,7 @@ export function ContactPage() {
             <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-6 lg:p-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                 {/* Phone */}
-                <div className="text-center group cursor-pointer" onClick={() => window.open('tel:+919876543210')}>
+                <div className="text-center group cursor-pointer" onClick={() => window.open('tel:+919430030564')}>
                   <div className="w-12 h-12 lg:w-14 lg:h-14 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
                     <Phone className="w-6 h-6 lg:w-7 lg:h-7 text-blue-600" />
                   </div>
@@ -84,7 +84,7 @@ export function ContactPage() {
                     Phone Number
                   </h3>
                   <p className="text-neutral-700 text-sm lg:text-base font-medium mb-1">
-                    +91 98765 43210
+                    +91 94300 30564
                   </p>
                   <p className="text-neutral-500 text-xs lg:text-sm">
                     Available during clinic hours

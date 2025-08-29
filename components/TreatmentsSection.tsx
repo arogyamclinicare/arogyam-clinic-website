@@ -15,7 +15,8 @@ import {
   ArrowRight,
   Star,
   Clock,
-  Users
+  Users,
+  Droplets
 } from 'lucide-react';
 
 interface Treatment {
@@ -42,6 +43,44 @@ export function TreatmentsSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const treatments: Treatment[] = [
+    {
+      id: 'kidney-stones',
+      title: 'Kidney Stones & Urinary Health',
+      shortDescription: 'Expert homeopathic treatment for kidney stones, UTIs, and urinary disorders',
+      icon: Droplets,
+      color: 'blue',
+      duration: '3-8 months',
+      successRate: 'Expert',
+      detailedInfo: {
+        overview: 'Dr. Kajal specializes in treating kidney stones and urinary disorders using advanced homeopathic remedies that dissolve stones naturally and prevent recurrence.',
+        conditions: [
+          'Kidney stones (renal calculi)',
+          'Urinary tract infections (UTIs)',
+          'Bladder stones',
+          'Frequent urination',
+          'Painful urination',
+          'Blood in urine',
+          'Kidney colic',
+          'Urinary retention'
+        ],
+        approach: 'Constitutional treatment targeting the root cause of stone formation, combined with specific remedies for stone dissolution and urinary health restoration.',
+        benefits: [
+          'Natural stone dissolution without surgery',
+          'Prevention of stone recurrence',
+          'Improved urinary function',
+          'Reduced pain and discomfort',
+          'Enhanced kidney health'
+        ],
+        process: [
+          'Comprehensive urinary system evaluation',
+          'Stone type and size assessment',
+          'Constitutional remedy prescription',
+          'Dietary and lifestyle guidance',
+          'Regular monitoring and adjustments'
+        ],
+        testimonial: 'My kidney stone dissolved completely in 4 months with Dr. Kajal\'s treatment - no surgery needed!'
+      }
+    },
     {
       id: 'skin-hair',
       title: 'Skin & Hair Disorders',

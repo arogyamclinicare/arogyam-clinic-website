@@ -18,7 +18,7 @@ export function FAQs() {
     },
     {
       question: "What conditions does Dr. Kajal specialize in treating?",
-      answer: "Dr. Kajal specializes in treating a wide range of conditions including: Skin & Hair Disorders (baldness, acne, eczema, psoriasis), Respiratory Issues (asthma, allergic rhinitis), Gastrointestinal Problems (gastritis, piles), Women's Health (PCOD, infertility, menstrual irregularities), Musculoskeletal Diseases (arthritis, joint pain), Neurological Disorders (migraine, anxiety, insomnia), and Metabolic Disorders (thyroid, diabetes, hypertension)."
+      answer: "Dr. Kajal specializes in treating a wide range of conditions including: Skin & Hair Disorders (baldness, acne, eczema, psoriasis), Respiratory Issues (asthma, allergic rhinitis), Gastrointestinal Problems (gastritis, piles), Women's Health (PCOD, infertility, menstrual irregularities), Musculoskeletal Diseases (arthritis, joint pain), Neurological Disorders (migraine, anxiety, insomnia), Metabolic Disorders (thyroid, diabetes, hypertension), and Urinary Health (kidney stones, UTIs, bladder disorders)."
     },
     {
       question: "Do you provide online consultations?",

@@ -1,5 +1,5 @@
 export const CONTACT_INFO = {
-  phone: '+91 98765 43210',
+  phone: '+91 94300 30564',
   email: 'arogyambihar@gmail.com',
   address: {
     line1: 'Teacher Colony, Sri Narayan Nagar',

@@ -1,9 +1,15 @@
 import { Button } from './ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
-import { ArrowRight, Brain, Flower2, Sparkles, Shield, Baby, Zap } from 'lucide-react';
+import { ArrowRight, Brain, Flower2, Sparkles, Shield, Baby, Zap, Droplets } from 'lucide-react';
 
 export function Treatments() {
   const treatments = [
+    {
+      title: 'Kidney Stones',
+      description: 'Expert homeopathic treatment for kidney stones and urinary health.',
+      icon: Droplets,
+      color: 'blue'
+    },
     {
       title: 'Migraine',
       description: 'Comprehensive natural treatment for chronic headaches and migraines.',

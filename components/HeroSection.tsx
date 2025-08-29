@@ -1,4 +1,4 @@
-import { ArrowRight, Star, Shield, CheckCircle, Heart } from 'lucide-react';
+import { ArrowRight, CheckCircle, Heart } from 'lucide-react';
 import { useOptimizedConsultation } from './context/OptimizedConsultationContext';
 
 export function HeroSection() {
@@ -80,53 +80,26 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Right Side - Image & Badges */}
+          {/* Right Side - Professional Image */}
           <div className="relative">
-            {/* 100% NATURAL Badge - Top Right */}
-            <div className="absolute top-0 right-0 z-20">
-              <div className="bg-gradient-to-r from-green-700 to-green-800 text-white px-4 py-2 rounded-xl font-bold text-center shadow-2xl">
-                <div className="text-lg">100%</div>
-                <div className="text-sm">NATURAL</div>
-              </div>
-            </div>
-
-            {/* Professional Image */}
-            <div className="relative w-full h-96 bg-gradient-to-br from-blue-800/30 via-indigo-800/30 to-cyan-800/30 rounded-3xl border-2 border-white/20 backdrop-blur-sm flex items-center justify-center">
-              <div className="text-center text-white/60">
-                <svg className="w-16 h-16 mx-auto mb-4 text-white/40" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                </svg>
-                <p className="text-lg font-medium">Professional Photo</p>
-                <p className="text-sm opacity-75">Dr. Kajal Kumari</p>
-              </div>
-            </div>
-
-            {/* Trust Badges - Bottom */}
-            <div className="absolute -bottom-4 left-0 right-0 flex justify-center space-x-4">
-              <div className="bg-white/95 backdrop-blur-sm rounded-xl p-3 text-center shadow-xl border border-white/30 animate-trust-badge trust-badge-delay-1">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838l-2.727 1.17a1 1 0 00-.356.257l-4 1.714a1 1 0 11-.788-1.838l7-3a1 1 0 00.788 0z" />
-                  </svg>
-                </div>
-                <div className="text-xs font-semibold text-neutral-900">BHMS</div>
-                <div className="text-xs text-neutral-600">Qualified</div>
+            {/* Professional Medical Consultation Room */}
+            <div className="relative w-full h-96 rounded-3xl border-2 border-white/20 overflow-hidden shadow-2xl">
+              <img 
+                src="/images/medical-consultation-room.jpg" 
+                alt="Professional Medical Consultation Room - Dr. Kajal Kumari's Clinic"
+                className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
+              />
+              {/* Professional Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 via-transparent to-transparent"></div>
+              
+              {/* Professional Badge */}
+              <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-1 border border-white/30 shadow-lg">
+                <p className="text-blue-600 text-xs font-semibold">Professional Care</p>
               </div>
               
-              <div className="bg-white/95 backdrop-blur-sm rounded-xl p-3 text-center shadow-xl border border-white/30 animate-trust-badge trust-badge-delay-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-xs font-semibold text-neutral-900">Registered</div>
-                <div className="text-xs text-neutral-600">Practitioner</div>
-              </div>
-              
-              <div className="bg-white/95 backdrop-blur-sm rounded-xl p-3 text-center shadow-xl border border-white/30 animate-trust-badge trust-badge-delay-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <Star className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-xs font-semibold text-neutral-900">Multiple</div>
-                <div className="text-xs text-neutral-600">Specialties</div>
+              {/* Consultation Highlight */}
+              <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/30 shadow-lg">
+                <p className="text-neutral-800 text-sm font-medium text-center">Expert Homeopathic Consultation</p>
               </div>
             </div>
           </div>
