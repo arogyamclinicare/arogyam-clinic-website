@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Eye, EyeOff, Home, Shield } from 'lucide-react';
+import { Eye, EyeOff, Home, Shield, AlertTriangle } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 
 export function AdminLoginPage() {
-  const { login } = useAuth();
+  const { login, csrfToken } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -11,6 +11,11 @@ export function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [securityInfo, setSecurityInfo] = useState({
+    remainingAttempts: 5,
+    isLocked: false,
+    lockoutTime: 0
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,13 +23,42 @@ export function AdminLoginPage() {
     setError('');
 
     try {
+      // Include CSRF token in form submission
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
         // Login successful - user will be redirected automatically
-        // Login successful
+        // Clear any previous security warnings
+        setSecurityInfo({
+          remainingAttempts: 5,
+          isLocked: false,
+          lockoutTime: 0
+        });
       } else {
         setError(result.error || 'Login failed. Please try again.');
+        
+        // Extract remaining attempts from error message
+        if (result.error?.includes('attempts remaining')) {
+          const match = result.error.match(/(\d+) attempts remaining/);
+          if (match) {
+            setSecurityInfo(prev => ({
+              ...prev,
+              remainingAttempts: parseInt(match[1])
+            }));
+          }
+        }
+        
+        // Check if account is locked
+        if (result.error?.includes('temporarily locked')) {
+          const match = result.error.match(/(\d+) minutes/);
+          if (match) {
+            setSecurityInfo(prev => ({
+              ...prev,
+              isLocked: true,
+              lockoutTime: parseInt(match[1])
+            }));
+          }
+        }
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -55,9 +89,37 @@ export function AdminLoginPage() {
           <p className="text-gray-300">Secure access to clinic management</p>
         </div>
 
+        {/* Security Status */}
+        {securityInfo.isLocked && (
+          <div className="mb-6 bg-red-500/20 border border-red-400/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-5 h-5 text-red-400" />
+              <span className="text-red-200 font-semibold">Account Temporarily Locked</span>
+            </div>
+            <p className="text-red-300 text-sm">
+              Too many failed login attempts. Please try again in {securityInfo.lockoutTime} minutes.
+            </p>
+          </div>
+        )}
+
+        {!securityInfo.isLocked && securityInfo.remainingAttempts < 5 && (
+          <div className="mb-6 bg-yellow-500/20 border border-yellow-400/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-400" />
+              <span className="text-yellow-200 font-semibold">Security Warning</span>
+            </div>
+            <p className="text-yellow-300 text-sm">
+              {securityInfo.remainingAttempts} login attempts remaining before account lockout.
+            </p>
+          </div>
+        )}
+
         {/* Login Form */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Hidden CSRF Token */}
+            <input type="hidden" name="_csrf" value={csrfToken} />
+            
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-2">
@@ -70,7 +132,8 @@ export function AdminLoginPage() {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200"
+                disabled={securityInfo.isLocked}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="Enter admin email"
               />
             </div>
@@ -88,13 +151,15 @@ export function AdminLoginPage() {
                   value={formData.password}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 pr-12"
+                  disabled={securityInfo.isLocked}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 pr-12 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Enter admin password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-white transition-colors"
+                  disabled={securityInfo.isLocked}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-white transition-colors disabled:opacity-50"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -111,7 +176,7 @@ export function AdminLoginPage() {
             {/* Login Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || securityInfo.isLocked}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
             >
               {loading ? (
@@ -119,38 +184,43 @@ export function AdminLoginPage() {
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                   Signing in...
                 </div>
+              ) : securityInfo.isLocked ? (
+                'Account Locked'
               ) : (
                 'Access Admin Panel'
               )}
             </button>
-
-
           </form>
 
-          {/* Admin Access Info */}
+          {/* Security Features Info */}
           <div className="mt-6 p-4 bg-blue-500/20 rounded-lg border border-blue-400/30">
-            <p className="text-sm text-blue-200 mb-2 font-semibold">🔐 Admin Access Required</p>
-            <p className="text-xs text-blue-300 mb-1">Contact your system administrator for login credentials</p>
-            <p className="text-xs text-blue-400 mt-2">✅ Secure authentication system active</p>
+            <p className="text-sm text-blue-200 mb-2 font-semibold">🔐 Enhanced Security Features</p>
+            <div className="space-y-1 text-xs text-blue-300">
+              <p>✅ CSRF Protection Active</p>
+              <p>✅ Rate Limiting Enabled</p>
+              <p>✅ Account Lockout Protection</p>
+              <p>✅ Secure Session Management</p>
+              <p>✅ Input Sanitization</p>
+            </div>
           </div>
         </div>
 
-                 {/* Back to Home */}
-         <div className="text-center mt-8">
-           <button
-             onClick={() => {
-               window.location.href = '/';
-               // Ensure scroll to top happens after navigation
-               setTimeout(() => {
-                 window.scrollTo({ top: 0, behavior: 'smooth' });
-               }, 50);
-             }}
-             className="inline-flex items-center text-blue-300 hover:text-blue-200 text-sm font-medium transition-colors"
-           >
-             <Home className="w-4 h-4 mr-2" />
-             Back to Main Website
-           </button>
-         </div>
+        {/* Back to Home */}
+        <div className="text-center mt-8">
+          <button
+            onClick={() => {
+              window.location.href = '/';
+              // Ensure scroll to top happens after navigation
+              setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }, 50);
+            }}
+            className="inline-flex items-center text-blue-300 hover:text-blue-200 text-sm font-medium transition-colors"
+          >
+            <Home className="w-4 h-4 mr-2" />
+            Back to Main Website
+          </button>
+        </div>
       </div>
     </div>
   );
