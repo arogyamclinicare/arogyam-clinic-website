@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+
+import { render, screen } from '@testing-library/react';
 import { Header } from '../Header';
 import { OptimizedConsultationProvider } from '../context/OptimizedConsultationContext';
 
@@ -16,7 +16,11 @@ jest.mock('../context/AuthContext', () => ({
 const renderHeader = () => {
   return render(
     <OptimizedConsultationProvider>
-      <Header />
+      <Header 
+        onContact={() => {}}
+        onPatientPortal={() => {}}
+        onHome={() => {}}
+      />
     </OptimizedConsultationProvider>
   );
 };

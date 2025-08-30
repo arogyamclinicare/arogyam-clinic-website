@@ -109,7 +109,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
   // Validate booking data
   const validateBookingData = (): boolean => {
     try {
-      console.log('🔍 Validation - Current booking data:', bookingData);
+      // Validation logging removed for production
       
       // Prepare data for validation
       const dataToValidate = {
@@ -125,7 +125,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
         treatment_type: bookingData.treatmentType
       };
 
-      console.log('🔍 Validation - Data to validate:', dataToValidate);
+              // Data validation logging removed for production
 
       // Validate using Zod schema
       const result = consultationBookingSchema.parse(dataToValidate);
@@ -186,7 +186,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
         // Prepare data for submission
         const consultationData = {
           name: formData.name.trim(),
-          email: formData.email.toLowerCase().trim(),
+          email: formData.email.trim() || 'no email provided', // Default for database constraint
           phone: formData.phone.replace(/\s/g, ''),
           age: parseInt(formData.age),
           gender: formData.gender,
@@ -405,21 +405,20 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Email *</label>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Email</label>
                   <input
                     type="email"
-                    required
                     value={bookingData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     className={`w-full px-4 py-4 text-base border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 touch-manipulation ${
                       validationErrors.email ? 'border-red-500 focus:ring-red-500' : 'border-neutral-300'
                     }`}
-                    placeholder="your.email@example.com"
+                                          placeholder="your.email@example.com"
                     aria-describedby="email-help email-error"
                     autoComplete="email"
                     inputMode="email"
                   />
-                  <div id="email-help" className="sr-only">Enter a valid email address for consultation confirmation</div>
+
                   {validationErrors.email && (
                     <div id="email-error" className="text-red-600 text-sm mt-1 flex items-center">
                       <AlertCircle className="w-4 h-4 mr-1" />

@@ -12,9 +12,9 @@ export const consultationBaseSchema = z.object({
     .regex(nameRegex, 'Name can only contain letters and spaces'),
   
   email: z.string()
-    .email('Please enter a valid email address')
-    .regex(emailRegex, 'Invalid email format')
-    .transform(val => val.toLowerCase().trim()),
+    .min(0, 'Email cannot be negative')
+    .transform(val => val.toLowerCase().trim())
+    .refine(val => val === '' || emailRegex.test(val), 'Please enter a valid email address or leave empty'),
   
   phone: z.string()
     .min(10, 'Phone number must be at least 10 digits')
@@ -39,10 +39,16 @@ export const consultationBaseSchema = z.object({
   preferred_date: z.string()
     .min(1, 'Please select a preferred date')
     .refine(date => {
-      const selectedDate = new Date(date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return selectedDate >= today;
+      try {
+        const selectedDate = new Date(date + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Allow today and future dates
+        return selectedDate >= today;
+      } catch (error) {
+        return false;
+      }
     }, 'Preferred date must be today or in the future'),
   
   preferred_time: z.string()

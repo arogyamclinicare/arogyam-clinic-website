@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AccessibleInput, AccessibleTextarea, AccessibleSelect, AccessibleButton } from '../AccessibleForm';
 
@@ -99,7 +99,8 @@ describe('AccessibleSelect', () => {
     ];
     
     render(<AccessibleSelect label="Test Select" options={optionsWithDisabled} />);
-    const select = screen.getByLabelText('Test Select');
+    const selectElement = screen.getByLabelText('Test Select');
+    expect(selectElement).toBeInTheDocument();
     const option2 = screen.getByText('Option 2');
     
     expect(option2).toHaveAttribute('disabled');
