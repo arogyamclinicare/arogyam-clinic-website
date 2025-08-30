@@ -16,10 +16,58 @@ export class PasswordSecurity {
   }
 
   /**
-   * Verify password against hash
+   * Verify a password against a stored hash
+   * @param password - Plain text password to verify
+   * @param hash - Stored password hash
+   * @returns Promise<boolean> - True if password matches
    */
   static async verifyPassword(password: string, hash: string): Promise<boolean> {
-    return await bcrypt.compare(password, hash);
+    try {
+      // For browser compatibility, we'll use a simple hash comparison
+      // In production, this should use proper bcrypt verification on the server
+      const inputHash = await this.hashPassword(password);
+      return inputHash === hash;
+    } catch (error) {
+      console.error('Password verification error:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Generate a secure password hash for storage
+   * @param password - Plain text password
+   * @returns Promise<string> - Secure hash for storage
+   */
+  static async generateSecureHash(password: string): Promise<string> {
+    try {
+      // In production, this should use bcrypt with 12+ salt rounds
+      // For now, we'll use a more secure hash method
+      const salt = randomHex(16);
+      const hash = await this.hashPassword(password + salt);
+      return `${salt}:${hash}`;
+    } catch (error) {
+      console.error('Hash generation error:', error);
+      throw new Error('Failed to generate secure hash');
+    }
+  }
+
+  /**
+   * Verify password against secure hash
+   * @param password - Plain text password
+   * @param secureHash - Stored secure hash (salt:hash format)
+   * @returns Promise<boolean> - True if password matches
+   */
+  static async verifySecureHash(password: string, secureHash: string): Promise<boolean> {
+    try {
+      const [salt, hash] = secureHash.split(':');
+      if (!salt || !hash) return false;
+      
+      const inputHash = await this.hashPassword(password + salt);
+      return inputHash === hash;
+    } catch (error) {
+      console.error('Secure hash verification error:', error);
+      return false;
+    }
   }
 
   /**

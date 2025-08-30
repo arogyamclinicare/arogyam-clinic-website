@@ -9,7 +9,7 @@ import { SupabaseProvider } from './components/context/SupabaseContext';
 import { ConsultationBooking } from './components/modals/ConsultationBooking';
 
 import { SimpleRouter } from './components/SimpleRouter';
-import { ErrorBoundary } from './components/error-handling/ErrorBoundary';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 /**
  * Main App component with simple admin authentication

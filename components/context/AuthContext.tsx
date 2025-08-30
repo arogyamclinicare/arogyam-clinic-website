@@ -4,7 +4,7 @@ import {
   CSRFProtection, 
   RateLimiting, 
   SessionManager,
-  InputSanitization 
+  InputSanitization
 } from '../../lib/security/auth-utils';
 import { SECURITY_CONFIG } from '../../lib/security/config';
 import { 
