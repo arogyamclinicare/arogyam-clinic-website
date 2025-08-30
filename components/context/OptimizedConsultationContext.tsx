@@ -5,6 +5,9 @@
 
 import React, { createContext, useContext, useCallback, useMemo, useReducer } from 'react';
 import { ConsultationContextState } from '../types/consultation';
+import { createLogger } from '../../lib/utils/logger';
+
+const logger = createLogger('OptimizedConsultationContext');
 
 // State management with useReducer for better performance
 interface ConsultationState {
@@ -56,24 +59,24 @@ export function OptimizedConsultationProvider({ children }: ConsultationProvider
   // Memoized callback functions to prevent unnecessary re-renders
   const openBooking = useCallback((treatmentType: string = 'General Consultation') => {
     try {
-      console.log('🔵 openBooking called with treatmentType:', treatmentType);
+      logger.debug('🔵 openBooking called with treatmentType:', treatmentType);
       document.body.style.overflow = 'hidden';
       dispatch({ type: 'OPEN_BOOKING', payload: treatmentType });
-      console.log('✅ Booking modal opened successfully');
+      logger.info('✅ Booking modal opened successfully');
     } catch (error) {
-      console.error('❌ Error in openBooking:', error);
+      logger.error('❌ Error in openBooking:', error);
     }
   }, []);
 
   const closeBooking = useCallback(() => {
     try {
-      console.log('🔵 closeBooking called');
+      logger.debug('🔵 closeBooking called');
       // Restore body scroll
       document.body.style.overflow = 'unset';
       dispatch({ type: 'CLOSE_BOOKING' });
-      console.log('✅ Booking modal closed successfully');
+      logger.info('✅ Booking modal closed successfully');
     } catch (error) {
-      console.error('❌ Error in closeBooking:', error);
+      logger.error('❌ Error in closeBooking:', error);
     }
   }, []);
 

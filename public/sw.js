@@ -2,6 +2,18 @@
 // Version: 1.0.0
 // Purpose: Caching, offline support, and performance optimization
 
+// Simple logger for service worker
+const logger = {
+  info: (msg, ...args) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[SW] ${msg}`, ...args);
+    }
+  },
+  error: (msg, ...args) => {
+    console.error(`[SW] ${msg}`, ...args);
+  }
+};
+
 const CACHE_NAME = 'arogyam-clinic-v1.0.0';
 const STATIC_CACHE = 'arogyam-static-v1.0.0';
 const DYNAMIC_CACHE = 'arogyam-dynamic-v1.0.0';
@@ -35,11 +47,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     Promise.all([
       caches.open(STATIC_CACHE).then(cache => {
-        console.log('Service Worker: Caching static files');
+        logger.info('Service Worker: Caching static files');
         return cache.addAll(STATIC_FILES);
       }),
       caches.open('critical-cache').then(cache => {
-        console.log('Service Worker: Caching critical files');
+        logger.info('Service Worker: Caching critical files');
         return cache.addAll(CRITICAL_FILES);
       })
     ])
@@ -56,17 +68,17 @@ self.addEventListener('activate', (event) => {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-              console.log('Service Worker: Deleting old cache', cacheName);
-              return caches.delete(cacheName);
-            }
+                     if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+           logger.info('Service Worker: Deleting old cache', cacheName);
+           return caches.delete(cacheName);
+         }
           })
         );
       })
-      .then(() => {
-        console.log('Service Worker: Activated and ready');
-        return self.clients.claim();
-      })
+             .then(() => {
+         logger.info('Service Worker: Activated and ready');
+         return self.clients.claim();
+       })
   );
 });
 
@@ -215,15 +227,15 @@ self.addEventListener('sync', (event) => {
 // Background sync function
 async function doBackgroundSync() {
   try {
-    // Sync offline data when connection is restored
-    console.log('Service Worker: Background sync started');
+         // Sync offline data when connection is restored
+     logger.info('Service Worker: Background sync started');
     
     // You can implement offline data sync here
     // For example, sync consultation bookings made offline
     
-  } catch (error) {
-    console.error('Service Worker: Background sync failed', error);
-  }
+     } catch (error) {
+     logger.error('Service Worker: Background sync failed', error);
+   }
 }
 
 // Push notification handling

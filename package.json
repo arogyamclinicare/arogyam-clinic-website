@@ -27,7 +27,9 @@
     "security:audit": "npm audit && npm audit fix",
     "performance:test": "npm run build:prod && lighthouse dist/index.html --output html --output-path ./lighthouse-report.html",
     "optimize:images": "node scripts/optimize-images.cjs",
-    "lighthouse": "lighthouse https://your-domain.vercel.app --output html --output-path ./lighthouse-report.html"
+    "lighthouse": "lighthouse https://your-domain.vercel.app --output html --output-path ./lighthouse-report.html",
+    "load:test": "node scripts/load-test.js",
+    "load:test:local": "node scripts/load-test.js http://localhost:3000"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
