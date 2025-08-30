@@ -1,11 +1,9 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+import { JWTUtils as BrowserJWTUtils } from './jwt-browser';
+import { randomHex } from './crypto-browser';
 
 // Security configuration
 const SALT_ROUNDS = 12;
-const JWT_EXPIRY = '30m'; // 30 minutes
-const JWT_REFRESH_EXPIRY = '7d'; // 7 days for refresh tokens
 const CSRF_TOKEN_EXPIRY = 60 * 60 * 1000; // 1 hour
 
 // Password security utilities
@@ -82,66 +80,55 @@ export class PasswordSecurity {
   }
 }
 
-// JWT token utilities
+// JWT token utilities (using browser-compatible implementation)
 export class JWTUtils {
-  private static readonly JWT_SECRET = import.meta.env.VITE_JWT_SECRET || 'fallback-secret-change-in-production';
-  private static readonly REFRESH_SECRET = import.meta.env.VITE_JWT_REFRESH_SECRET || 'fallback-refresh-secret-change-in-production';
-
   /**
    * Generate JWT access token
    */
   static generateAccessToken(payload: any): string {
-    return jwt.sign(payload, this.JWT_SECRET, { 
-      expiresIn: JWT_EXPIRY,
-      issuer: 'arogyam-clinic',
-      audience: 'arogyam-users'
-    });
+    return BrowserJWTUtils.generateAccessToken(payload);
   }
 
   /**
    * Generate JWT refresh token
    */
   static generateRefreshToken(payload: any): string {
-    return jwt.sign(payload, this.REFRESH_SECRET, { 
-      expiresIn: JWT_REFRESH_EXPIRY,
-      issuer: 'arogyam-clinic',
-      audience: 'arogyam-users'
-    });
+    return BrowserJWTUtils.generateRefreshToken(payload);
   }
 
   /**
    * Verify JWT access token
    */
   static verifyAccessToken(token: string): any {
-    try {
-      return jwt.verify(token, this.JWT_SECRET, {
-        issuer: 'arogyam-clinic',
-        audience: 'arogyam-users'
-      });
-    } catch (error) {
-      throw new Error('Invalid or expired access token');
-    }
+    return BrowserJWTUtils.verifyAccessToken(token);
   }
 
   /**
    * Verify JWT refresh token
    */
   static verifyRefreshToken(token: string): any {
-    try {
-      return jwt.verify(token, this.REFRESH_SECRET, {
-        issuer: 'arogyam-clinic',
-        audience: 'arogyam-users'
-      });
-    } catch (error) {
-      throw new Error('Invalid or expired refresh token');
-    }
+    return BrowserJWTUtils.verifyRefreshToken(token);
   }
 
   /**
    * Decode JWT token without verification (for debugging)
    */
   static decodeToken(token: string): any {
-    return jwt.decode(token);
+    return BrowserJWTUtils.decodeToken(token);
+  }
+
+  /**
+   * Check if token is expired
+   */
+  static isTokenExpired(token: string): boolean {
+    return BrowserJWTUtils.isTokenExpired(token);
+  }
+
+  /**
+   * Get time until token expires
+   */
+  static getTimeUntilExpiration(token: string): number {
+    return BrowserJWTUtils.getTimeUntilExpiration(token);
   }
 }
 
@@ -151,7 +138,7 @@ export class CSRFProtection {
    * Generate CSRF token
    */
   static generateToken(): string {
-    return crypto.randomBytes(32).toString('hex');
+    return randomHex(32);
   }
 
   /**
@@ -358,9 +345,15 @@ export class SessionManager {
       const refreshToken = this.getRefreshToken();
       if (!refreshToken) return false;
 
+      // Check if refresh token is expired
+      if (JWTUtils.isTokenExpired(refreshToken)) {
+        this.clearSession();
+        return false;
+      }
+
       // Here you would typically call your backend to refresh the token
-      // For now, we'll just return false to indicate refresh is needed
-      return false;
+      // For now, we'll just return true if token is valid
+      return true;
     } catch (error) {
       console.error('Error refreshing session:', error);
       return false;

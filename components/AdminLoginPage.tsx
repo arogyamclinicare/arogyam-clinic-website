@@ -192,16 +192,11 @@ export function AdminLoginPage() {
             </button>
           </form>
 
-          {/* Security Features Info */}
+          {/* Admin Access Info */}
           <div className="mt-6 p-4 bg-blue-500/20 rounded-lg border border-blue-400/30">
-            <p className="text-sm text-blue-200 mb-2 font-semibold">🔐 Enhanced Security Features</p>
-            <div className="space-y-1 text-xs text-blue-300">
-              <p>✅ CSRF Protection Active</p>
-              <p>✅ Rate Limiting Enabled</p>
-              <p>✅ Account Lockout Protection</p>
-              <p>✅ Secure Session Management</p>
-              <p>✅ Input Sanitization</p>
-            </div>
+            <p className="text-sm text-blue-200 mb-2 font-semibold">🔐 Admin Access Required</p>
+            <p className="text-xs text-blue-300 mb-1">Contact your system administrator for login credentials</p>
+            <p className="text-xs text-blue-400 mt-2">✅ Secure authentication system active</p>
           </div>
         </div>
 
