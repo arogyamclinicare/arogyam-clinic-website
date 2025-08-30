@@ -75,6 +75,7 @@ export function AboutUs() {
                   <img
                     src="/images/dr-kajal-kumari.jpg"
                     alt="Dr. Kajal Kumari - BHMS"
+                    loading="lazy"
                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 via-transparent to-transparent"></div>

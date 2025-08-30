@@ -25,8 +25,12 @@ const STATIC_FILES = [
   '/favicon.svg',
   '/apple-touch-icon.png',
   '/manifest.json',
-  '/images/dr-kajal-kumari.jpg',
   '/images/medical-consultation-room.jpg'
+];
+
+// Images to cache on demand (not immediately)
+const IMAGE_FILES = [
+  '/images/dr-kajal-kumari.jpg'
 ];
 
 // Critical CSS and JS files
@@ -124,6 +128,12 @@ async function handleSameOriginRequest(request) {
     if (networkResponse.ok) {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, networkResponse.clone());
+      
+      // Special handling for doctor's image - cache it for future use
+      if (request.url.includes('dr-kajal-kumari.jpg')) {
+        const imageCache = await caches.open(STATIC_CACHE);
+        imageCache.put(request, networkResponse.clone());
+      }
     }
     
     return networkResponse;

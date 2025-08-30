@@ -14,8 +14,13 @@
     <link rel="dns-prefetch" href="//www.google-analytics.com" />
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="/images/dr-kajal-kumari.jpg" as="image" />
-    <link rel="preload" href="/images/medical-consultation-room.jpg" as="image" />
+    <!-- Only preload the hero image that's immediately visible above the fold -->
+    <link rel="preload" href="/images/medical-consultation-room.jpg" as="image" type="image/jpeg" />
+    
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="//www.google-analytics.com" />
     
     <!-- Core Meta Tags -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />

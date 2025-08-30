@@ -87,6 +87,7 @@ export function HeroSection() {
               <img 
                 src="/images/medical-consultation-room.jpg" 
                 alt="Professional Medical Consultation Room - Dr. Kajal Kumari's Clinic"
+                fetchPriority="high"
                 className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
               />
               {/* Professional Overlay */}
