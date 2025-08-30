@@ -1,0 +1,386 @@
+/* Accessibility CSS for WCAG 2.1 AA Compliance */
+
+/* 1. Focus Management */
+.focus-visible {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  border-radius: 4px !important;
+}
+
+/* High contrast focus for better visibility */
+@media (prefers-contrast: high) {
+  .focus-visible {
+    outline: 3px solid #000000 !important;
+    outline-offset: 3px !important;
+  }
+}
+
+/* 2. Keyboard Navigation Indicator */
+.keyboard-navigation .focus-visible {
+  outline: 3px solid #dc2626 !important;
+  outline-offset: 3px !important;
+}
+
+/* 3. Skip Links */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #3b82f6;
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* 4. Screen Reader Only Content */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* 5. Focus Indicators for Interactive Elements */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+}
+
+/* 6. High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  /* Increase contrast for better visibility */
+  .text-gray-600 {
+    color: #000000 !important;
+  }
+  
+  .text-gray-500 {
+    color: #000000 !important;
+  }
+  
+  .border-gray-300 {
+    border-color: #000000 !important;
+  }
+  
+  /* Ensure buttons have sufficient contrast */
+  .bg-blue-600 {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+  }
+  
+  .bg-gray-200 {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+  }
+}
+
+/* 7. Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable hover effects */
+  .hover\:bg-blue-700:hover,
+  .hover\:bg-gray-300:hover,
+  .hover\:bg-red-700:hover,
+  .hover\:bg-gray-100:hover {
+    background-color: inherit !important;
+  }
+  
+  /* Disable transform effects */
+  .hover\:scale-105:hover,
+  .hover\:scale-110:hover {
+    transform: none !important;
+  }
+}
+
+/* 8. Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  /* Ensure sufficient contrast in dark mode */
+  .text-gray-700 {
+    color: #ffffff !important;
+  }
+  
+  .text-gray-600 {
+    color: #e5e7eb !important;
+  }
+  
+  .text-gray-500 {
+    color: #d1d5db !important;
+  }
+  
+  .border-gray-300 {
+    border-color: #4b5563 !important;
+  }
+  
+  .bg-gray-50 {
+    background-color: #1f2937 !important;
+  }
+}
+
+/* 9. Touch Target Sizes */
+/* Ensure minimum 44x44px touch targets for mobile */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+a,
+[role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* 10. Form Accessibility */
+/* Error states */
+.input-error {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 1px #dc2626 !important;
+}
+
+.input-error:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 2px #dc2626 !important;
+}
+
+/* Success states */
+.input-success {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 1px #059669 !important;
+}
+
+/* 11. Live Regions */
+[aria-live="polite"] {
+  position: relative;
+}
+
+[aria-live="assertive"] {
+  position: relative;
+}
+
+/* 12. Loading States */
+[aria-busy="true"] {
+  cursor: wait;
+}
+
+[aria-busy="true"] * {
+  pointer-events: none;
+}
+
+/* 13. Disabled States */
+[aria-disabled="true"],
+[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 14. Required Field Indicators */
+.required-indicator {
+  color: #dc2626;
+  margin-left: 4px;
+}
+
+/* 15. Error Message Styling */
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 4px;
+  display: block;
+}
+
+/* 16. Helper Text Styling */
+.helper-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-top: 4px;
+  display: block;
+}
+
+/* 17. Focus Ring for High Contrast */
+@media (prefers-contrast: high) {
+  .focus-visible {
+    outline: 3px solid #ffffff !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 3px #000000 !important;
+  }
+}
+
+/* 18. Print Styles for Accessibility */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Ensure sufficient contrast in print */
+  * {
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
+  
+  /* Show focus indicators in print */
+  .focus-visible {
+    outline: 2px solid #000000 !important;
+  }
+}
+
+/* 19. Large Text Support */
+@media (min-width: 768px) {
+  /* Increase font sizes for better readability */
+  .text-sm {
+    font-size: 1rem !important;
+  }
+  
+  .text-base {
+    font-size: 1.125rem !important;
+  }
+  
+  .text-lg {
+    font-size: 1.25rem !important;
+  }
+}
+
+/* 20. Spacing for Touch Devices */
+@media (pointer: coarse) {
+  /* Increase spacing between interactive elements */
+  button + button,
+  input + input,
+  a + a {
+    margin-left: 16px;
+  }
+  
+  /* Increase padding for better touch targets */
+  button,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"] {
+    padding: 12px 24px;
+  }
+}
+
+/* 21. High DPI Display Support */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Ensure crisp focus indicators on high DPI displays */
+  .focus-visible {
+    outline-width: 1px !important;
+  }
+}
+
+/* 22. Accessibility Utilities */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.visually-hidden-focusable:not(:focus):not(:focus-within) {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* 23. Focus Management for Modals */
+.modal-focus-trap {
+  position: relative;
+}
+
+.modal-focus-trap:focus {
+  outline: none;
+}
+
+/* 24. Announcement Regions */
+.announcement-region {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* 25. Loading Indicators */
+.loading-indicator {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f4f6;
+  border-radius: 50%;
+  border-top-color: #3b82f6;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 26. Error Boundaries */
+.error-boundary {
+  border: 2px solid #dc2626;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  background-color: #fef2f2;
+}
+
+/* 27. Success Messages */
+.success-message {
+  color: #059669;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin: 8px 0;
+}
+
+/* 28. Warning Messages */
+.warning-message {
+  color: #d97706;
+  background-color: #fffbeb;
+  border: 1px solid #fed7aa;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin: 8px 0;
+}
+
+/* 29. Information Messages */
+.info-message {
+  color: #2563eb;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin: 8px 0;
+}
