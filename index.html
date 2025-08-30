@@ -6,6 +6,16 @@
     <!-- Performance Critical: Preload key resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://mvmbbpjtyrjmoccoajmt.supabase.co" />
+    
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="//www.google-analytics.com" />
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/images/dr-kajal-kumari.jpg" as="image" />
+    <link rel="preload" href="/images/medical-consultation-room.jpg" as="image" />
     
     <!-- Core Meta Tags -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -14,6 +24,7 @@
     
     <!-- Critical CSS for instant display -->
     <style>
+      /* Critical CSS - Above the fold styles */
       html, body, #root {
         background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #1e3a8a 100%) !important;
         margin: 0 !important;
@@ -21,6 +32,24 @@
       }
       body { overflow-x: hidden !important; }
       #root { min-height: 100vh !important; }
+      
+      /* Loading skeleton for instant perceived performance */
+      .loading-skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+      }
+      @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+      
+      /* Critical font loading */
+      .font-display { font-display: swap; }
+      
+      /* Performance optimizations */
+      * { box-sizing: border-box; }
+      img { max-width: 100%; height: auto; }
     </style>
     
     <!-- Enhanced SEO Meta Tags -->

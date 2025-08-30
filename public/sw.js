@@ -12,7 +12,15 @@ const STATIC_FILES = [
   '/index.html',
   '/favicon.svg',
   '/apple-touch-icon.png',
-  '/manifest.json'
+  '/manifest.json',
+  '/images/dr-kajal-kumari.jpg',
+  '/images/medical-consultation-room.jpg'
+];
+
+// Critical CSS and JS files
+const CRITICAL_FILES = [
+  '/assets/index.css',
+  '/assets/index.js'
 ];
 
 // API endpoints to cache
@@ -25,14 +33,16 @@ const API_CACHE = [
 // Install event - cache static files
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then((cache) => {
+    Promise.all([
+      caches.open(STATIC_CACHE).then(cache => {
         console.log('Service Worker: Caching static files');
         return cache.addAll(STATIC_FILES);
+      }),
+      caches.open('critical-cache').then(cache => {
+        console.log('Service Worker: Caching critical files');
+        return cache.addAll(CRITICAL_FILES);
       })
-      .catch((error) => {
-        console.error('Service Worker: Error caching static files', error);
-      })
+    ])
   );
   
   // Activate immediately

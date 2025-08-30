@@ -1,0 +1,28 @@
+{
+  "original": {
+    "dr-kajal-kumari.jpg": 64097,
+    "medical-consultation-room.jpg": 244782
+  },
+  "optimized": {
+    "dr-kajal-kumari-1280w.webp": 20544,
+    "dr-kajal-kumari-1920w.webp": 20544,
+    "dr-kajal-kumari-640w.webp": 17196,
+    "dr-kajal-kumari.webp": 20544,
+    "medical-consultation-room-1280w.webp": 35442,
+    "medical-consultation-room-1920w.webp": 53462,
+    "medical-consultation-room-640w.webp": 16890,
+    "medical-consultation-room.webp": 91548
+  },
+  "savings": {
+    "dr-kajal-kumari.jpg": {
+      "original": 64097,
+      "optimized": 20544,
+      "savings": "67.9%"
+    },
+    "medical-consultation-room.jpg": {
+      "original": 244782,
+      "optimized": 91548,
+      "savings": "62.6%"
+    }
+  }
+}
