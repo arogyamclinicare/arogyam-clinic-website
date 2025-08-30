@@ -1,35 +1,42 @@
-// Service Worker for Arogyam Clinic - Progressive Web App
-// Version 1.0.0
+// Arogyam Clinic Service Worker
+// Version: 1.0.0
+// Purpose: Caching, offline support, and performance optimization
 
-const CACHE_NAME = 'arogyam-clinic-v1';
-const STATIC_CACHE = 'arogyam-static-v1';
-const DYNAMIC_CACHE = 'arogyam-dynamic-v1';
+const CACHE_NAME = 'arogyam-clinic-v1.0.0';
+const STATIC_CACHE = 'arogyam-static-v1.0.0';
+const DYNAMIC_CACHE = 'arogyam-dynamic-v1.0.0';
 
-// Assets to cache immediately
-const STATIC_ASSETS = [
+// Files to cache immediately
+const STATIC_FILES = [
   '/',
   '/index.html',
   '/favicon.svg',
-  '/images/dr-kajal-kumari.jpg',
-  // Add other critical assets here
+  '/apple-touch-icon.png',
+  '/manifest.json'
 ];
 
-// Install event - cache static assets
+// API endpoints to cache
+const API_CACHE = [
+  '/api/consultations',
+  '/api/treatments',
+  '/api/contact'
+];
+
+// Install event - cache static files
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
-        console.log('[SW] Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => {
-        console.log('[SW] Static assets cached successfully');
-        return self.skipWaiting();
+        console.log('Service Worker: Caching static files');
+        return cache.addAll(STATIC_FILES);
       })
       .catch((error) => {
-        console.error('[SW] Failed to cache static assets:', error);
+        console.error('Service Worker: Error caching static files', error);
       })
   );
+  
+  // Activate immediately
+  self.skipWaiting();
 });
 
 // Activate event - clean up old caches
@@ -40,20 +47,20 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
             if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-              console.log('[SW] Deleting old cache:', cacheName);
+              console.log('Service Worker: Deleting old cache', cacheName);
               return caches.delete(cacheName);
             }
           })
         );
       })
       .then(() => {
-        console.log('[SW] Service worker activated');
+        console.log('Service Worker: Activated and ready');
         return self.clients.claim();
       })
   );
 });
 
-// Fetch event - implement caching strategies
+// Fetch event - serve from cache or network
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -63,82 +70,149 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip external requests (except for images)
-  if (url.origin !== location.origin && !request.url.includes('images.unsplash.com')) {
-    return;
+  // Handle different types of requests
+  if (url.origin === self.location.origin) {
+    // Same origin requests
+    event.respondWith(handleSameOriginRequest(request));
+  } else if (url.origin.includes('supabase.co')) {
+    // Supabase API requests
+    event.respondWith(handleSupabaseRequest(request));
+  } else if (url.origin.includes('fonts.googleapis.com') || url.origin.includes('fonts.gstatic.com')) {
+    // Google Fonts
+    event.respondWith(handleFontRequest(request));
+  } else {
+    // Other external requests
+    event.respondWith(handleExternalRequest(request));
   }
-
-  event.respondWith(
-    caches.match(request)
-      .then((cachedResponse) => {
-        // Return cached version if available
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        // Fetch from network
-        return fetch(request)
-          .then((networkResponse) => {
-            // Don't cache non-successful responses
-            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-              return networkResponse;
-            }
-
-            // Clone the response for caching
-            const responseToCache = networkResponse.clone();
-
-            // Cache strategy based on request type
-            if (request.url.includes('images') || request.url.includes('fonts')) {
-              // Cache images and fonts for longer periods
-              caches.open(STATIC_CACHE)
-                .then((cache) => {
-                  cache.put(request, responseToCache);
-                });
-            } else {
-              // Cache other resources dynamically
-              caches.open(DYNAMIC_CACHE)
-                .then((cache) => {
-                  cache.put(request, responseToCache);
-                });
-            }
-
-            return networkResponse;
-          })
-          .catch(() => {
-            // Offline fallback
-            if (request.destination === 'document') {
-              return caches.match('/index.html');
-            }
-            
-            // Return a fallback for images
-            if (request.destination === 'image') {
-              return new Response(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="100%" height="100%" fill="#f3f4f6"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af">Image unavailable</text></svg>',
-                { headers: { 'Content-Type': 'image/svg+xml' } }
-              );
-            }
-          });
-      })
-  );
 });
+
+// Handle same origin requests
+async function handleSameOriginRequest(request) {
+  try {
+    // Try cache first
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    // Try network
+    const networkResponse = await fetch(request);
+    
+    // Cache successful responses
+    if (networkResponse.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    // Return cached version if available
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    // Return offline page
+    return caches.match('/offline.html');
+  }
+}
+
+// Handle Supabase requests
+async function handleSupabaseRequest(request) {
+  try {
+    // Try network first for real-time data
+    const networkResponse = await fetch(request);
+    
+    // Cache successful responses
+    if (networkResponse.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    // Try cache as fallback
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    throw error;
+  }
+}
+
+// Handle font requests
+async function handleFontRequest(request) {
+  try {
+    // Try cache first for fonts
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    // Try network
+    const networkResponse = await fetch(request);
+    
+    // Cache successful responses
+    if (networkResponse.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    // Return cached version if available
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    throw error;
+  }
+}
+
+// Handle external requests
+async function handleExternalRequest(request) {
+  try {
+    // Try network first
+    const networkResponse = await fetch(request);
+    
+    // Cache successful responses
+    if (networkResponse.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    // Try cache as fallback
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    throw error;
+  }
+}
 
 // Background sync for offline actions
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'contact-form') {
-    event.waitUntil(
-      // Handle offline form submissions
-      syncContactForm()
-    );
+  if (event.tag === 'background-sync') {
+    event.waitUntil(doBackgroundSync());
   }
 });
 
-// Handle contact form sync
-async function syncContactForm() {
+// Background sync function
+async function doBackgroundSync() {
   try {
-    // Implement contact form sync logic here
-    console.log('[SW] Syncing contact form data');
+    // Sync offline data when connection is restored
+    console.log('Service Worker: Background sync started');
+    
+    // You can implement offline data sync here
+    // For example, sync consultation bookings made offline
+    
   } catch (error) {
-    console.error('[SW] Contact form sync failed:', error);
+    console.error('Service Worker: Background sync failed', error);
   }
 }
 
@@ -150,9 +224,10 @@ self.addEventListener('push', (event) => {
       body: data.body,
       icon: '/favicon.svg',
       badge: '/favicon.svg',
-      vibrate: [200, 100, 200],
+      vibrate: [100, 50, 100],
       data: {
-        url: data.url || '/'
+        dateOfArrival: Date.now(),
+        primaryKey: 1
       }
     };
 
@@ -162,11 +237,22 @@ self.addEventListener('push', (event) => {
   }
 });
 
-// Handle notification clicks
+// Notification click handling
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
+  
   event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/')
+    clients.openWindow('/')
   );
+});
+
+// Message handling from main thread
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({ version: CACHE_NAME });
+  }
 });
