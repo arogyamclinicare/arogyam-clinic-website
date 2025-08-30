@@ -25,6 +25,7 @@ class Logger {
 
   constructor(context: string = 'App') {
     this.isProduction = process.env.NODE_ENV === 'production';
+    // In production, only show ERROR and WARN, in development show everything
     this.logLevel = this.isProduction ? LogLevel.WARN : LogLevel.DEBUG;
     this.context = context;
   }
@@ -133,6 +134,11 @@ class Logger {
     if (this.shouldLog(LogLevel.INFO)) {
       this.info(`Performance: ${name}`, { duration: `${duration.toFixed(2)}ms`, ...data });
     }
+  }
+
+  // Check if we're in production mode
+  isProductionMode(): boolean {
+    return this.isProduction;
   }
 
   // Security logging

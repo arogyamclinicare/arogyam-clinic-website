@@ -56,6 +56,22 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     try {
       logger.info('Adding consultation', consultationData)
       
+      // Check for potential duplicates before inserting
+      const { data: existingData, error: checkError } = await supabase
+        .from('consultations')
+        .select('id, name, phone, created_at')
+        .eq('name', consultationData.name)
+        .eq('phone', consultationData.phone)
+        .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString()) // Last 5 minutes
+        .limit(1)
+
+      if (checkError) {
+        logger.warn('Could not check for duplicates', checkError)
+      } else if (existingData && existingData.length > 0) {
+        logger.warn('Potential duplicate consultation detected', existingData[0])
+        return { success: false, error: 'A similar consultation was recently submitted. Please wait before submitting again.' }
+      }
+      
       const { data, error: insertError } = await supabase
         .from('consultations')
         .insert([consultationData])
@@ -206,11 +222,11 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
               logger.debug('Real-time update received', payload)
               
               if (payload.eventType === 'INSERT') {
-                logger.info('New consultation added via real-time', payload.new)
+                logger.debug('New consultation added via real-time', payload.new)
                 setConsultations(prev => {
                   const exists = prev.find(c => c.id === payload.new.id)
                   if (exists) {
-                    logger.warn('Consultation already exists, skipping duplicate')
+                    logger.debug('Consultation already exists, skipping duplicate')
                     return prev
                   }
                   return [payload.new as Consultation, ...prev]
@@ -241,14 +257,14 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             } else if (status === 'CHANNEL_ERROR') {
               // Only log error on first occurrence to reduce noise
               if (retryCount === 0) {
-                logger.warn('Real-time connection issue - attempting to reconnect')
+                logger.info('Real-time connection issue - attempting to reconnect')
               }
               setRealtimeStatus('error')
               handleReconnection()
             } else if (status === 'TIMED_OUT') {
               // Only log timeout on first occurrence
               if (retryCount === 0) {
-                logger.warn('Real-time connection timeout - attempting to reconnect')
+                logger.info('Real-time connection timeout - attempting to reconnect')
               }
               setRealtimeStatus('error')
               handleReconnection()
@@ -302,7 +318,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           }
         }, delay)
       } else if (retryCount >= maxRetries) {
-        logger.warn('Max retry attempts reached, falling back to periodic refresh')
+        logger.info('Max retry attempts reached, falling back to periodic refresh')
         setRealtimeStatus('failed')
       }
     }
@@ -323,12 +339,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (realtimeStatus !== 'connected') {
       const interval = setInterval(() => {
-        logger.info('Periodic refresh due to real-time issues')
+        logger.debug('Periodic refresh due to real-time issues')
         fetchConsultations()
       }, 30000) // 30 seconds
 
       return () => {
-        logger.info('Clearing periodic refresh interval')
+        logger.debug('Clearing periodic refresh interval')
         clearInterval(interval)
       }
     }
@@ -350,14 +366,14 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // Enhanced fallback: more frequent refresh when real-time is completely down
   useEffect(() => {
     if (realtimeStatus === 'failed') {
-      logger.warn('Real-time failed, setting up aggressive fallback refresh')
+      logger.info('Real-time failed, setting up aggressive fallback refresh')
       const interval = setInterval(() => {
-        logger.info('Aggressive fallback refresh every 15 seconds')
+        logger.debug('Aggressive fallback refresh every 15 seconds')
         fetchConsultations()
       }, 15000) // 15 seconds when real-time is completely down
 
       return () => {
-        logger.info('Clearing aggressive fallback interval')
+        logger.debug('Clearing aggressive fallback interval')
         clearInterval(interval)
       }
     }

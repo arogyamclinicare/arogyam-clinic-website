@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { useSupabase } from '../context/SupabaseContext';
 import { consultationBookingSchema, sanitizeInput, formatValidationErrors } from '../../lib/validation';
+import { debounceTrailing } from '../../lib/utils/debounce';
 import { 
   X, 
   Calendar, 
@@ -59,9 +60,9 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
   // Debug logging
   useEffect(() => {
     if (isOpen) {
-      console.log('🔵 ConsultationBooking: Modal opened with treatmentType:', treatmentType);
+      // Modal opened - could add analytics here if needed
     } else {
-      console.log('🔵 ConsultationBooking: Modal closed');
+      // Modal closed - cleanup
     }
   }, [isOpen, treatmentType]);
 
@@ -169,58 +170,61 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
     }
   };
 
+  // Debounced form submission to prevent duplicate submissions
+  const debouncedSubmit = useCallback(
+    debounceTrailing(async (formData: typeof bookingData) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Validate data before submission
+        if (!validateBookingData()) {
+          setError('Please fix the validation errors below');
+          return;
+        }
+
+        // Prepare data for submission
+        const consultationData = {
+          name: formData.name.trim(),
+          email: formData.email.toLowerCase().trim(),
+          phone: formData.phone.replace(/\s/g, ''),
+          age: parseInt(formData.age),
+          gender: formData.gender,
+          condition: formData.condition.trim() || null,
+          preferred_date: formData.preferredDate,
+          preferred_time: formData.preferredTime,
+          consultation_type: formData.consultationType,
+          treatment_type: formData.treatmentType.trim(),
+          status: 'pending'
+        };
+
+        const result = await addConsultation(consultationData);
+
+        if (result.success) {
+          setBookingId(result.data?.id || 'success');
+          setCurrentStep('confirmation');
+        } else {
+          setError(result.error || 'Failed to book consultation');
+        }
+      } catch (err: any) {
+        setError('An unexpected error occurred. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    }, 1000), // 1 second debounce
+    []
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevent default form submission
-    console.log('🚀 Form submission started');
-    console.log('📝 Current booking data:', bookingData);
     
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // Validate data before submission
-      console.log('🔍 Starting validation...');
-      if (!validateBookingData()) {
-        console.log('❌ Validation failed');
-        setError('Please fix the validation errors below');
-        return;
-      }
-      console.log('✅ Validation passed');
-
-      // Prepare data for submission
-      const consultationData = {
-        name: bookingData.name.trim(),
-        email: bookingData.email.toLowerCase().trim(),
-        phone: bookingData.phone.replace(/\s/g, ''),
-        age: parseInt(bookingData.age),
-        gender: bookingData.gender,
-        condition: bookingData.condition.trim() || null,
-        preferred_date: bookingData.preferredDate,
-        preferred_time: bookingData.preferredTime,
-        consultation_type: bookingData.consultationType,
-        treatment_type: bookingData.treatmentType.trim(),
-        status: 'pending'
-      };
-
-      console.log('📤 Submitting consultation data:', consultationData);
-
-      const result = await addConsultation(consultationData);
-      console.log('📥 Received result:', result);
-
-      if (result.success) {
-        setBookingId(result.data?.id || 'success');
-        setCurrentStep('confirmation');
-        console.log('✅ Consultation booked successfully:', result.data);
-      } else {
-        setError(result.error || 'Failed to book consultation');
-        console.error('❌ Consultation booking failed:', result.error);
-      }
-    } catch (err: any) {
-      console.error('💥 Unexpected error during booking:', err);
-      setError('An unexpected error occurred. Please try again.');
-    } finally {
-      setIsLoading(false);
+    // Prevent multiple submissions
+    if (isLoading) {
+      return;
     }
+
+    // Use debounced submission
+    debouncedSubmit(bookingData);
   };
 
   const handleBack = () => {
