@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase, Consultation, ConsultationInsert, ConsultationUpdate } from '../../lib/supabase'
+import { createLogger } from '../../lib/utils/logger'
 
 interface SupabaseContextType {
   consultations: Consultation[]
@@ -18,6 +19,7 @@ interface SupabaseContextType {
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined)
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
+  const logger = createLogger('SupabaseContext');
   const [consultations, setConsultations] = useState<Consultation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -35,14 +37,14 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         .order('created_at', { ascending: false })
 
       if (fetchError) {
-        console.error('Error fetching consultations:', fetchError)
+        logger.error('Error fetching consultations', fetchError)
         setError(fetchError.message)
         return
       }
 
       setConsultations(data || [])
     } catch (err) {
-      console.error('Unexpected error:', err)
+      logger.error('Unexpected error fetching consultations', err)
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -52,7 +54,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // Add new consultation
   const addConsultation = async (consultationData: ConsultationInsert) => {
     try {
-      console.log('🚀 Attempting to add consultation:', consultationData)
+      logger.info('Adding consultation', consultationData)
       
       const { data, error: insertError } = await supabase
         .from('consultations')
@@ -60,21 +62,21 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         .select()
         .single()
 
-      console.log('📊 Supabase response:', { data, error: insertError })
+      logger.debug('Supabase response', { data, error: insertError })
 
       if (insertError) {
-        console.error('❌ Error adding consultation:', insertError)
+        logger.error('Error adding consultation', insertError)
         return { success: false, error: insertError.message }
       }
 
-      console.log('✅ Consultation added successfully:', data)
+      logger.info('Consultation added successfully', data)
       
       // Update local state
       setConsultations(prev => [data, ...prev])
       
       return { success: true, data }
     } catch (err) {
-      console.error('💥 Unexpected error adding consultation:', err)
+      logger.error('Unexpected error adding consultation', err)
       return { success: false, error: 'An unexpected error occurred' }
     }
   }
@@ -88,7 +90,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         .eq('id', id)
 
       if (updateError) {
-        console.error('Error updating consultation status:', updateError)
+        logger.error('Error updating consultation status', updateError)
         return { success: false, error: updateError.message }
       }
 
@@ -101,7 +103,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
       return { success: true }
     } catch (err) {
-      console.error('Unexpected error updating consultation:', err)
+      logger.error('Unexpected error updating consultation status', err)
       return { success: false, error: 'An unexpected error occurred' }
     }
   }
@@ -115,7 +117,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         .eq('id', id)
 
       if (updateError) {
-        console.error('Error updating consultation:', updateError)
+        logger.error('Error updating consultation', updateError)
         return { success: false, error: updateError.message }
       }
 
@@ -128,7 +130,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
       return { success: true }
     } catch (err) {
-      console.error('Unexpected error updating consultation:', err)
+      logger.error('Unexpected error updating consultation', err)
       return { success: false, error: 'An unexpected error occurred' }
     }
   }
@@ -142,7 +144,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         .eq('id', id)
 
       if (deleteError) {
-        console.error('Error deleting consultation:', deleteError)
+        logger.error('Error deleting consultation', deleteError)
         return { success: false, error: deleteError.message }
       }
 
@@ -151,7 +153,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
       return { success: true }
     } catch (err) {
-      console.error('Unexpected error deleting consultation:', err)
+      logger.error('Unexpected error deleting consultation', err)
       return { success: false, error: 'An unexpected error occurred' }
     }
   }
@@ -163,7 +165,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   // Manual reconnection function
   const reconnectRealtime = () => {
-    console.log('🔄 Manual reconnection requested...')
+    logger.info('Manual reconnection requested')
     setRealtimeStatus('connecting')
     // Force a fresh fetch to ensure data is current
     fetchConsultations()
@@ -171,13 +173,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   // Load consultations on mount
   useEffect(() => {
-    console.log('🚀 Initial load of consultations...')
+    logger.info('Initial load of consultations')
     fetchConsultations()
   }, [])
 
   // Set up real-time subscription for live updates
   useEffect(() => {
-    console.log('🔌 Setting up real-time subscription...')
+    logger.info('Setting up real-time subscription')
     
     let isSubscribed = true
     let retryCount = 0
@@ -186,7 +188,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     
     const setupSubscription = async () => {
       try {
-        console.log(`🔄 Attempt ${retryCount + 1} to setup real-time subscription...`)
+        logger.debug(`Attempt ${retryCount + 1} to setup real-time subscription`)
         
         // Use the modern real-time subscription method
         const channel = supabase
@@ -201,27 +203,27 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             (payload) => {
               if (!isSubscribed) return
               
-              console.log('🔄 Real-time update received:', payload)
+              logger.debug('Real-time update received', payload)
               
               if (payload.eventType === 'INSERT') {
-                console.log('➕ New consultation added via real-time:', payload.new)
+                logger.info('New consultation added via real-time', payload.new)
                 setConsultations(prev => {
                   const exists = prev.find(c => c.id === payload.new.id)
                   if (exists) {
-                    console.log('⚠️ Consultation already exists, skipping duplicate')
+                    logger.warn('Consultation already exists, skipping duplicate')
                     return prev
                   }
                   return [payload.new as Consultation, ...prev]
                 })
               } else if (payload.eventType === 'UPDATE') {
-                console.log('✏️ Consultation updated via real-time:', payload.new)
+                logger.info('Consultation updated via real-time', payload.new)
                 setConsultations(prev =>
                   prev.map(consultation =>
                     consultation.id === payload.new.id ? payload.new as Consultation : consultation
                   )
                 )
               } else if (payload.eventType === 'DELETE') {
-                console.log('🗑️ Consultation deleted via real-time:', payload.old)
+                logger.info('Consultation deleted via real-time', payload.old)
                 setConsultations(prev =>
                   prev.filter(consultation => consultation.id !== payload.old.id)
                 )
@@ -231,27 +233,27 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           .subscribe((status) => {
             if (!isSubscribed) return
             
-            console.log('📡 Real-time subscription status:', status)
+            logger.debug('Real-time subscription status', status)
             if (status === 'SUBSCRIBED') {
-              console.log('✅ Real-time subscription active!')
+              logger.info('Real-time subscription active')
               setRealtimeStatus('connected')
               retryCount = 0 // Reset retry count on success
             } else if (status === 'CHANNEL_ERROR') {
               // Only log error on first occurrence to reduce noise
               if (retryCount === 0) {
-                console.log('⚠️ Real-time connection issue - attempting to reconnect...')
+                logger.warn('Real-time connection issue - attempting to reconnect')
               }
               setRealtimeStatus('error')
               handleReconnection()
             } else if (status === 'TIMED_OUT') {
               // Only log timeout on first occurrence
               if (retryCount === 0) {
-                console.log('⏰ Real-time connection timeout - attempting to reconnect...')
+                logger.warn('Real-time connection timeout - attempting to reconnect')
               }
               setRealtimeStatus('error')
               handleReconnection()
             } else if (status === 'CLOSED') {
-              console.log('🚪 Real-time connection closed')
+              logger.info('Real-time connection closed')
               setRealtimeStatus('disconnected')
               handleReconnection()
             }
@@ -262,7 +264,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
         // Cleanup subscription on unmount
         return () => {
-          console.log('🔌 Cleaning up real-time subscription...')
+          logger.info('Cleaning up real-time subscription')
           isSubscribed = false
           if (retryTimeout) {
             clearTimeout(retryTimeout)
@@ -273,12 +275,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
               channelRef.unsubscribe()
             }
           } catch (error) {
-            console.log('🔌 Channel cleanup error:', error)
+            logger.error('Channel cleanup error', error)
           }
         }
         
       } catch (error) {
-        console.error('❌ Error setting up real-time subscription:', error)
+        logger.error('Error setting up real-time subscription', error)
         setRealtimeStatus('error')
         handleReconnection()
         return () => {} // Return empty cleanup function
@@ -291,16 +293,16 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         // Use exponential backoff: 5s, 10s, 20s, 40s...
         const delay = Math.min(5000 * Math.pow(2, retryCount - 1), 60000) // Max 60 seconds
         
-        console.log(`🔄 Scheduling reconnection attempt ${retryCount}/${maxRetries} in ${delay/1000}s...`)
+        logger.info(`Scheduling reconnection attempt ${retryCount}/${maxRetries} in ${delay/1000}s`)
         
         retryTimeout = setTimeout(() => {
           if (isSubscribed) {
-            console.log(`🔄 Attempting reconnection ${retryCount}/${maxRetries}...`)
+            logger.info(`Attempting reconnection ${retryCount}/${maxRetries}`)
             setupSubscription()
           }
         }, delay)
       } else if (retryCount >= maxRetries) {
-        console.log('⚠️ Max retry attempts reached, falling back to periodic refresh')
+        logger.warn('Max retry attempts reached, falling back to periodic refresh')
         setRealtimeStatus('failed')
       }
     }
@@ -321,12 +323,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (realtimeStatus !== 'connected') {
       const interval = setInterval(() => {
-        console.log('🔄 Periodic refresh due to real-time issues...')
+        logger.info('Periodic refresh due to real-time issues')
         fetchConsultations()
       }, 30000) // 30 seconds
 
       return () => {
-        console.log('🔄 Clearing periodic refresh interval...')
+        logger.info('Clearing periodic refresh interval')
         clearInterval(interval)
       }
     }
@@ -336,7 +338,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (realtimeStatus === 'error' || realtimeStatus === 'disconnected') {
       const timeout = setTimeout(() => {
-        console.log('🔄 Attempting to reconnect real-time...')
+        logger.info('Attempting to reconnect real-time')
         setRealtimeStatus('connecting')
         // The main useEffect will handle reconnection
       }, 5000) // Wait 5 seconds before attempting reconnection
@@ -348,14 +350,14 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // Enhanced fallback: more frequent refresh when real-time is completely down
   useEffect(() => {
     if (realtimeStatus === 'failed') {
-      console.log('🔄 Real-time failed, setting up aggressive fallback refresh...')
+      logger.warn('Real-time failed, setting up aggressive fallback refresh')
       const interval = setInterval(() => {
-        console.log('🔄 Aggressive fallback refresh every 15 seconds...')
+        logger.info('Aggressive fallback refresh every 15 seconds')
         fetchConsultations()
       }, 15000) // 15 seconds when real-time is completely down
 
       return () => {
-        console.log('🔄 Clearing aggressive fallback interval...')
+        logger.info('Clearing aggressive fallback interval')
         clearInterval(interval)
       }
     }
@@ -364,10 +366,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // Add a function to manually check real-time health
   const checkRealtimeHealth = () => {
     if (realtimeStatus === 'connected') {
-      console.log('✅ Real-time connection is healthy')
+      logger.info('Real-time connection is healthy')
       return true
     } else {
-      console.log(`⚠️ Real-time status: ${realtimeStatus}`)
+      logger.warn(`Real-time status: ${realtimeStatus}`)
       return false
     }
   }
