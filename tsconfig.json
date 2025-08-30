@@ -5,7 +5,6 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "types": ["vite/client", "node"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -25,9 +24,31 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+
+    /* Types */
+    "types": ["vite/client", "jest", "node"]
   },
-  "include": ["components/**/*.ts", "components/**/*.tsx", "lib/**/*.ts", "*.tsx", "*.ts"],
-  "exclude": ["node_modules", "dist", "vite.config.ts"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": [
+    "src/**/*",
+    "components/**/*",
+    "lib/**/*",
+    "App.tsx",
+    "main.tsx",
+    "index.html"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "__tests__/**/*",
+    "**/__tests__/**/*",
+    "**/*.test.js",
+    "**/*.test.jsx",
+    "**/*.spec.js",
+    "**/*.spec.jsx"
+  ]
 }

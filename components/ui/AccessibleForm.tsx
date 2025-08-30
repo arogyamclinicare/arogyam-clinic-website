@@ -1,4 +1,4 @@
-import React, { forwardRef, useId } from 'react';
+import React, { forwardRef, useId, useEffect } from 'react';
 import { useAccessibility } from '../hooks/useAccessibility';
 
 interface AccessibleInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -28,7 +28,7 @@ export const AccessibleInput = forwardRef<HTMLInputElement, AccessibleInputProps
     const { associateError, removeError } = useAccessibility();
 
     // Handle error association
-    React.useEffect(() => {
+    useEffect(() => {
       const inputElement = document.getElementById(inputId) as HTMLInputElement;
       if (inputElement) {
         if (error) {
@@ -117,7 +117,7 @@ export const AccessibleTextarea = forwardRef<HTMLTextAreaElement, AccessibleText
     const { associateError, removeError } = useAccessibility();
 
     // Handle error association
-    React.useEffect(() => {
+    useEffect(() => {
       const textareaElement = document.getElementById(textareaId) as HTMLTextAreaElement;
       if (textareaElement) {
         if (error) {
@@ -211,7 +211,7 @@ export const AccessibleSelect = forwardRef<HTMLSelectElement, AccessibleSelectPr
     const { associateError, removeError } = useAccessibility();
 
     // Handle error association
-    React.useEffect(() => {
+    useEffect(() => {
       const selectElement = document.getElementById(selectId) as HTMLSelectElement;
       if (selectElement) {
         if (error) {

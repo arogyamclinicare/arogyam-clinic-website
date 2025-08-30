@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -83,7 +83,7 @@ export function Logo({
   );
 
   // Always try to load the logo first, fallback only on error
-  const [hasError, setHasError] = React.useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const handleImageError = () => {
     setHasError(true);
