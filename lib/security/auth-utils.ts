@@ -206,16 +206,76 @@ export class CSRFProtection {
 
 // Rate limiting utilities
 export class RateLimiting {
-  private static loginAttempts = new Map<string, { count: number; lastAttempt: number; lockedUntil?: number }>();
+  private static readonly STORAGE_KEY = 'arogyam_rate_limiting';
   private static readonly MAX_ATTEMPTS = 5;
   private static readonly LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
   private static readonly RESET_DURATION = 60 * 60 * 1000; // 1 hour
 
   /**
+   * Get rate limiting data from storage
+   */
+  private static getRateLimitData(): Map<string, { count: number; lastAttempt: number; lockedUntil?: number }> {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        return new Map(Object.entries(data));
+      }
+    } catch (error) {
+      console.error('Error reading rate limit data:', error);
+    }
+    return new Map();
+  }
+
+  /**
+   * Save rate limiting data to storage
+   */
+  private static saveRateLimitData(data: Map<string, { count: number; lastAttempt: number; lockedUntil?: number }>): void {
+    try {
+      const obj = Object.fromEntries(data);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(obj));
+    } catch (error) {
+      console.error('Error saving rate limit data:', error);
+    }
+  }
+
+  /**
+   * Clean up expired rate limiting data
+   */
+  private static cleanupExpiredData(): void {
+    try {
+      const data = this.getRateLimitData();
+      const now = Date.now();
+      let hasChanges = false;
+
+      for (const [email, attempts] of data.entries()) {
+        // Remove if locked and lockout expired
+        if (attempts.lockedUntil && now >= attempts.lockedUntil) {
+          data.delete(email);
+          hasChanges = true;
+        }
+        // Remove if reset duration passed
+        else if (now - attempts.lastAttempt > this.RESET_DURATION) {
+          data.delete(email);
+          hasChanges = true;
+        }
+      }
+
+      if (hasChanges) {
+        this.saveRateLimitData(data);
+      }
+    } catch (error) {
+      console.error('Error cleaning up rate limit data:', error);
+    }
+  }
+
+  /**
    * Check if login attempts are allowed
    */
   static canAttemptLogin(email: string): { allowed: boolean; remainingTime?: number } {
-    const attempts = this.loginAttempts.get(email);
+    this.cleanupExpiredData();
+    const data = this.getRateLimitData();
+    const attempts = data.get(email);
     
     if (!attempts) {
       return { allowed: true };
@@ -229,16 +289,12 @@ export class RateLimiting {
       };
     }
 
-    // Reset attempts if enough time has passed
-    if (Date.now() - attempts.lastAttempt > this.RESET_DURATION) {
-      this.loginAttempts.delete(email);
-      return { allowed: true };
-    }
-
     // Check if max attempts reached
     if (attempts.count >= this.MAX_ATTEMPTS) {
       // Lock account
       attempts.lockedUntil = Date.now() + this.LOCKOUT_DURATION;
+      data.set(email, attempts);
+      this.saveRateLimitData(data);
       return { 
         allowed: false, 
         remainingTime: this.LOCKOUT_DURATION 
@@ -252,26 +308,53 @@ export class RateLimiting {
    * Record failed login attempt
    */
   static recordFailedAttempt(email: string): void {
-    const attempts = this.loginAttempts.get(email) || { count: 0, lastAttempt: 0 };
+    const data = this.getRateLimitData();
+    const attempts = data.get(email) || { count: 0, lastAttempt: 0 };
     attempts.count += 1;
     attempts.lastAttempt = Date.now();
-    this.loginAttempts.set(email, attempts);
+    data.set(email, attempts);
+    this.saveRateLimitData(data);
   }
 
   /**
    * Record successful login (reset attempts)
    */
   static recordSuccessfulLogin(email: string): void {
-    this.loginAttempts.delete(email);
+    const data = this.getRateLimitData();
+    data.delete(email);
+    this.saveRateLimitData(data);
   }
 
   /**
    * Get remaining attempts for an email
    */
   static getRemainingAttempts(email: string): number {
-    const attempts = this.loginAttempts.get(email);
+    const data = this.getRateLimitData();
+    const attempts = data.get(email);
     if (!attempts) return this.MAX_ATTEMPTS;
     return Math.max(0, this.MAX_ATTEMPTS - attempts.count);
+  }
+
+  /**
+   * Get lockout status for an email
+   */
+  static getLockoutStatus(email: string): { isLocked: boolean; remainingTime?: number } {
+    const data = this.getRateLimitData();
+    const attempts = data.get(email);
+    
+    if (!attempts || !attempts.lockedUntil) {
+      return { isLocked: false };
+    }
+
+    const now = Date.now();
+    if (now < attempts.lockedUntil) {
+      return { 
+        isLocked: true, 
+        remainingTime: attempts.lockedUntil - now 
+      };
+    }
+
+    return { isLocked: false };
   }
 }
 
