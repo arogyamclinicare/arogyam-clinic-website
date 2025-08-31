@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { consultationBookingSchema } from '../../lib/validation';
 
 export function FormDebugTest() {
