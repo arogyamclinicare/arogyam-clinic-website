@@ -2,14 +2,15 @@ import { z } from 'zod';
 
 // Common validation patterns
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const nameRegex = /^[a-zA-Z\s]{2,50}$/; // Letters and spaces only, 2-50 chars
+const nameRegex = /^[a-zA-Z\s\u00C0-\u017F\u0027\u002D]{2,50}$/; // Letters, spaces, accented characters, apostrophes, and hyphens, 2-50 chars
 
 // Base consultation schema
 export const consultationBaseSchema = z.object({
   name: z.string()
     .min(2, 'Name must be at least 2 characters')
     .max(50, 'Name must be less than 50 characters')
-    .regex(nameRegex, 'Name can only contain letters and spaces'),
+    .regex(nameRegex, 'Name can only contain letters and spaces')
+    .transform(val => val.trim()),
   
   email: z.string()
     .min(0, 'Email cannot be negative')
@@ -19,13 +20,20 @@ export const consultationBaseSchema = z.object({
   phone: z.string()
     .min(10, 'Phone number must be at least 10 digits')
     .max(15, 'Phone number too long')
-    .regex(/^[\+]?[0-9\s\-\(\)]+$/, 'Please enter a valid phone number')
+    .regex(/^[\+]?[0-9\s\-\(\)\.]+$/, 'Please enter a valid phone number')
     .transform(val => val.replace(/\s/g, '')),
   
-  age: z.coerce.number()
-    .int('Age must be a whole number')
-    .min(1, 'Age must be at least 1')
-    .max(120, 'Age must be less than 120'),
+  age: z.string()
+    .min(1, 'Age is required')
+    .transform((val) => {
+      const num = parseInt(val);
+      if (isNaN(num)) {
+        throw new Error('Age must be a valid number');
+      }
+      return num;
+    })
+    .refine((val) => val >= 1, 'Age must be at least 1')
+    .refine((val) => val <= 120, 'Age must be less than 120'),
   
   gender: z.enum(['male', 'female', 'other'], {
     errorMap: () => ({ message: 'Please select a valid gender' })
@@ -41,15 +49,16 @@ export const consultationBaseSchema = z.object({
     .refine(date => {
       try {
         const selectedDate = new Date(date + 'T00:00:00');
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
         
-        // Allow today and future dates
-        return selectedDate >= today;
+        // Allow tomorrow and future dates (matching form min attribute)
+        return selectedDate >= tomorrow;
       } catch (error) {
         return false;
       }
-    }, 'Preferred date must be today or in the future'),
+    }, 'Preferred date must be tomorrow or in the future'),
   
   preferred_time: z.string()
     .min(1, 'Please select a preferred time'),

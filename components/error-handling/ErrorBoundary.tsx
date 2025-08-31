@@ -58,17 +58,9 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo
     });
 
-    // In production, you could send this to an error reporting service
-    // Example: Sentry, LogRocket, etc.
-    console.log('📊 Error would be reported to monitoring service:', {
-      errorId: this.state.errorId,
-      message: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    });
+    // In a real app, you would log the error to an error reporting service
+    // For now, we'll just log it to the console
+    // Error would be reported to monitoring service: { error, errorInfo }
   }
 
   private handleRetry = () => {

@@ -109,34 +109,27 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
   // Validate booking data
   const validateBookingData = (): boolean => {
     try {
-      // Validation logging removed for production
-      
       // Prepare data for validation
       const dataToValidate = {
-        name: bookingData.name,
+        name: bookingData.name.trim(),
         email: bookingData.email,
         phone: bookingData.phone,
-        age: parseInt(bookingData.age) || 0,
+        age: bookingData.age, // Pass as string, let Zod handle conversion
         gender: bookingData.gender as 'male' | 'female' | 'other',
         condition: bookingData.condition,
-        preferred_date: bookingData.preferredDate,
-        preferred_time: bookingData.preferredTime,
+        preferred_date: bookingData.preferredDate, // This was correct
+        preferred_time: bookingData.preferredTime, // This was correct
         consultation_type: bookingData.consultationType,
         treatment_type: bookingData.treatmentType
       };
 
-              // Data validation logging removed for production
-
       // Validate using Zod schema
-      const result = consultationBookingSchema.parse(dataToValidate);
-      console.log('✅ Validation - Schema validation passed:', result);
+      consultationBookingSchema.parse(dataToValidate);
       setValidationErrors({});
       return true;
     } catch (error: any) {
-      console.log('❌ Validation - Schema validation failed:', error);
       if (error.errors) {
         const formattedErrors = formatValidationErrors(error);
-        console.log('❌ Validation - Formatted errors:', formattedErrors);
         setValidationErrors(formattedErrors);
       }
       return false;
@@ -145,7 +138,6 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
 
   // Handle input change with sanitization
   const handleInputChange = (field: keyof BookingData, value: string) => {
-    console.log(`🔍 Input change - Field: ${field}, Original value: "${value}"`);
     
     // For name and condition fields, preserve spaces and use minimal sanitization
     let processedValue = value;
@@ -159,8 +151,6 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
     } else {
       processedValue = sanitizeInput(value);
     }
-    
-    console.log(`🔍 Input change - Field: ${field}, Processed value: "${processedValue}"`);
     
     setBookingData(prev => ({ ...prev, [field]: processedValue }));
     
