@@ -36,13 +36,27 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
 };
 
 /**
- * Simple password verification for plain text passwords
+ * SECURITY FIX: Replace insecure plain text password verification
  * @param password - Plain text password to verify
- * @param storedPassword - Stored password (plain text for now)
+ * @param storedPassword - Stored password (should be bcrypt hash)
  * @returns True if password matches, false otherwise
  */
-export const verifySimplePassword = (password: string, storedPassword: string): boolean => {
-  return password === storedPassword;
+export const verifySimplePassword = async (password: string, storedPassword: string): Promise<boolean> => {
+  try {
+    // Check if stored password is already a bcrypt hash
+    if (storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$') || storedPassword.startsWith('$2y$')) {
+      // It's a bcrypt hash, use proper verification
+      return await verifyPassword(password, storedPassword);
+    } else {
+      // CRITICAL: This is a plain text password - needs to be migrated
+      console.warn('SECURITY WARNING: Plain text password detected. User needs password reset.');
+      // For now, return false to force password reset
+      return false;
+    }
+  } catch (error) {
+    console.error('Password verification error:', error);
+    return false;
+  }
 };
 
 /**
@@ -97,4 +111,24 @@ export const validatePasswordStrength = (password: string) => {
       isLongEnough
     }
   };
+};
+
+/**
+ * SECURITY: Force password reset for users with plain text passwords
+ * @param userId - User ID to force password reset
+ * @returns Success status
+ */
+export const forcePasswordReset = async (userId: string): Promise<boolean> => {
+  try {
+    // Generate a secure temporary password
+    const tempPassword = generateSecurePassword(16);
+    
+    // In production, this would update the database and send email
+    console.log(`SECURITY: User ${userId} needs password reset. Temporary password: ${tempPassword}`);
+    
+    return true;
+  } catch (error) {
+    console.error('Error forcing password reset:', error);
+    return false;
+  }
 };

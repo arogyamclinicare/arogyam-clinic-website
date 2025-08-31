@@ -242,7 +242,7 @@ export const LazyPatientPortal = createRouteLazyComponent(
 );
 
 export const LazyEnhancedPatientForm = createFeatureLazyComponent(
-  () => import('../EnhancedPatientForm').then(module => ({ default: module.EnhancedPatientForm })),
+  () => import('../EnhancedPatientForm').then(module => ({ default: module.SimplePatientForm })),
   'enhanced-patient-form',
   'high'
 );

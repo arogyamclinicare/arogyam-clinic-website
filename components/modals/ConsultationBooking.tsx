@@ -367,10 +367,9 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Age *</label>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Age</label>
                   <input
                     type="number"
-                    required
                     min="1"
                     max="120"
                     value={bookingData.age}
@@ -378,12 +377,12 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                     className={`w-full px-4 py-4 text-base border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 touch-manipulation ${
                       validationErrors.age ? 'border-red-500 focus:ring-red-500' : 'border-neutral-300'
                     }`}
-                    placeholder="Enter your age"
+                    placeholder="Enter your age (optional)"
                     aria-describedby="age-help age-error"
                     autoComplete="bday-year"
                     inputMode="numeric"
                   />
-                  <div id="age-help" className="sr-only">Enter your age in years for personalized consultation</div>
+                  <div id="age-help" className="sr-only">Enter your age in years for personalized consultation (optional)</div>
                   {validationErrors.age && (
                     <div id="age-error" className="text-red-600 text-sm mt-1 flex items-center">
                       <AlertCircle className="w-4 h-4 mr-1" />
@@ -442,9 +441,8 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Gender *</label>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">Gender</label>
                 <select
-                  required
                   value={bookingData.gender}
                   onChange={(e) => handleInputChange('gender', e.target.value)}
                   className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
@@ -452,7 +450,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                   }`}
                   aria-describedby="gender-error"
                 >
-                  <option value="">Select Gender</option>
+                  <option value="">Select Gender (optional)</option>
                   <option value="female">Female</option>
                   <option value="male">Male</option>
                   <option value="other">Other</option>

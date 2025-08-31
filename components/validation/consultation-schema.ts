@@ -1,39 +1,41 @@
 /**
  * Zod validation schemas for consultation booking
  * Following best practices: runtime validation, early error handling
+ * UPDATED: More user-friendly validation for basic clinic website
  */
 
 import { z } from 'zod';
 import { CONSULTATION_TYPES, TIME_SLOTS } from '../types/consultation';
 
-// Phone number validation (Indian format)
-const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-
-// Email validation schema
-const emailSchema = z.string()
-  .min(1, 'Email is required')
-  .email('Please enter a valid email address')
-  .max(254, 'Email is too long');
-
-// Phone validation schema
+// Phone number validation - more flexible for basic clinic
 const phoneSchema = z.string()
   .min(1, 'Phone number is required')
-  .regex(phoneRegex, 'Please enter a valid phone number')
-  .min(10, 'Phone number must be at least 10 digits')
-  .max(15, 'Phone number is too long');
+  .refine(
+    (val) => val.replace(/\D/g, '').length >= 10,
+    'Please enter a valid phone number (at least 10 digits)'
+  );
 
-// Age validation schema
+// Email validation schema - optional for basic clinic
+const emailSchema = z.string()
+  .optional()
+  .refine(
+    (val) => !val || /\S+@\S+\.\S+/.test(val),
+    'Please enter a valid email address'
+  );
+
+// Age validation schema - optional for basic clinic
 const ageSchema = z.string()
-  .min(1, 'Age is required')
+  .optional()
   .refine(
     (val) => {
+      if (!val || val.trim() === '') return true; // Allow empty
       const age = parseInt(val, 10);
       return !isNaN(age) && age >= 1 && age <= 120;
     },
     'Please enter a valid age between 1 and 120'
   );
 
-// Date validation schema (must be future date)
+// Date validation schema - must be future date
 const dateSchema = z.string()
   .min(1, 'Date is required')
   .refine(
@@ -43,16 +45,19 @@ const dateSchema = z.string()
       today.setHours(0, 0, 0, 0);
       return selectedDate >= today;
     },
-    'Please select a future date'
+    'Preferred date must be tomorrow or in the future'
   );
 
-// Main consultation booking validation schema
+// Main consultation booking validation schema - UPDATED for basic clinic
 export const consultationBookingSchema = z.object({
   name: z.string()
     .min(1, 'Name is required')
     .min(2, 'Name must be at least 2 characters')
     .max(100, 'Name is too long')
-    .regex(/^[a-zA-Z\s]+$/, 'Name can only contain letters and spaces'),
+    .refine(
+      (val) => /^[a-zA-Z\s\-'\.]+$/.test(val),
+      'Name can only contain letters, spaces, hyphens, apostrophes, and periods'
+    ),
   
   email: emailSchema,
   
@@ -61,24 +66,34 @@ export const consultationBookingSchema = z.object({
   age: ageSchema,
   
   gender: z.string()
-    .min(1, 'Please select your gender'),
+    .optional()
+    .refine(
+      (val) => !val || ['male', 'female', 'other'].includes(val.toLowerCase()),
+      'Please select a valid gender option'
+    ),
   
   condition: z.string()
-    .min(1, 'Please describe your condition')
-    .min(10, 'Please provide more details about your condition')
-    .max(1000, 'Description is too long'),
+    .optional()
+    .refine(
+      (val) => !val || val.length >= 10,
+      'Please provide more details about your condition (at least 10 characters)'
+    )
+    .refine(
+      (val) => !val || val.length <= 1000,
+      'Description is too long'
+    ),
   
-  preferredDate: dateSchema,
+  preferred_date: dateSchema,
   
-  preferredTime: z.enum(TIME_SLOTS as readonly [string, ...string[]], {
-    errorMap: () => ({ message: 'Please select a valid time slot' })
+  preferred_time: z.enum(TIME_SLOTS as readonly [string, ...string[]], {
+    errorMap: () => ({ message: 'Please select a preferred time' })
   }),
   
-  consultationType: z.enum([CONSULTATION_TYPES.video, CONSULTATION_TYPES.phone] as const, {
+  consultation_type: z.enum([CONSULTATION_TYPES.video, CONSULTATION_TYPES.phone] as const, {
     errorMap: () => ({ message: 'Please select a consultation type' })
   }),
   
-  treatmentType: z.string().min(1, 'Treatment type is required')
+  treatment_type: z.string().min(1, 'Treatment type is required')
 });
 
 export type ConsultationBookingFormData = z.infer<typeof consultationBookingSchema>;

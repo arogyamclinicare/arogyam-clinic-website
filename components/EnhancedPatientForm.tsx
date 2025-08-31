@@ -14,7 +14,7 @@ interface FormData {
   address: string;
 }
 
-interface EnhancedPatientFormProps {
+interface SimplePatientFormProps {
   isLogin: boolean;
   onSubmit: (data: FormData) => Promise<void>;
   onToggleMode: () => void;
@@ -23,14 +23,14 @@ interface EnhancedPatientFormProps {
   success?: string;
 }
 
-export function EnhancedPatientForm({
+export function SimplePatientForm({
   isLogin,
   onSubmit,
   onToggleMode,
   isLoading = false,
   error,
   success
-}: EnhancedPatientFormProps) {
+}: SimplePatientFormProps) {
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -57,11 +57,17 @@ export function EnhancedPatientForm({
   // Simple input change handler
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear validation error for this field
+    if (validationErrors[name as keyof FormData]) {
+      setValidationErrors(prev => ({ ...prev, [name]: undefined }));
+    }
     
     if (name === 'password') {
       let strength = 0;
-      if (value.length >= 8) strength += 1;
+      if (value.length >= 6) strength += 1;
       if (/[a-z]/.test(value)) strength += 1;
       if (/[A-Z]/.test(value)) strength += 1;
       if (/[0-9]/.test(value)) strength += 1;
@@ -70,39 +76,63 @@ export function EnhancedPatientForm({
     }
   };
 
-  // Simple password toggle
+  // Password visibility toggle
   const togglePasswordVisibility = () => {
     setShowPassword(prev => !prev);
   };
 
-  // Form validation
+  // Simple, practical form validation for basic clinic website
   const validateForm = (): boolean => {
     const errors: Partial<FormData> = {};
     
+    // Email validation - basic check
     if (!formData.email) {
       errors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = 'Please enter a valid email address';
     }
     
+    // Password validation - simple requirements
     if (!formData.password) {
       errors.password = 'Password is required';
-    } else if (!isLogin && formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters long';
+    } else if (!isLogin && formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters long';
     }
     
+    // Name validation - allow common characters
     if (!isLogin) {
-      if (!formData.name) errors.name = 'Name is required';
-      if (!formData.phone) errors.phone = 'Phone number is required';
-      if (!formData.age) errors.age = 'Age is required';
-      if (!formData.gender) errors.gender = 'Gender is required';
+      if (!formData.name) {
+        errors.name = 'Name is required';
+      } else if (formData.name.length < 2) {
+        errors.name = 'Name must be at least 2 characters';
+      }
+      
+      // Phone validation - simple check
+      if (!formData.phone) {
+        errors.phone = 'Phone number is required';
+      } else if (formData.phone.replace(/\D/g, '').length < 10) {
+        errors.phone = 'Please enter a valid phone number';
+      }
+      
+      // Age validation - optional, but if provided must be valid
+      if (formData.age && formData.age.trim() !== '') {
+        const ageNum = parseInt(formData.age);
+        if (isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
+          errors.age = 'Please enter a valid age (1-120)';
+        }
+      }
+      
+      // Gender validation - optional
+      if (formData.gender && formData.gender.trim() !== '' && !['Male', 'Female', 'Other'].includes(formData.gender)) {
+        errors.gender = 'Please select a valid gender option';
+      }
     }
     
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  // Form submission
+  // Simple form submission for basic clinic website
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -111,8 +141,11 @@ export function EnhancedPatientForm({
     }
     
     try {
+      // Simple form submission
       await onSubmit(formData);
+      
     } catch (err) {
+      console.error('Form submission error:', err);
       // Error handling is done by parent component
     }
   };
@@ -225,6 +258,8 @@ export function EnhancedPatientForm({
                     onChange={handleInputChange}
                     placeholder="25"
                     autoComplete="bday-year"
+                    min="1"
+                    max="120"
                     className={`w-full px-4 py-4 border-2 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-sage-500 ${
                       validationErrors.age ? 'border-red-300' : 'border-neutral-200'
                     }`}
@@ -243,7 +278,7 @@ export function EnhancedPatientForm({
 
               <div className="space-y-2">
                 <label htmlFor="input-gender" className="block text-sm font-semibold text-neutral-700">
-                  Gender <span className="text-red-500">*</span>
+                  Gender
                 </label>
                 <div className="relative">
                   <select
@@ -252,7 +287,6 @@ export function EnhancedPatientForm({
                     name="gender"
                     value={formData.gender}
                     onChange={handleInputChange}
-                    required
                     className={`w-full px-4 py-4 pr-12 border-2 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-sage-500 appearance-none ${
                       validationErrors.gender ? 'border-red-300' : 'border-neutral-200'
                     }`}
@@ -262,7 +296,7 @@ export function EnhancedPatientForm({
                     <option value="Female">Female</option>
                     <option value="Other">Other</option>
                   </select>
-                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-neutral-400">
+                  <div className="absolute inset-y-0 right-0 pr-4 pointer-events-none text-neutral-400">
                     <Heart className="w-5 h-5" />
                   </div>
                 </div>
