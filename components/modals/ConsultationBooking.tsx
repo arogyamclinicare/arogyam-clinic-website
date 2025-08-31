@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { useSupabase } from '../context/SupabaseContext';
 import { consultationBookingSchema, sanitizeInput, formatValidationErrors } from '../../lib/validation';
-import { debounceTrailing } from '../../lib/utils/debounce';
 import { 
   X, 
   Calendar, 
@@ -109,7 +108,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
   // Validate booking data
   const validateBookingData = (): boolean => {
     try {
-      // Prepare data for validation
+      // Prepare data for validation - use correct field names that match the schema
       const dataToValidate = {
         name: bookingData.name.trim(),
         email: bookingData.email,
@@ -117,19 +116,25 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
         age: bookingData.age, // Pass as string, let Zod handle conversion
         gender: bookingData.gender as 'male' | 'female' | 'other',
         condition: bookingData.condition,
-        preferred_date: bookingData.preferredDate, // This was correct
-        preferred_time: bookingData.preferredTime, // This was correct
+        preferred_date: bookingData.preferredDate, // This matches the schema field name
+        preferred_time: bookingData.preferredTime, // This matches the schema field name
         consultation_type: bookingData.consultationType,
         treatment_type: bookingData.treatmentType
       };
 
+      console.log('🔍 VALIDATION DATA:', dataToValidate);
+
       // Validate using Zod schema
-      consultationBookingSchema.parse(dataToValidate);
+      const validatedData = consultationBookingSchema.parse(dataToValidate);
+      console.log('✅ VALIDATION SUCCESS:', validatedData);
+      
       setValidationErrors({});
       return true;
     } catch (error: any) {
+      console.error('❌ VALIDATION ERROR:', error);
       if (error.errors) {
         const formattedErrors = formatValidationErrors(error);
+        console.log('🔍 FORMATTED ERRORS:', formattedErrors);
         setValidationErrors(formattedErrors);
       }
       return false;
@@ -138,10 +143,15 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
 
   // Handle input change with sanitization
   const handleInputChange = (field: keyof BookingData, value: string) => {
+    console.log(`�� INPUT RECEIVED: ${field} = "${value}"`);
+    console.log(`🔍 INPUT TYPE: ${typeof value}`);
+    console.log(`🔍 INPUT LENGTH: ${value.length}`);
     
-    // For name and condition fields, preserve spaces and use minimal sanitization
+    // For time and date fields, don't sanitize - preserve the exact value
     let processedValue = value;
-    if (field === 'name' || field === 'condition') {
+    if (field === 'preferredTime' || field === 'preferredDate') {
+      processedValue = value; // No sanitization for time/date
+    } else if (field === 'name' || field === 'condition') {
       // Only remove HTML tags and limit length, preserve spaces
       processedValue = value
         .replace(/[<>]/g, '') // Remove potential HTML tags
@@ -152,58 +162,26 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
       processedValue = sanitizeInput(value);
     }
     
+    console.log(`🔍 FINAL VALUE SET: ${field} = "${processedValue}"`);
+    console.log(`🔍 PROCESSED LENGTH: ${processedValue.length}`);
+    
     setBookingData(prev => ({ ...prev, [field]: processedValue }));
     
     // Clear validation error for this field when user starts typing
     if (validationErrors[field]) {
       setValidationErrors(prev => ({ ...prev, [field]: '' }));
     }
+    
+    // Also clear validation errors for the corresponding schema field names
+    if (field === 'preferredDate' && validationErrors.preferred_date) {
+      setValidationErrors(prev => ({ ...prev, preferred_date: '' }));
+    }
+    if (field === 'preferredTime' && validationErrors.preferred_time) {
+      setValidationErrors(prev => ({ ...prev, preferred_time: '' }));
+    }
   };
 
-  // Debounced form submission to prevent duplicate submissions
-  const debouncedSubmit = useCallback(
-    debounceTrailing(async (formData: typeof bookingData) => {
-      try {
-        setIsLoading(true);
-        setError(null);
 
-        // Validate data before submission
-        if (!validateBookingData()) {
-          setError('Please fix the validation errors below');
-          return;
-        }
-
-        // Prepare data for submission
-        const consultationData = {
-          name: formData.name.trim(),
-          email: formData.email.trim() || 'no email provided', // Default for database constraint
-          phone: formData.phone.replace(/\s/g, ''),
-          age: parseInt(formData.age),
-          gender: formData.gender,
-          condition: formData.condition.trim() || null,
-          preferred_date: formData.preferredDate,
-          preferred_time: formData.preferredTime,
-          consultation_type: formData.consultationType,
-          treatment_type: formData.treatmentType.trim(),
-          status: 'pending'
-        };
-
-        const result = await addConsultation(consultationData);
-
-        if (result.success) {
-          setBookingId(result.data?.id || 'success');
-          setCurrentStep('confirmation');
-        } else {
-          setError(result.error || 'Failed to book consultation');
-        }
-      } catch (err: any) {
-        setError('An unexpected error occurred. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    }, 1000), // 1 second debounce
-    []
-  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevent default form submission
@@ -213,8 +191,73 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
       return;
     }
 
-    // Use debounced submission
-    debouncedSubmit(bookingData);
+    console.log('🎯 FORM SUBMIT TRIGGERED');
+    console.log('📊 CURRENT FORM STATE:', bookingData);
+    console.log('🔍 CURRENT VALIDATION ERRORS:', validationErrors);
+
+    // Check if form has basic required data before even attempting validation
+    const hasBasicData = bookingData.name.trim() && 
+                        bookingData.phone.trim() && 
+                        bookingData.preferredDate && 
+                        bookingData.preferredTime;
+    
+    if (!hasBasicData) {
+      console.log('❌ BASIC DATA MISSING - showing user what to fill');
+      setError('Please fill in all required fields: Name, Phone, Date, and Time');
+      
+      // Run validation to show specific field errors
+      validateBookingData();
+      return;
+    }
+
+    // Run immediate validation to show errors right away
+    const isValid = validateBookingData();
+    if (!isValid) {
+      console.log('❌ IMMEDIATE VALIDATION FAILED');
+      setError('Please fix the validation errors below');
+      return;
+    }
+
+    console.log('✅ IMMEDIATE VALIDATION PASSED - proceeding with direct submission');
+
+    // Submit directly instead of using debounced submission
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Prepare data for submission
+      const consultationData = {
+        name: bookingData.name.trim(),
+        email: bookingData.email.trim() || 'no email provided',
+        phone: bookingData.phone.replace(/\s/g, ''),
+        age: parseInt(bookingData.age),
+        gender: bookingData.gender,
+        condition: bookingData.condition.trim() || null,
+        preferred_date: bookingData.preferredDate,
+        preferred_time: bookingData.preferredTime,
+        consultation_type: bookingData.consultationType,
+        treatment_type: bookingData.treatmentType.trim(),
+        status: 'pending'
+      };
+
+      console.log('📤 SUBMITTING TO DATABASE:', consultationData);
+
+      const result = await addConsultation(consultationData);
+
+      console.log('📥 DATABASE RESPONSE:', result);
+
+      if (result.success) {
+        setBookingId(result.data?.id || 'success');
+        setCurrentStep('confirmation');
+      } else {
+        setError(result.error || 'Failed to book consultation');
+      }
+    } catch (err: any) {
+      console.error('💥 SUBMISSION ERROR:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleBack = () => {
@@ -329,7 +372,8 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
         {/* Content - Scrollable area */}
         <div className="p-3 sm:p-4 lg:p-6 overflow-y-auto flex-1 modal-content-scrollable" style={{ scrollBehavior: 'smooth' }}>
           {currentStep === 'booking' && (
-            <form onSubmit={handleSubmit} className="pt-2 sm:pt-4 lg:pt-6 space-y-4 sm:space-y-6 animate-fade-in-up">
+                         <form onSubmit={handleSubmit} className="pt-2 sm:pt-4 lg:pt-6 space-y-4 sm:space-y-6 animate-fade-in-up">
+
               {/* Selected Treatment - Optimized spacing */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4 lg:p-5 flex items-center space-x-3 sm:space-x-4">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
@@ -344,7 +388,9 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
               {/* Personal Information */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Full Name *</label>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -353,7 +399,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                     className={`w-full px-4 py-4 text-base border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 touch-manipulation ${
                       validationErrors.name ? 'border-red-500 focus:ring-red-500' : 'border-neutral-300'
                     }`}
-                    placeholder="Enter your full name"
+                                         placeholder="Enter your full name"
                     aria-describedby="name-help name-error"
                     autoComplete="name"
                     inputMode="text"
@@ -366,8 +412,8 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                     </div>
                   )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Age</label>
+                                 <div>
+                   <label className="block text-sm font-medium text-neutral-700 mb-2">Age <span className="text-red-500">*</span></label>
                   <input
                     type="number"
                     min="1"
@@ -377,7 +423,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                     className={`w-full px-4 py-4 text-base border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 touch-manipulation ${
                       validationErrors.age ? 'border-red-500 focus:ring-red-500' : 'border-neutral-300'
                     }`}
-                    placeholder="Enter your age (optional)"
+                                         placeholder="Enter your age"
                     aria-describedby="age-help age-error"
                     autoComplete="bday-year"
                     inputMode="numeric"
@@ -402,7 +448,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                     className={`w-full px-4 py-4 text-base border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 touch-manipulation ${
                       validationErrors.email ? 'border-red-500 focus:ring-red-500' : 'border-neutral-300'
                     }`}
-                                          placeholder="your.email@example.com"
+                    placeholder="your.email@example.com (optional)"
                     aria-describedby="email-help email-error"
                     autoComplete="email"
                     inputMode="email"
@@ -416,7 +462,9 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Phone Number *</label>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="tel"
                     required
@@ -425,7 +473,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                     className={`w-full px-4 py-4 text-base border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 touch-manipulation ${
                       validationErrors.phone ? 'border-red-500 focus:ring-red-500' : 'border-neutral-300'
                     }`}
-                    placeholder="+91 XXXXX XXXXX"
+                                         placeholder="+91 XXXXX XXXXX"
                     aria-describedby="phone-help phone-error"
                     autoComplete="tel"
                     inputMode="tel"
@@ -450,7 +498,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                   }`}
                   aria-describedby="gender-error"
                 >
-                  <option value="">Select Gender (optional)</option>
+                                     <option value="">Select Gender</option>
                   <option value="female">Female</option>
                   <option value="male">Male</option>
                   <option value="other">Other</option>
@@ -522,7 +570,9 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
               {/* Date and Time */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Preferred Date *</label>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Preferred Date <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="date"
                     required
@@ -534,7 +584,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                     }`}
                     aria-describedby="date-help date-error"
                   />
-                  <div id="date-help" className="sr-only">Select your preferred consultation date</div>
+                  <div id="date-help" className="sr-only">Select your preferred consultation date (must be tomorrow or later)</div>
                   {validationErrors.preferred_date && (
                     <div id="date-error" className="text-red-600 text-sm mt-1 flex items-center">
                       <AlertCircle className="w-4 h-4 mr-1" />
@@ -543,7 +593,9 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Preferred Time *</label>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Preferred Time <span className="text-red-500">*</span>
+                  </label>
                   <select
                     required
                     value={bookingData.preferredTime}
@@ -580,18 +632,15 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                 </div>
               )}
 
-              {/* Full Refund Guarantee */}
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                <div className="flex items-start space-x-3">
-                  <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-green-800">100% Satisfaction Guarantee</p>
-                    <p className="text-sm text-green-700">
-                      Full refund if you're not completely satisfied with our consultation service. Your healing journey is risk-free!
-                    </p>
-                  </div>
-                </div>
-              </div>
+                             {/* Satisfaction Guarantee */}
+               <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                 <div className="flex items-start space-x-3">
+                   <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                   <div>
+                     <p className="text-sm font-medium text-green-800">100% Satisfaction Guarantee</p>
+                   </div>
+                 </div>
+               </div>
 
               <Button 
                 type="submit" 

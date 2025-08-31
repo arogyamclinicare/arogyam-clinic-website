@@ -1,0 +1,10 @@
+[33mdac91f9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix phone validation - exclude from sanitizeInput to preserve digits
+[33m69e4127[m[33m ([m[1;33mtag: [m[1;33mv1.0.1-validation-fixed[m[33m)[m Fix validation errors - simplified schema for basic clinic website
+[33ma829d50[m[33m ([m[1;33mtag: [m[1;33mv1.0.0-production[m[33m)[m  PRODUCTION READY: Complete security overhaul and form validation fixes - EnhancedPatientForm simplified, consultation booking validation relaxed, security features implemented, ready for client deployment
+[33m0ae90ee[m Fix vercel.json configuration and remove unused functions config
+[33m6724033[m Update deployment guide and restore vercel.json configuration
+[33m1e3198b[m  PHASE 4 COMPLETE: Production Ready - Form Validation Fixed, Security Audit Complete, All Tests Passing
+[33m1e402c4[m FINAL UPDATE: Fixed date validation, email handling, ESLint config, and test suite - All tests passing
+[33m660a4ed[m QUICK FIX: Removed unnecessary ImagePreloader to eliminate preload warnings
+[33m52cba8b[m  FIX: Image Preload Warning & Performance Optimization
+[33m4652224[m  FIX: F12 Console Warnings & Duplicate Consultation Prevention
