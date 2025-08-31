@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { useSupabase } from '../context/SupabaseContext';
-import { consultationBookingSchema, sanitizeInput, formatValidationErrors } from '../../lib/validation';
-import { debounceTrailing } from '../../lib/utils/debounce';
+import { consultationBookingSchema } from '../validation/consultation-schema';
+import { sanitizeInput, formatValidationErrors } from '../../lib/validation';import { debounceTrailing } from '../../lib/utils/debounce';
 import { 
   X, 
   Calendar, 
@@ -57,15 +57,6 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  // Debug logging
-  useEffect(() => {
-    if (isOpen) {
-      // Modal opened - could add analytics here if needed
-    } else {
-      // Modal closed - cleanup
-    }
-  }, [isOpen, treatmentType]);
-
   // Auto-scroll to top when step changes
   useEffect(() => {
     if (isOpen) {
@@ -115,7 +106,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
         email: bookingData.email,
         phone: bookingData.phone,
         age: bookingData.age, // Pass as string, let Zod handle conversion
-        gender: bookingData.gender as 'male' | 'female' | 'other',
+        gender: bookingData.gender, // Remove restrictive casting - let Zod handle validation
         condition: bookingData.condition,
         preferred_date: bookingData.preferredDate, // This was correct
         preferred_time: bookingData.preferredTime, // This was correct
@@ -130,7 +121,34 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
     } catch (error: any) {
       if (error.errors) {
         const formattedErrors = formatValidationErrors(error);
-        setValidationErrors(formattedErrors);
+        
+        // Map schema field names back to form field names
+        const mappedErrors: Record<string, string> = {};
+        Object.entries(formattedErrors).forEach(([schemaField, message]) => {
+          let formField = schemaField;
+          
+          // Map underscore fields back to camelCase
+          switch (schemaField) {
+            case 'preferred_date':
+              formField = 'preferredDate';
+              break;
+            case 'preferred_time':
+              formField = 'preferredTime';
+              break;
+            case 'consultation_type':
+              formField = 'consultationType';
+              break;
+            case 'treatment_type':
+              formField = 'treatmentType';
+              break;
+            default:
+              formField = schemaField;
+          }
+          
+          mappedErrors[formField] = message;
+        });
+        
+        setValidationErrors(mappedErrors);
       }
       return false;
     }
@@ -178,8 +196,8 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
           name: formData.name.trim(),
           email: formData.email.trim() || 'no email provided', // Default for database constraint
           phone: formData.phone.replace(/\s/g, ''),
-          age: parseInt(formData.age),
-          gender: formData.gender,
+          age: formData.age ? parseInt(formData.age) : 25, // Default age if empty
+          gender: formData.gender || 'other', // Default gender if empty - satisfy database constraint
           condition: formData.condition.trim() || null,
           preferred_date: formData.preferredDate,
           preferred_time: formData.preferredTime,
@@ -194,7 +212,18 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
           setBookingId(result.data?.id || 'success');
           setCurrentStep('confirmation');
         } else {
-          setError(result.error || 'Failed to book consultation');
+          // Handle specific database constraint errors
+          let errorMessage = result.error || 'Failed to book consultation';
+          
+          if (result.error?.includes('gender_check')) {
+            errorMessage = 'Please select a valid gender option (Male, Female, or Other)';
+          } else if (result.error?.includes('age')) {
+            errorMessage = 'Please enter a valid age between 1 and 120';
+          } else if (result.error?.includes('phone')) {
+            errorMessage = 'Please enter a valid phone number';
+          }
+          
+          setError(errorMessage);
         }
       } catch (err: any) {
         setError('An unexpected error occurred. Please try again.');
@@ -530,15 +559,15 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                     value={bookingData.preferredDate}
                     onChange={(e) => handleInputChange('preferredDate', e.target.value)}
                     className={`w-full px-4 py-4 text-base border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 touch-manipulation ${
-                      validationErrors.preferred_date ? 'border-red-500 focus:ring-red-500' : 'border-neutral-300'
+                      validationErrors.preferredDate ? 'border-red-500 focus:ring-red-500' : 'border-neutral-300'
                     }`}
                     aria-describedby="date-help date-error"
                   />
                   <div id="date-help" className="sr-only">Select your preferred consultation date</div>
-                  {validationErrors.preferred_date && (
+                  {validationErrors.preferredDate && (
                     <div id="date-error" className="text-red-600 text-sm mt-1 flex items-center">
                       <AlertCircle className="w-4 h-4 mr-1" />
-                      {validationErrors.preferred_date}
+                      {validationErrors.preferredDate}
                     </div>
                   )}
                 </div>
@@ -549,7 +578,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                     value={bookingData.preferredTime}
                     onChange={(e) => handleInputChange('preferredTime', e.target.value)}
                     className={`w-full px-4 py-4 text-base border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 touch-manipulation ${
-                      validationErrors.preferred_time ? 'border-red-500 focus:ring-red-500' : 'border-neutral-300'
+                      validationErrors.preferredTime ? 'border-red-500 focus:ring-red-500' : 'border-neutral-300'
                     }`}
                     aria-describedby="time-error"
                   >
@@ -558,10 +587,10 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                       <option key={time} value={time}>{time}</option>
                     ))}
                   </select>
-                  {validationErrors.preferred_time && (
+                  {validationErrors.preferredTime && (
                     <div id="time-error" className="text-red-600 text-sm mt-1 flex items-center">
                       <AlertCircle className="w-4 h-4 mr-1" />
-                      {validationErrors.preferred_time}
+                      {validationErrors.preferredTime}
                     </div>
                   )}
                 </div>
