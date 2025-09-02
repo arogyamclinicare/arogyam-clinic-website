@@ -69,7 +69,56 @@ export const consultationBaseSchema = z.object({
   
   treatment_type: z.string()
     .min(2, 'Treatment type must be at least 2 characters')
-    .max(100, 'Treatment type too long')
+    .max(100, 'Treatment type too long'),
+  
+  // Service Classification Fields (Optional for new consultations)
+  service_type: z.enum(['homeopathy', 'aesthetics'], {
+    errorMap: () => ({ message: 'Please select a valid service type' })
+  }).optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  segment: z.string()
+    .max(100, 'Segment name too long (max 100 characters)')
+    .optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  sub_segment: z.string()
+    .max(100, 'Sub-segment name too long (max 100 characters)')
+    .optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  sub_sub_segment_text: z.string()
+    .max(500, 'Sub-sub-segment details too long (max 500 characters)')
+    .optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  case_type: z.enum(['', 'difficult_case', 'normal_case', 'rare_difficult_case', 'rare_case'], {
+    errorMap: () => ({ message: 'Please select a valid case type' })
+  }).optional()
+    .nullable()
+    .transform(val => val === '' ? null : val),
+  
+  remarks: z.string()
+    .max(1000, 'Remarks too long (max 1000 characters)')
+    .optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  manual_case_type: z.string()
+    .max(200, 'Manual case type too long (max 200 characters)')
+    .optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  associated_segments: z.array(z.string())
+    .max(20, 'Too many associated segments (max 20)')
+    .optional()
+    .nullable()
+    .transform(val => val && val.length > 0 ? val : null)
 });
 
 // Consultation booking schema
@@ -210,7 +259,56 @@ export const consultationUpdateSchema = z.object({
     .max(1000, 'Doctor observations too long (max 1000 characters)')
     .optional()
     .nullable()
-    .transform(val => val?.trim() || null)
+    .transform(val => val?.trim() || null),
+  
+  // Service Classification Fields
+  service_type: z.enum(['homeopathy', 'aesthetics'], {
+    errorMap: () => ({ message: 'Please select a valid service type' })
+  }).optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  segment: z.string()
+    .max(100, 'Segment name too long (max 100 characters)')
+    .optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  sub_segment: z.string()
+    .max(100, 'Sub-segment name too long (max 100 characters)')
+    .optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  sub_sub_segment_text: z.string()
+    .max(500, 'Sub-sub-segment details too long (max 500 characters)')
+    .optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  case_type: z.enum(['', 'difficult_case', 'normal_case', 'rare_difficult_case', 'rare_case'], {
+    errorMap: () => ({ message: 'Please select a valid case type' })
+  }).optional()
+    .nullable()
+    .transform(val => val === '' ? null : val),
+  
+  remarks: z.string()
+    .max(1000, 'Remarks too long (max 1000 characters)')
+    .optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  manual_case_type: z.string()
+    .max(200, 'Manual case type too long (max 200 characters)')
+    .optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
+  associated_segments: z.array(z.string())
+    .max(20, 'Too many associated segments (max 20)')
+    .optional()
+    .nullable()
+    .transform(val => val && val.length > 0 ? val : null)
 });
 
 // Patient login schema
@@ -257,4 +355,54 @@ export const formatValidationErrors = (errors: z.ZodError): Record<string, strin
   });
   
   return formattedErrors;
+};
+
+// Service field validation helpers
+export const validateServiceCombination = (data: {
+  service_type?: string | null;
+  segment?: string | null;
+  sub_segment?: string | null;
+}) => {
+  const errors: string[] = [];
+  
+  // If segment is selected, service_type must be selected
+  if (data.segment && !data.service_type) {
+    errors.push('Service type is required when segment is selected');
+  }
+  
+  // If sub_segment is selected, both service_type and segment must be selected
+  if (data.sub_segment && (!data.service_type || !data.segment)) {
+    errors.push('Service type and segment are required when sub-segment is selected');
+  }
+  
+  return errors;
+};
+
+// Validate associated segments array
+export const validateAssociatedSegments = (segments: string[] | null | undefined): string[] => {
+  const errors: string[] = [];
+  
+  if (segments && Array.isArray(segments)) {
+    if (segments.length > 20) {
+      errors.push('Too many associated segments (maximum 20 allowed)');
+    }
+    
+    // Check for duplicate segments
+    const uniqueSegments = new Set(segments);
+    if (uniqueSegments.size !== segments.length) {
+      errors.push('Duplicate associated segments are not allowed');
+    }
+    
+    // Validate each segment value
+    segments.forEach((segment, index) => {
+      if (typeof segment !== 'string' || segment.trim().length === 0) {
+        errors.push(`Invalid associated segment at position ${index + 1}`);
+      }
+      if (segment.length > 100) {
+        errors.push(`Associated segment at position ${index + 1} is too long (max 100 characters)`);
+      }
+    });
+  }
+  
+  return errors;
 };

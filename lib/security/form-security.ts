@@ -59,6 +59,9 @@ export class FormSecurity {
           case 'dosage_instructions':
           case 'patient_concerns':
           case 'doctor_observations':
+          case 'sub_sub_segment_text':
+          case 'remarks':
+          case 'manual_case_type':
             sanitized[key] = InputSanitization.sanitizeHTML(value);
             break;
           default:
@@ -109,7 +112,9 @@ export class FormSecurity {
         keyLower.includes('notes') || keyLower.includes('symptoms') || 
         keyLower.includes('diagnosis') || keyLower.includes('treatment_plan') ||
         keyLower.includes('prescription') || keyLower.includes('dosage_instructions') ||
-        keyLower.includes('patient_concerns') || keyLower.includes('doctor_observations')) {
+        keyLower.includes('patient_concerns') || keyLower.includes('doctor_observations') ||
+        keyLower.includes('sub_sub_segment_text') || keyLower.includes('remarks') ||
+        keyLower.includes('manual_case_type')) {
       return SECURITY_CONFIG.VALIDATION.MAX_DESCRIPTION_LENGTH;
     }
     
@@ -136,6 +141,14 @@ export class FormSecurity {
     if (keyLower.includes('dosage_instructions')) return 'Dosage instructions';
     if (keyLower.includes('patient_concerns')) return 'Patient concerns';
     if (keyLower.includes('doctor_observations')) return 'Doctor observations';
+    if (keyLower.includes('service_type')) return 'Service type';
+    if (keyLower.includes('segment')) return 'Segment';
+    if (keyLower.includes('sub_segment')) return 'Sub-segment';
+    if (keyLower.includes('sub_sub_segment_text')) return 'Sub-sub-segment details';
+    if (keyLower.includes('case_type')) return 'Case type';
+    if (keyLower.includes('remarks')) return 'Remarks';
+    if (keyLower.includes('manual_case_type')) return 'Manual case type';
+    if (keyLower.includes('associated_segments')) return 'Associated segments';
     
     return key.charAt(0).toUpperCase() + key.slice(1);
   }
@@ -159,6 +172,35 @@ export class FormSecurity {
    */
   static validateName(name: string): boolean {
     return SECURITY_CONFIG.VALIDATION.ALLOWED_NAME_CHARS.test(name);
+  }
+
+  /**
+   * Validate service type
+   */
+  static validateServiceType(serviceType: string): boolean {
+    return ['homeopathy', 'aesthetics'].includes(serviceType);
+  }
+
+  /**
+   * Validate case type
+   */
+  static validateCaseType(caseType: string): boolean {
+    return ['', 'difficult_case', 'normal_case', 'rare_difficult_case', 'rare_case'].includes(caseType);
+  }
+
+  /**
+   * Validate associated segments array
+   */
+  static validateAssociatedSegments(segments: any): boolean {
+    if (!segments || !Array.isArray(segments)) return true; // Optional field
+    
+    if (segments.length > 20) return false;
+    
+    return segments.every((segment: any) => 
+      typeof segment === 'string' && 
+      segment.trim().length > 0 && 
+      segment.length <= 100
+    );
   }
 
   /**
@@ -205,6 +247,19 @@ export class FormSecurity {
 
     if (sanitizedData.name && !this.validateName(sanitizedData.name)) {
       formatErrors.name = 'Name can only contain letters and spaces.';
+    }
+
+    // Validate service fields
+    if (sanitizedData.service_type && !this.validateServiceType(sanitizedData.service_type)) {
+      formatErrors.service_type = 'Please select a valid service type.';
+    }
+
+    if (sanitizedData.case_type && !this.validateCaseType(sanitizedData.case_type)) {
+      formatErrors.case_type = 'Please select a valid case type.';
+    }
+
+    if (sanitizedData.associated_segments && !this.validateAssociatedSegments(sanitizedData.associated_segments)) {
+      formatErrors.associated_segments = 'Associated segments contain invalid data.';
     }
 
     if (Object.keys(formatErrors).length > 0) {

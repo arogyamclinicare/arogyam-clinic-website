@@ -66,6 +66,14 @@ export interface Database {
           patient_concerns: string | null
           doctor_observations: string | null
           patient_id: string | null
+          service_type: string | null
+          segment: string | null
+          sub_segment: string | null
+          sub_sub_segment_text: string | null
+          case_type: string | null
+          remarks: string | null
+          manual_case_type: string | null
+          associated_segments: string[] | null
         }
         Insert: {
           id?: string
@@ -124,6 +132,14 @@ export interface Database {
           patient_concerns?: string | null
           doctor_observations?: string | null
           patient_id?: string | null
+          service_type?: string | null
+          segment?: string | null
+          sub_segment?: string | null
+          sub_sub_segment_text?: string | null
+          case_type?: string | null
+          remarks?: string | null
+          manual_case_type?: string | null
+          associated_segments?: string[] | null
         }
       }
       prescription_templates: {

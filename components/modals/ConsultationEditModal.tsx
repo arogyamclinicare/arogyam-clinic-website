@@ -7,8 +7,17 @@ import {
   Save,
   Trash2,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Settings
 } from 'lucide-react';
+import { 
+  serviceOptions, 
+  caseTypeOptions, 
+  associatedSegmentOptions,
+  getSegmentsForService,
+  getSubSegmentsForSegment,
+  resetDependentFields
+} from '../../lib/admin-services';
 import type { Consultation, ConsultationUpdate } from '../../lib/supabase';
 import { CONSULTATION_STATUS, STATUS_LABELS } from '../../lib/constants';
 
@@ -30,7 +39,7 @@ export function ConsultationEditModal({
   const [formData, setFormData] = useState<Partial<ConsultationUpdate>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'details' | 'prescription' | 'notes'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'prescription' | 'notes' | 'services'>('details');
 
   // Initialize form data when consultation changes
   useEffect(() => {
@@ -49,13 +58,39 @@ export function ConsultationEditModal({
         dosage_instructions: consultation.dosage_instructions || '',
         next_appointment_date: consultation.next_appointment_date || '',
         patient_concerns: consultation.patient_concerns || '',
-        doctor_observations: consultation.doctor_observations || ''
+        doctor_observations: consultation.doctor_observations || '',
+        service_type: consultation.service_type || '',
+        segment: consultation.segment || '',
+        sub_segment: consultation.sub_segment || '',
+        sub_sub_segment_text: consultation.sub_sub_segment_text || '',
+        case_type: consultation.case_type || '',
+        remarks: consultation.remarks || '',
+        manual_case_type: consultation.manual_case_type || '',
+        associated_segments: consultation.associated_segments || []
       });
     }
   }, [consultation]);
 
   const handleInputChange = (field: keyof ConsultationUpdate, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Handle service field dependencies
+    if (field === 'service_type' || field === 'segment') {
+      const updatedData = resetDependentFields(formData, field);
+      updatedData[field] = value;
+      setFormData(updatedData);
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
+  };
+
+  const handleAssociatedSegmentChange = (segment: string, isSelected: boolean) => {
+    setFormData(prev => {
+      const currentSegments = prev.associated_segments || [];
+      if (isSelected) {
+        return { ...prev, associated_segments: [...currentSegments, segment] };
+      } else {
+        return { ...prev, associated_segments: currentSegments.filter(s => s !== segment) };
+      }
+    });
   };
 
   const handleSave = async () => {
@@ -103,6 +138,32 @@ export function ConsultationEditModal({
       }
       if (cleanedFormData.dosage_instructions === '') {
         cleanedFormData.dosage_instructions = null;
+      }
+      
+      // Clean up service fields
+      if (cleanedFormData.service_type === '') {
+        cleanedFormData.service_type = null;
+      }
+      if (cleanedFormData.segment === '') {
+        cleanedFormData.segment = null;
+      }
+      if (cleanedFormData.sub_segment === '') {
+        cleanedFormData.sub_segment = null;
+      }
+      if (cleanedFormData.sub_sub_segment_text === '') {
+        cleanedFormData.sub_sub_segment_text = null;
+      }
+      if (cleanedFormData.case_type === '') {
+        cleanedFormData.case_type = null;
+      }
+      if (cleanedFormData.remarks === '') {
+        cleanedFormData.remarks = null;
+      }
+      if (cleanedFormData.manual_case_type === '') {
+        cleanedFormData.manual_case_type = null;
+      }
+      if (!cleanedFormData.associated_segments || cleanedFormData.associated_segments.length === 0) {
+        cleanedFormData.associated_segments = null;
       }
       
       const result = await onSave(cleanedFormData);
@@ -176,7 +237,8 @@ export function ConsultationEditModal({
             {[
               { id: 'details', name: 'Details', icon: FileText },
               { id: 'prescription', name: 'Prescription', icon: Pill },
-              { id: 'notes', name: 'Notes', icon: Stethoscope }
+              { id: 'notes', name: 'Notes', icon: Stethoscope },
+              { id: 'services', name: 'Services', icon: Settings }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -361,6 +423,145 @@ export function ConsultationEditModal({
                   onChange={(e) => handleInputChange('follow_up_date', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'services' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Services Classification</h3>
+              
+              {/* Service Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Service Type *</label>
+                <select
+                  value={formData.service_type || ''}
+                  onChange={(e) => handleInputChange('service_type', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select Service Type</option>
+                  {serviceOptions.map((service) => (
+                    <option key={service.value} value={service.value}>
+                      {service.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Segment Selection */}
+              {formData.service_type && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Segment *</label>
+                  <select
+                    value={formData.segment || ''}
+                    onChange={(e) => handleInputChange('segment', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Segment</option>
+                    {getSegmentsForService(formData.service_type).map((segment) => (
+                      <option key={segment.value} value={segment.value}>
+                        {segment.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Sub-Segment Selection */}
+              {formData.segment && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sub-Segment</label>
+                  <select
+                    value={formData.sub_segment || ''}
+                    onChange={(e) => handleInputChange('sub_segment', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Sub-Segment</option>
+                    {getSubSegmentsForSegment(formData.service_type!, formData.segment).map((subSegment) => (
+                      <option key={subSegment.value} value={subSegment.value}>
+                        {subSegment.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Sub-Sub-Segment Text Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Sub-Sub-Segment Details</label>
+                <textarea
+                  rows={3}
+                  value={formData.sub_sub_segment_text || ''}
+                  onChange={(e) => handleInputChange('sub_sub_segment_text', e.target.value)}
+                  placeholder="Enter additional details or custom sub-segment information..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Case Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Case Type</label>
+                <select
+                  value={formData.case_type || ''}
+                  onChange={(e) => handleInputChange('case_type', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {caseTypeOptions.map((caseType) => (
+                    <option key={caseType.value} value={caseType.value}>
+                      {caseType.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Manual Case Type Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Manual Case Type</label>
+                <textarea
+                  rows={2}
+                  value={formData.manual_case_type || ''}
+                  onChange={(e) => handleInputChange('manual_case_type', e.target.value)}
+                  placeholder="Enter custom case type if needed..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Remarks */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+                <textarea
+                  rows={4}
+                  value={formData.remarks || ''}
+                  onChange={(e) => handleInputChange('remarks', e.target.value)}
+                  placeholder="Enter additional remarks, observations, or notes..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Associated Segments Multi-Select */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Associated Segments</label>
+                <div className="border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {associatedSegmentOptions.map((segment) => {
+                      const isSelected = formData.associated_segments?.includes(segment.value) || false;
+                      return (
+                        <label key={segment.value} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => handleAssociatedSegmentChange(segment.value, e.target.checked)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700">{segment.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select multiple segments that are relevant to this case
+                </p>
               </div>
             </div>
           )}
