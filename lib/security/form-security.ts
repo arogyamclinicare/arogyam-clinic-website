@@ -131,6 +131,7 @@ export class FormSecurity {
     if (keyLower.includes('symptoms')) return 'Symptoms';
     if (keyLower.includes('diagnosis')) return 'Diagnosis';
     if (keyLower.includes('treatment_plan')) return 'Treatment plan';
+    if (keyLower.includes('describe_it')) return 'Describe it';
     if (keyLower.includes('prescription')) return 'Prescription';
     if (keyLower.includes('dosage_instructions')) return 'Dosage instructions';
     if (keyLower.includes('patient_concerns')) return 'Patient concerns';

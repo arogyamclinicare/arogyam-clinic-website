@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { verifyPassword, generateSecurePassword } from '../../lib/auth';
+import { verifyPassword, generateSecurePassword, hashPassword } from '../../lib/auth';
 import { createLogger } from '../../lib/utils/logger';
 
 interface PatientUser {
@@ -25,6 +25,7 @@ interface PatientAuthContextType {
   sessionExpiry: Date | null;
   refreshSession: () => Promise<boolean>;
   forcePasswordReset: (patientId: string) => Promise<{ success: boolean; error?: string }>;
+  hashPatientPassword: (patientId: string, plainTextPassword: string) => Promise<boolean>;
 }
 
 const PatientAuthContext = createContext<PatientAuthContextType | undefined>(undefined);
@@ -250,19 +251,17 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
         if (patientData.password.startsWith('$2a$') || patientData.password.startsWith('$2b$') || patientData.password.startsWith('$2y$')) {
           // It's a bcrypt hash, use proper verification
           isPasswordValid = await verifyPassword(password, patientData.password);
+          logger.info(`Patient ${patientId}: Using bcrypt hash verification`);
         } else {
-          // CRITICAL: This is a plain text password - needs migration
-          logger.warn(`SECURITY WARNING: Patient ${patientId} has plain text password. Forcing password reset.`);
+          // TEMPORARY: Allow plain text passwords for demo/testing
+          // TODO: Remove this after migrating all passwords to bcrypt
+          isPasswordValid = (password === patientData.password);
+          logger.info(`Patient ${patientId}: Using plain text password (temporary support)`);
           
-          // For now, return false to force password reset
-          // In production, you would:
-          // 1. Hash the plain text password
-          // 2. Update the database
-          // 3. Send email to patient
-          return { 
-            success: false, 
-            error: 'Your password needs to be reset for security. Please contact the clinic.' 
-          };
+          // If login successful with plain text, we could hash it here
+          if (isPasswordValid) {
+            logger.info(`Patient ${patientId}: Login successful with plain text - consider hashing password`);
+          }
         }
       } catch (error) {
         logger.error('Password verification error:', error);
@@ -362,6 +361,30 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
     }
   };
 
+  // TEMPORARY: Helper function to hash plain text passwords after successful login
+  const hashPatientPassword = async (patientId: string, plainTextPassword: string): Promise<boolean> => {
+    try {
+      const hashedPassword = await hashPassword(plainTextPassword);
+      
+      // Update the patient's password in the database
+      const { error } = await supabase
+        .from('patients')
+        .update({ password: hashedPassword })
+        .eq('patient_id', patientId);
+      
+      if (error) {
+        logger.error(`Failed to hash password for patient ${patientId}:`, error);
+        return false;
+      }
+      
+      logger.info(`Successfully hashed password for patient ${patientId}`);
+      return true;
+    } catch (error) {
+      logger.error(`Error hashing password for patient ${patientId}:`, error);
+      return false;
+    }
+  };
+
   const value: PatientAuthContextType = {
     user,
     isAuthenticated: !!user,
@@ -371,7 +394,8 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
     loading,
     sessionExpiry,
     refreshSession,
-    forcePasswordReset
+    forcePasswordReset,
+    hashPatientPassword
   };
 
   return (

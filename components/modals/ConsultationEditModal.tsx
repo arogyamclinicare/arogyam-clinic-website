@@ -42,6 +42,7 @@ export function ConsultationEditModal({
         follow_up_date: consultation.follow_up_date || '',
         follow_up_notes: consultation.follow_up_notes || '',
         treatment_plan: consultation.treatment_plan || '',
+        describe_it: consultation.describe_it || '',
         symptoms: consultation.symptoms || '',
         diagnosis: consultation.diagnosis || '',
         medicines_prescribed: consultation.medicines_prescribed || null,
@@ -90,6 +91,9 @@ export function ConsultationEditModal({
       }
       if (cleanedFormData.treatment_plan === '') {
         cleanedFormData.treatment_plan = null;
+      }
+      if (cleanedFormData.describe_it === '') {
+        cleanedFormData.describe_it = null;
       }
       if (cleanedFormData.notes === '') {
         cleanedFormData.notes = null;
@@ -300,12 +304,23 @@ export function ConsultationEditModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Treatment Plan</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">What are you suffering from?</label>
                 <textarea
                   rows={3}
                   value={formData.treatment_plan || ''}
                   onChange={(e) => handleInputChange('treatment_plan', e.target.value)}
-                  placeholder="Enter treatment plan..."
+                  placeholder="Enter what the patient is suffering from..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Describe it (Admin Only)</label>
+                <textarea
+                  rows={3}
+                  value={formData.describe_it || ''}
+                  onChange={(e) => handleInputChange('describe_it', e.target.value)}
+                  placeholder="Enter detailed description of the condition (admin only)..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>

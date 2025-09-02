@@ -164,6 +164,12 @@ export const consultationUpdateSchema = z.object({
     .nullable()
     .transform(val => val?.trim() || null),
   
+  describe_it: z.string()
+    .max(1000, 'Describe it field too long (max 1000 characters)')
+    .optional()
+    .nullable()
+    .transform(val => val?.trim() || null),
+  
   symptoms: z.string()
     .max(1000, 'Symptoms description too long (max 1000 characters)')
     .optional()

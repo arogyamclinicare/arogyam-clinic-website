@@ -17,6 +17,45 @@ interface PatientDashboardProps {
   onBookAppointment: (type?: string) => void;
 }
 
+// Utility function to format time from 24-hour to 12-hour format
+const formatTimeToIndianFormat = (timeString: string): string => {
+  if (!timeString) return '';
+  
+  try {
+    // Handle different time formats
+    let time: string;
+    
+    if (timeString.includes(':')) {
+      // If it's already in HH:MM format
+      if (timeString.length === 5) {
+        time = timeString;
+      } else if (timeString.length === 8) {
+        // If it's in HH:MM:SS format, extract HH:MM
+        time = timeString.substring(0, 5);
+      } else {
+        return timeString; // Return as is if format is unexpected
+      }
+    } else {
+      return timeString; // Return as is if no colon found
+    }
+    
+    const [hours, minutes] = time.split(':').map(Number);
+    
+    if (isNaN(hours) || isNaN(minutes)) {
+      return timeString; // Return original if parsing fails
+    }
+    
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+    const displayMinutes = minutes.toString().padStart(2, '0');
+    
+    return `${displayHours}:${displayMinutes} ${period}`;
+  } catch (error) {
+    console.error('Error formatting time:', error);
+    return timeString; // Return original if any error occurs
+  }
+};
+
 export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
   const { user, logout } = usePatientAuth();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
@@ -304,7 +343,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
                        <div className="flex justify-between items-center">
                          <div>
                            <p className="font-medium text-blue-900">{appointment.preferred_date}</p>
-                           <p className="text-sm text-blue-700">{appointment.preferred_time}</p>
+                           <p className="text-sm text-blue-700">{formatTimeToIndianFormat(appointment.preferred_time)}</p>
                          </div>
                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
                            {appointment.status}

@@ -57,6 +57,7 @@ export interface Database {
           follow_up_date: string | null
           follow_up_notes: string | null
           treatment_plan: string | null
+          describe_it: string | null
           symptoms: string | null
           diagnosis: string | null
           medicines_prescribed: string | null
@@ -85,6 +86,7 @@ export interface Database {
           follow_up_date?: string | null
           follow_up_notes?: string | null
           treatment_plan?: string | null
+          describe_it?: string | null
           symptoms?: string | null
           diagnosis?: string | null
           medicines_prescribed?: string | null
@@ -113,6 +115,7 @@ export interface Database {
           follow_up_date?: string | null
           follow_up_notes?: string | null
           treatment_plan?: string | null
+          describe_it?: string | null
           symptoms?: string | null
           diagnosis?: string | null
           medicines_prescribed?: string | null
