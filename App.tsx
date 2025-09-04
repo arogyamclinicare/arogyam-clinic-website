@@ -5,7 +5,7 @@ import { FloatingCTA } from './components/FloatingCTA';
 import { OptimizedConsultationProvider, useOptimizedConsultation } from './components/context/OptimizedConsultationContext';
 import { AuthProvider } from './components/context/AuthContext';
 import { PatientAuthProvider } from './components/context/PatientAuthContext';
-import { SupabaseProvider } from './components/context/SupabaseContext';
+// Removed SupabaseProvider import to eliminate multiple client instances
 import { ConsultationBooking } from './components/modals/ConsultationBooking';
 
 import { SimpleRouter } from './components/SimpleRouter';
@@ -108,11 +108,10 @@ export default function App() {
   return (
     <AuthProvider>
       <PatientAuthProvider>
-        <SupabaseProvider>
-          <OptimizedConsultationProvider>
-            <AppContent />
-          </OptimizedConsultationProvider>
-        </SupabaseProvider>
+        {/* Removed SupabaseProvider to eliminate multiple client instances */}
+        <OptimizedConsultationProvider>
+          <AppContent />
+        </OptimizedConsultationProvider>
       </PatientAuthProvider>
     </AuthProvider>
   );

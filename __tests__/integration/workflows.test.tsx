@@ -14,7 +14,7 @@ jest.mock('../../components/context/AuthContext', () => ({
 
 // Mock Supabase
 jest.mock('../../lib/supabase', () => ({
-  supabase: {
+  getSupabaseClient: jest.fn(() => ({
     auth: {
       signInWithPassword: jest.fn(),
       signOut: jest.fn(),
@@ -29,7 +29,23 @@ jest.mock('../../lib/supabase', () => ({
         select: jest.fn(() => Promise.resolve({ data: null, error: null })),
       })),
     })),
-  },
+  })),
+  getSupabase: jest.fn(() => ({
+    auth: {
+      signInWithPassword: jest.fn(),
+      signOut: jest.fn(),
+    },
+    from: jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn(() => Promise.resolve({ data: null, error: null })),
+        })),
+      })),
+      insert: jest.fn(() => ({
+        select: jest.fn(() => Promise.resolve({ data: null, error: null })),
+      })),
+    })),
+  })),
 }));
 
 describe('User Workflow Integration Tests', () => {

@@ -6,12 +6,14 @@ import {
   LogOut,
   Home,
   Plus,
-  Pill
+  Pill,
+  Download
 } from 'lucide-react';
 import { usePatientAuth } from './context/PatientAuthContext';
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import type { Consultation } from '../lib/supabase';
+import { getSupabaseAdmin } from '../lib/supabase-admin';
+import { pdfGenerator } from '../lib/pdf-generator';
+import type { Consultation, DrugTemplate } from '../lib/supabase';
 
 interface PatientDashboardProps {
   onBookAppointment: (type?: string) => void;
@@ -59,7 +61,10 @@ const formatTimeToIndianFormat = (timeString: string): string => {
 export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
   const { user, logout } = usePatientAuth();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [drugTemplates, setDrugTemplates] = useState<DrugTemplate[]>([]);
+  const [prescriptionDrugs, setPrescriptionDrugs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Fetch real data from Supabase
   useEffect(() => {
@@ -73,7 +78,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
         setLoading(true);
         
         // First, let's check what's in the patients table
-        const { data: patientCheck, error: patientError } = await supabase
+        const { data: patientCheck, error: patientError } = await (getSupabaseAdmin() as any)
           .from('patients')
           .select('*')
           .eq('patient_id', user.patient_id);
@@ -85,7 +90,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
         }
         
         // Try to find consultations by patient_id first
-        let { data, error } = await supabase
+        let { data, error } = await (getSupabaseAdmin() as any)
           .from('consultations')
           .select('*')
           .eq('patient_id', user.patient_id)
@@ -95,7 +100,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
         if (!data || data.length === 0) {
           if (patientCheck && patientCheck[0]?.email) {
             
-            const { data: emailData } = await supabase
+            const { data: emailData } = await (getSupabaseAdmin() as any)
               .from('consultations')
               .select('*')
               .eq('email', patientCheck[0].email)
@@ -111,7 +116,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
                 if (!consultation.patient_id) {
                   // Linking consultation to patient_id
                   
-                  const { error: linkError } = await supabase
+                  const { error: linkError } = await (getSupabaseAdmin() as any)
                     .from('consultations')
                     .update({ patient_id: user.patient_id })
                     .eq('id', consultation.id);
@@ -125,7 +130,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
               }
               
               // Also check if consultations already have the right patient_id but different format
-              const consultationsWithRightEmail = emailData.filter(c => c.email === patientCheck[0].email);
+              const consultationsWithRightEmail = emailData.filter((c: any) => c.email === patientCheck[0].email);
               // Consultations with matching email
               
               if (consultationsWithRightEmail.length > 0) {
@@ -135,7 +140,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
               }
               
               // Now fetch the linked consultations
-              const { data: linkedData, error: linkedError } = await supabase
+              const { data: linkedData, error: linkedError } = await (getSupabaseAdmin() as any)
                 .from('consultations')
                 .select('*')
                 .eq('patient_id', user.patient_id)
@@ -159,10 +164,52 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
           setConsultations(data || []);
         }
         
+        // Fetch drug templates for common name lookup
+        try {
+          const { data: templates, error: templateError } = await (getSupabaseAdmin() as any)
+            .from('drug_templates')
+            .select('*')
+            .order('drug_name', { ascending: true });
+
+          if (templateError) {
+            console.error('❌ Error fetching drug templates:', templateError);
+          } else {
+            setDrugTemplates(templates || []);
+          }
+        } catch (templateError) {
+          console.error('❌ Failed to fetch drug templates:', templateError);
+        }
+
+        // Fetch prescription drugs from the new prescription_drugs table
+        try {
+          const consultationIds = (data || []).map((c: any) => c.id);
+          console.log('🔍 PatientDashboard: Consultation IDs for prescription fetch:', consultationIds);
+          
+          if (consultationIds.length > 0) {
+            const { data: prescriptionData, error: prescriptionError } = await (getSupabaseAdmin() as any)
+              .from('prescription_drugs')
+              .select('*')
+              .in('consultation_id', consultationIds)
+              .order('created_at', { ascending: true });
+
+            if (prescriptionError) {
+              console.error('❌ Error fetching prescription drugs:', prescriptionError);
+            } else {
+              setPrescriptionDrugs(prescriptionData || []);
+              console.log('✅ PatientDashboard: Fetched prescription drugs:', prescriptionData);
+              console.log('📊 PatientDashboard: Total prescription drugs found:', prescriptionData?.length || 0);
+            }
+          } else {
+            console.log('⚠️ PatientDashboard: No consultation IDs found for prescription fetch');
+          }
+        } catch (prescriptionError) {
+          console.error('❌ Failed to fetch prescription drugs:', prescriptionError);
+        }
+        
         // If still no data, try to show consultations by email as a last resort
         if ((!data || data.length === 0) && patientCheck && patientCheck[0]?.email) {
           // Last resort: trying to show consultations by email
-          const { data: lastResortData } = await supabase
+          const { data: lastResortData } = await (getSupabaseAdmin() as any)
             .from('consultations')
             .select('*')
             .eq('email', patientCheck[0].email)
@@ -197,15 +244,53 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
     onBookAppointment();
   };
 
+  const handleDownloadPrescriptionPDF = async (consultation: Consultation) => {
+    setIsGeneratingPDF(true);
+    try {
+      const pdfBlob = await pdfGenerator.generatePatientPrescriptionPDF(consultation);
+      
+      // Create download link
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${consultation.name}_prescription_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   // Filter consultations by status - more inclusive
   const upcomingAppointments = consultations.filter(c => 
     c.status === 'Confirmed' || c.status === 'Scheduled' || c.status === 'pending' || c.status === 'confirmed'
   );
   
-  // Show prescriptions for ANY consultation with medicine info, regardless of status
-  const activePrescriptions = consultations.filter(c => 
-    c.medicines_prescribed && c.medicines_prescribed.trim() !== ''
-  );
+  // Show prescriptions from prescription_drugs table or fallback to consultations table
+  const activePrescriptions = consultations.filter(c => {
+    // Check if consultation has prescription drugs in the new table
+    const hasPrescriptionDrugs = prescriptionDrugs.some(pd => pd.consultation_id === c.id);
+    // Fallback to old prescription fields in consultations table
+    const hasOldPrescription = (c.drug_name && c.drug_name.trim() !== '') || 
+                              (c.medicines_prescribed && c.medicines_prescribed.trim() !== '');
+    
+    console.log(`🔍 PatientDashboard: Checking consultation ${c.id} (${c.name}):`, {
+      hasPrescriptionDrugs,
+      hasOldPrescription,
+      prescriptionDrugsCount: prescriptionDrugs.filter(pd => pd.consultation_id === c.id).length
+    });
+    
+    return hasPrescriptionDrugs || hasOldPrescription;
+  });
+  
+  console.log('📊 PatientDashboard: Active prescriptions count:', activePrescriptions.length);
+  console.log('📊 PatientDashboard: Total consultations:', consultations.length);
+  console.log('📊 PatientDashboard: Total prescription drugs:', prescriptionDrugs.length);
   
   // Also show next appointment date from any consultation that has it
   const nextAppointmentDate = consultations.find(c => 
@@ -340,7 +425,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
                  <div className="space-y-3">
                    {upcomingAppointments.slice(0, 3).map((appointment) => (
                      <div key={appointment.id} className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                       <div className="flex justify-between items-center">
+                       <div className="flex justify-between items-start mb-2">
                          <div>
                            <p className="font-medium text-blue-900">{appointment.preferred_date}</p>
                            <p className="text-sm text-blue-700">{formatTimeToIndianFormat(appointment.preferred_time)}</p>
@@ -349,6 +434,33 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
                            {appointment.status}
                          </span>
                        </div>
+                       
+                       {/* Service Information */}
+                       {(appointment.segment || appointment.sub_segment) && (
+                         <div className="mt-2 pt-2 border-t border-blue-200">
+                           <div className="flex flex-wrap gap-2">
+                             {appointment.segment && (
+                               <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md font-medium">
+                                 📋 {appointment.segment}
+                               </span>
+                             )}
+                             {appointment.sub_segment && (
+                               <span className="inline-flex items-center px-2 py-1 bg-blue-200 text-blue-900 text-xs rounded-md font-medium">
+                                 🔍 {appointment.sub_segment}
+                               </span>
+                             )}
+                           </div>
+                         </div>
+                       )}
+                       
+                       {/* Treatment Information */}
+                       {appointment.treatment_type && (
+                         <div className="mt-2">
+                           <p className="text-xs text-blue-600">
+                             <span className="font-medium">Treatment:</span> {appointment.treatment_type}
+                           </p>
+                         </div>
+                       )}
                      </div>
                    ))}
                  </div>
@@ -372,24 +484,227 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
           {/* Prescriptions Card */}
           <Card className="border-l-4 border-l-green-500 shadow-lg">
             <CardContent className="p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <Pill className="w-6 h-6 text-green-600" />
-                <h3 className="text-xl font-semibold text-gray-900">Prescriptions</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <Pill className="w-6 h-6 text-green-600" />
+                  <h3 className="text-xl font-semibold text-gray-900">Prescriptions</h3>
+                </div>
+                {activePrescriptions.length > 0 && (
+                  <Button
+                    onClick={() => handleDownloadPrescriptionPDF(activePrescriptions[0])}
+                    disabled={isGeneratingPDF}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg flex items-center space-x-1"
+                  >
+                    <Download className="w-3 h-3" />
+                    <span>{isGeneratingPDF ? 'Generating...' : 'Download PDF'}</span>
+                  </Button>
+                )}
               </div>
 
               {activePrescriptions.length > 0 ? (
                 <div className="space-y-3">
-                  {activePrescriptions.slice(0, 3).map((prescription) => (
-                    <div key={prescription.id} className="bg-green-50 rounded-lg p-3 border border-green-200">
-                      <div className="space-y-2">
-                        <p className="font-medium text-green-900">Medicines Prescribed</p>
-                        <p className="text-sm text-green-700">{prescription.medicines_prescribed}</p>
-                        {prescription.dosage_instructions && (
-                          <p className="text-xs text-green-600">Dosage: {prescription.dosage_instructions}</p>
-                        )}
+                  {activePrescriptions.slice(0, 3).map((consultation) => {
+                    // Get prescription drugs for this consultation
+                    const consultationPrescriptions = prescriptionDrugs.filter(pd => pd.consultation_id === consultation.id);
+                    
+                    return (
+                      <div key={consultation.id} className="bg-green-50 rounded-lg p-3 border border-green-200">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-start">
+                            <p className="font-medium text-green-900">Prescription Details</p>
+                            <span className="text-xs text-green-600">{consultation.preferred_date}</span>
+                          </div>
+                          
+                          {/* Show prescription drugs from prescription_drugs table */}
+                          {consultationPrescriptions.length > 0 ? (
+                            <div className="space-y-3">
+                              {consultationPrescriptions.map((prescription, index) => {
+                                const template = drugTemplates.find(t => t.drug_name === prescription.drug_name);
+                                
+                                // Skip empty prescriptions (drug_name is empty)
+                                if (!prescription.drug_name || prescription.drug_name.trim() === '') {
+                                  return null;
+                                }
+                                
+                                return (
+                                  <div key={prescription.id} className="bg-white rounded-md p-4 border border-green-100">
+                                    <div className="space-y-2">
+                                      <h5 className="font-semibold text-green-900 text-lg mb-3">
+                                        {consultationPrescriptions.length > 1 ? `Drug #${index + 1}` : 'Prescription Drugs'}
+                                      </h5>
+                                      
+                                      <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                          <span className="font-medium text-green-700">Drug Name:</span>
+                                          <span className="text-green-600">{template?.common_name || prescription.drug_name}</span>
+                                        </div>
+                                        
+                                        {prescription.potency && (
+                                          <div className="flex justify-between">
+                                            <span className="font-medium text-green-700">Potency:</span>
+                                            <span className="text-green-600">{prescription.potency}</span>
+                                          </div>
+                                        )}
+                                        
+                                        {prescription.dosage && (
+                                          <div className="flex justify-between">
+                                            <span className="font-medium text-green-700">Dosage:</span>
+                                            <span className="text-green-600">{prescription.dosage}</span>
+                                          </div>
+                                        )}
+                                        
+                                        {prescription.repetition_frequency && prescription.repetition_interval && (
+                                          <div className="flex justify-between">
+                                            <span className="font-medium text-green-700">Repetition:</span>
+                                            <span className="text-green-600">
+                                              {prescription.repetition_frequency} x {prescription.repetition_interval} {prescription.repetition_unit}
+                                            </span>
+                                          </div>
+                                        )}
+                                        
+                                        {prescription.quantity && (
+                                          <div className="flex justify-between">
+                                            <span className="font-medium text-green-700">Quantity:</span>
+                                            <span className="text-green-600">{prescription.quantity}</span>
+                                          </div>
+                                        )}
+                                        
+                                        {prescription.period && (
+                                          <div className="flex justify-between">
+                                            <span className="font-medium text-green-700">Period:</span>
+                                            <span className="text-green-600">{prescription.period} days</span>
+                                          </div>
+                                        )}
+                                        
+                                        {prescription.remarks && (
+                                          <div className="flex justify-between">
+                                            <span className="font-medium text-green-700">Remarks:</span>
+                                            <span className="text-green-600">{prescription.remarks}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              
+                              {/* Show legacy medicines_prescribed and dosage_instructions if they exist */}
+                              {(consultation.medicines_prescribed && consultation.medicines_prescribed.trim() !== '') && (
+                                <div className="bg-white rounded-md p-4 border border-green-100">
+                                  <div className="space-y-2">
+                                    <h5 className="font-semibold text-green-900 text-lg mb-3">Medicines Prescribed</h5>
+                                    <div className="space-y-2 text-sm">
+                                      <div className="flex justify-between">
+                                        <span className="font-medium text-green-700">Medicines:</span>
+                                        <span className="text-green-600">{consultation.medicines_prescribed}</span>
+                                      </div>
+                                      
+                                      {consultation.dosage_instructions && (
+                                        <div className="flex justify-between">
+                                          <span className="font-medium text-green-700">Dosage Instructions:</span>
+                                          <span className="text-green-600">{consultation.dosage_instructions}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            /* Fallback to old prescription fields in consultations table */
+                            consultation.drug_name && consultation.drug_name.trim() !== '' ? (
+                              <div className="bg-white rounded-md p-4 border border-green-100">
+                                <div className="space-y-2">
+                                  <h5 className="font-semibold text-green-900 text-lg mb-3">
+                                    Prescription Drugs
+                                  </h5>
+                                  
+                                  <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                      <span className="font-medium text-green-700">Drug Name:</span>
+                                      <span className="text-green-600">{consultation.drug_name}</span>
+                                    </div>
+                                    
+                                    {consultation.potency && (
+                                      <div className="flex justify-between">
+                                        <span className="font-medium text-green-700">Potency:</span>
+                                        <span className="text-green-600">{consultation.potency}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {consultation.dosage && (
+                                      <div className="flex justify-between">
+                                        <span className="font-medium text-green-700">Dosage:</span>
+                                        <span className="text-green-600">{consultation.dosage}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {consultation.repetition_frequency && consultation.repetition_interval && (
+                                      <div className="flex justify-between">
+                                        <span className="font-medium text-green-700">Repetition:</span>
+                                        <span className="text-green-600">
+                                          {consultation.repetition_frequency} x {consultation.repetition_interval} {consultation.repetition_unit}
+                                        </span>
+                                      </div>
+                                    )}
+                                    
+                                    {consultation.quantity && (
+                                      <div className="flex justify-between">
+                                        <span className="font-medium text-green-700">Quantity:</span>
+                                        <span className="text-green-600">{consultation.quantity}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {consultation.period && (
+                                      <div className="flex justify-between">
+                                        <span className="font-medium text-green-700">Period:</span>
+                                        <span className="text-green-600">{consultation.period} days</span>
+                                      </div>
+                                    )}
+                                    
+                                    {consultation.prescription_remarks && (
+                                      <div className="flex justify-between">
+                                        <span className="font-medium text-green-700">Remarks:</span>
+                                        <span className="text-green-600">{consultation.prescription_remarks}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Fallback to old medicines_prescribed field */
+                              <div>
+                                <p className="text-sm text-green-700">{consultation.medicines_prescribed}</p>
+                                {consultation.dosage_instructions && (
+                                  <p className="text-xs text-green-600">Dosage: {consultation.dosage_instructions}</p>
+                                )}
+                              </div>
+                            )
+                          )}
+                          
+                          {/* Services Information for Prescriptions */}
+                          {(consultation.segment || consultation.sub_segment) && (
+                            <div className="mt-3 pt-3 border-t border-green-200">
+                              <h6 className="font-semibold text-green-900 text-sm mb-2">Services</h6>
+                              <div className="flex flex-wrap gap-2">
+                                {consultation.segment && (
+                                  <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded-md font-medium">
+                                    📋 {consultation.segment}
+                                  </span>
+                                )}
+                                {consultation.sub_segment && (
+                                  <span className="inline-flex items-center px-2 py-1 bg-green-200 text-green-900 text-xs rounded-md font-medium">
+                                    🔍 {consultation.sub_segment}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-8">

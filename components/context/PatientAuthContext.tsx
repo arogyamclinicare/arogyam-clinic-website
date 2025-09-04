@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
 import { verifyPassword, generateSecurePassword, hashPassword } from '../../lib/auth';
 import { createLogger } from '../../lib/utils/logger';
+import { getSupabaseAdmin } from '../../lib/supabase-admin';
 
 interface PatientUser {
   id: string;
@@ -26,6 +26,7 @@ interface PatientAuthContextType {
   refreshSession: () => Promise<boolean>;
   forcePasswordReset: (patientId: string) => Promise<{ success: boolean; error?: string }>;
   hashPatientPassword: (patientId: string, plainTextPassword: string) => Promise<boolean>;
+  forceResetLockout: () => void;
 }
 
 const PatientAuthContext = createContext<PatientAuthContextType | undefined>(undefined);
@@ -72,6 +73,14 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
   const resetLoginAttempts = (): void => {
     setLoginAttempts({ count: 0, lockedUntil: 0 });
     sessionStorage.removeItem('patient_login_attempts');
+  };
+
+  // SECURITY: Force reset lockout (for admin/debugging purposes)
+  const forceResetLockout = (): void => {
+    setLoginAttempts({ count: 0, lockedUntil: 0 });
+    sessionStorage.removeItem('patient_login_attempts');
+    sessionStorage.removeItem('arogyam_patient_session');
+    logger.info('Patient lockout force reset');
   };
 
   // SECURITY: Create secure patient session
@@ -222,8 +231,8 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
         return { success: false, error: 'Patient ID and password are required' };
       }
 
-      // Find the patient by patient_id
-      const { data: patientData, error: patientError } = await supabase
+      // Find the patient by patient_id - using admin client to bypass RLS
+      const { data: patientData, error: patientError } = await getSupabaseAdmin()
         .from('patients')
         .select('*')
         .eq('patient_id', patientId)
@@ -248,14 +257,14 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
       
       try {
         // Check if stored password is already a bcrypt hash
-        if (patientData.password.startsWith('$2a$') || patientData.password.startsWith('$2b$') || patientData.password.startsWith('$2y$')) {
+        if ((patientData as any).password.startsWith('$2a$') || (patientData as any).password.startsWith('$2b$') || (patientData as any).password.startsWith('$2y$')) {
           // It's a bcrypt hash, use proper verification
-          isPasswordValid = await verifyPassword(password, patientData.password);
+          isPasswordValid = await verifyPassword(password, (patientData as any).password);
           logger.info(`Patient ${patientId}: Using bcrypt hash verification`);
         } else {
           // TEMPORARY: Allow plain text passwords for demo/testing
           // TODO: Remove this after migrating all passwords to bcrypt
-          isPasswordValid = (password === patientData.password);
+          isPasswordValid = (password === (patientData as any).password);
           logger.info(`Patient ${patientId}: Using plain text password (temporary support)`);
           
           // If login successful with plain text, we could hash it here
@@ -276,15 +285,15 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
 
       // SECURITY: Create secure session
       const patientUser: PatientUser = {
-        id: patientData.id,
-        email: patientData.email || '',
+        id: (patientData as any).id,
+        email: (patientData as any).email || '',
         role: 'patient',
-        name: patientData.name,
-        patient_id: patientData.patient_id,
-        phone: patientData.phone,
-        age: patientData.age,
-        gender: patientData.gender,
-        address: patientData.address
+        name: (patientData as any).name,
+        patient_id: (patientData as any).patient_id,
+        phone: (patientData as any).phone,
+        age: (patientData as any).age,
+        gender: (patientData as any).gender,
+        address: (patientData as any).address
       };
       
       const sessionId = createSecureSession(patientUser);
@@ -366,8 +375,8 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
     try {
       const hashedPassword = await hashPassword(plainTextPassword);
       
-      // Update the patient's password in the database
-      const { error } = await supabase
+      // Update the patient's password in the database - using admin client
+      const { error } = await (getSupabaseAdmin() as any)
         .from('patients')
         .update({ password: hashedPassword })
         .eq('patient_id', patientId);
@@ -395,7 +404,8 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
     sessionExpiry,
     refreshSession,
     forcePasswordReset,
-    hashPatientPassword
+    hashPatientPassword,
+    forceResetLockout
   };
 
   return (

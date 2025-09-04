@@ -49,19 +49,23 @@ export const consultationBaseSchema = z.object({
     .refine(date => {
       try {
         const selectedDate = new Date(date + 'T00:00:00');
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         
-        // Allow tomorrow and future dates (matching form min attribute)
-        return selectedDate >= tomorrow;
+        // Allow today and future dates
+        return selectedDate >= today;
       } catch (error) {
         return false;
       }
-    }, 'Preferred date must be tomorrow or in the future'),
+    }, 'Preferred date must be today or in the future'),
   
   preferred_time: z.string()
-    .min(1, 'Please select a preferred time'),
+    .min(1, 'Please select a preferred time')
+    .refine(time => {
+      // Accept time formats like "10:00 AM", "2:30 PM", "09:15 AM"
+      const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i;
+      return timeRegex.test(time);
+    }, 'Please select a valid time format (e.g., 10:00 AM)'),
   
   consultation_type: z.enum(['video', 'phone'], {
     errorMap: () => ({ message: 'Please select consultation type' })

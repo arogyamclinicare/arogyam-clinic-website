@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
-import { useSupabase } from './context/SupabaseContext';
+import { clearAdminSession } from '../lib/secure-auth';
+// Removed SupabaseContext to avoid multiple client instances
 import { ConsultationEditModal } from './modals/ConsultationEditModal';
-import { supabase } from '../lib/supabase';
+// Admin client will be imported dynamically to avoid conflicts
 import { generateSecurePassword } from '../lib/auth';
+import { getSupabaseAdmin } from '../lib/supabase-admin';
+import type { Consultation, ConsultationUpdate } from '../lib/supabase';
 import { 
   Users, 
   Calendar, 
@@ -28,7 +31,6 @@ import {
 } from 'lucide-react';
 
 // Import the types from our Supabase lib
-import type { Consultation } from '../lib/supabase';
 import { 
   CONSULTATION_STATUS, 
   STATUS_LABELS, 
@@ -72,28 +74,218 @@ const formatTimeToIndian = (timeString: string) => {
 };
 
 export function AdminDashboard() {
-  const { user, logout } = useAuth();
-  const { 
-    consultations, 
-    loading,
-    error,
-    realtimeStatus,
-    updateConsultationStatus,
-    updateConsultation,
-    deleteConsultation,
-    refreshConsultations
-  } = useSupabase();
+  const { user, logout: authLogout } = useAuth();
+
+  // Custom logout function that handles both auth systems
+  const logout = async () => {
+    try {
+      // Use secure logout
+      clearAdminSession();
+      
+      // Also call the complex auth logout if available
+      if (authLogout) {
+        await authLogout();
+      }
+      
+      // Redirect to home page
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force redirect even if logout fails
+      clearAdminSession();
+      window.location.href = '/';
+    }
+  };
+    // State for consultation management (using admin client only)
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'connected' | 'error' | 'disconnected' | 'failed'>('disconnected');
+  
+  // Consultation management functions using admin client
+  const fetchConsultations = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await (getSupabaseAdmin() as any)
+        .from('consultations')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        setError(error.message);
+      } else {
+        setConsultations(data || []);
+        setError(null);
+      }
+    } catch (err) {
+      setError('Failed to fetch consultations');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateConsultationStatus = async (id: string, status: string) => {
+    try {
+      const { error } = await (getSupabaseAdmin() as any)
+        .from('consultations')
+        .update({ status })
+        .eq('id', id);
+      
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      
+      // Refresh consultations
+      await fetchConsultations();
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: 'Failed to update consultation status' };
+    }
+  };
+
+  const updateConsultation = async (id: string, updates: Partial<ConsultationUpdate>) => {
+    try {
+      console.log('🔍 AdminDashboard: Updating consultation with data:', { id, updates });
+      
+      const { error } = await (getSupabaseAdmin() as any)
+        .from('consultations')
+        .update(updates)
+        .eq('id', id);
+      
+      if (error) {
+        console.error('❌ AdminDashboard: Error updating consultation:', error);
+        return { success: false, error: error.message };
+      }
+      
+      console.log('✅ AdminDashboard: Successfully updated consultation');
+      
+      // Refresh consultations
+      await fetchConsultations();
+      return { success: true };
+    } catch (err) {
+      console.error('❌ AdminDashboard: Unexpected error updating consultation:', err);
+      return { success: false, error: 'Failed to update consultation' };
+    }
+  };
+
+  const deleteConsultation = async (id: string) => {
+    try {
+      const { error } = await (getSupabaseAdmin() as any)
+        .from('consultations')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      
+      // Refresh consultations
+      await fetchConsultations();
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: 'Failed to delete consultation' };
+    }
+  };
+
+  const refreshConsultations = fetchConsultations;
+
+  // Don't fetch consultations immediately - only when user interacts
+  // This prevents the admin client from being created at component mount
+  
   const [activeTab, setActiveTab] = useState<'new_entry' | 'interacting' | 'live_patients'>('new_entry');
-  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Load consultations when user switches to a tab that needs them
+  useEffect(() => {
+    if (activeTab !== 'new_entry' || consultations.length === 0) {
+      fetchConsultations();
+    }
+  }, [activeTab]);
+
+  // Set up real-time subscription for live updates - but only when needed
+  useEffect(() => {
+    let channel: any = null;
+    
+    const setupRealtime = async () => {
+      try {
+        // Only setup real-time when user is actually interacting with the admin panel
+        const client = getSupabaseAdmin();
+        channel = client
+          .channel('admin-consultations-changes')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'consultations'
+            },
+            (payload) => {
+              console.log('🔄 Real-time update received:', payload);
+              
+              // Handle different types of changes
+              if (payload.eventType === 'INSERT') {
+                // Add new consultation to the list
+                const newConsultation = payload.new as Consultation;
+                setConsultations(prev => [newConsultation, ...prev]);
+                console.log('✅ New consultation added:', newConsultation.name);
+              } else if (payload.eventType === 'UPDATE') {
+                // Update existing consultation
+                const updatedConsultation = payload.new as Consultation;
+                setConsultations(prev => 
+                  prev.map(consultation => 
+                    consultation.id === updatedConsultation.id ? updatedConsultation : consultation
+                  )
+                );
+                console.log('🔄 Consultation updated:', updatedConsultation.name);
+              } else if (payload.eventType === 'DELETE') {
+                // Remove deleted consultation
+                const deletedId = payload.old.id;
+                setConsultations(prev => prev.filter(consultation => consultation.id !== deletedId));
+                console.log('🗑️ Consultation deleted:', deletedId);
+              }
+            }
+          )
+          .subscribe((status) => {
+            console.log('📡 Admin real-time status:', status);
+            if (status === 'SUBSCRIBED') {
+              setRealtimeStatus('connected');
+            } else if (status === 'CHANNEL_ERROR') {
+              setRealtimeStatus('error');
+            } else if (status === 'TIMED_OUT') {
+              setRealtimeStatus('failed');
+            }
+          });
+      } catch (error) {
+        console.error('❌ Failed to setup admin real-time:', error);
+        setRealtimeStatus('error');
+      }
+    };
+
+    // Delay real-time setup to avoid immediate client creation
+    const timer = setTimeout(() => {
+      setupRealtime();
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(timer);
+      if (channel) {
+        channel.unsubscribe();
+      }
+    };
+  }, []);
   const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [showRecycleBin, setShowRecycleBin] = useState(false);
   const [recycleBinConsultations, setRecycleBinConsultations] = useState<Consultation[]>([]);
+  const [recycleBinSearchTerm, setRecycleBinSearchTerm] = useState('');
+  const [quickSearchTerm, setQuickSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<Consultation[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [selectedPatientCredentials, setSelectedPatientCredentials] = useState<any>(null);
   const [generatingCredentials, setGeneratingCredentials] = useState<string | null>(null);
+
 
   // Listen for real-time updates and show notifications
   useEffect(() => {
@@ -107,6 +299,15 @@ export function AdminDashboard() {
       }
     }
   }, [consultations]);
+
+  // Search effect - trigger search when search term changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchConsultations(quickSearchTerm);
+    }, 300); // Debounce search by 300ms
+
+    return () => clearTimeout(timeoutId);
+  }, [quickSearchTerm]);
 
   // Show helpful notification when real-time fails
   useEffect(() => {
@@ -168,10 +369,79 @@ export function AdminDashboard() {
     
     const result = await updateConsultation(editingConsultation.id, updates);
     if (result.success) {
+      // Update the consultations list with the new data
+      setConsultations(prev => 
+        prev.map(consultation => 
+          consultation.id === editingConsultation.id 
+            ? { ...consultation, ...updates }
+            : consultation
+        )
+      );
       setIsEditModalOpen(false);
       setEditingConsultation(null);
     }
     return result;
+  };
+
+  // Database search function
+  const searchConsultations = async (searchTerm: string) => {
+    const trimmedTerm = searchTerm.trim();
+    if (!trimmedTerm) {
+      setSearchResults([]);
+      return;
+    }
+
+    console.log('Searching for:', `"${trimmedTerm}"`);
+    setIsSearching(true);
+    try {
+      const supabase = getSupabaseAdmin();
+      
+      // Use a simpler approach with multiple queries and combine results
+      const [nameResults, emailResults, treatmentResults] = await Promise.all([
+        supabase
+          .from('consultations')
+          .select('*')
+          .ilike('name', `%${trimmedTerm}%`)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('consultations')
+          .select('*')
+          .ilike('email', `%${trimmedTerm}%`)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('consultations')
+          .select('*')
+          .ilike('treatment_type', `%${trimmedTerm}%`)
+          .order('created_at', { ascending: false })
+      ]);
+
+      // Combine and deduplicate results
+      const allResults = [
+        ...(nameResults.data || []),
+        ...(emailResults.data || []),
+        ...(treatmentResults.data || [])
+      ];
+
+      // Remove duplicates based on ID
+      const uniqueResults = allResults.filter((consultation: any, index: number, self: any[]) => 
+        index === self.findIndex((c: any) => c.id === consultation.id)
+      );
+
+      // Sort by created_at
+      uniqueResults.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setSearchResults(uniqueResults);
+      
+      console.log('Search results:', uniqueResults.length, 'patients found for:', trimmedTerm);
+      console.log('Name results:', nameResults.data?.length || 0);
+      console.log('Email results:', emailResults.data?.length || 0);
+      console.log('Treatment results:', treatmentResults.data?.length || 0);
+    } catch (error) {
+      console.error('Search failed:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleDeleteConsultation = async () => {
@@ -301,7 +571,7 @@ export function AdminDashboard() {
           // Generated credentials attempt
           
           // Check if this ID already exists
-          const { data: duplicateCheck, error: checkError } = await supabase
+          const { data: duplicateCheck, error: checkError } = await getSupabaseAdmin()
             .from('patients')
             .select('patient_id')
             .eq('patient_id', patientId)
@@ -332,7 +602,7 @@ export function AdminDashboard() {
 
         // Create new patient record for this consultation
         // This ensures each consultation gets unique credentials
-        const { error: insertError } = await supabase
+        const { error: insertError } = await getSupabaseAdmin()
           .from('patients')
           .insert({
             user_id: null, // No auth user for now
@@ -344,14 +614,14 @@ export function AdminDashboard() {
             credentials_generated_at: new Date().toISOString(),
             email_sent: false,
             consultation_id: consultation.id // Link to specific consultation
-          });
+          } as any);
         
         if (insertError) throw insertError;
         // Created new patient with unique credentials
 
       // CRITICAL: Link the consultation to the patient by updating patient_id
               // Linking consultation to patient
-      const { error: linkError } = await supabase
+      const { error: linkError } = await (getSupabaseAdmin() as any)
         .from('consultations')
         .update({ patient_id: patientId })
         .eq('id', consultation.id);
@@ -364,7 +634,7 @@ export function AdminDashboard() {
               // Successfully linked consultation to patient
 
       // For now, mark email as pending (manual sending)
-      await supabase
+      await (getSupabaseAdmin() as any)
         .from('patients')
         .update({ email_sent: false })
         .eq('email', consultation.email);
@@ -418,8 +688,8 @@ Arogyam Clinic Team
     try {
               // Looking for patient for consultation
       
-      // Find patient by consultation_id (new approach)
-      let { data: patient, error } = await supabase
+      // Find patient by consultation_id (new approach) - using admin client
+      let { data: patient, error } = await getSupabaseAdmin()
         .from('patients')
         .select('*')
         .eq('consultation_id', consultation.id)
@@ -429,7 +699,7 @@ Arogyam Clinic Team
       if (error || !patient) {
         // Not found by consultation_id, trying by patient_id
         if (consultation.patient_id) {
-          const { data: patientById } = await supabase
+          const { data: patientById } = await getSupabaseAdmin()
             .from('patients')
             .select('*')
             .eq('patient_id', consultation.patient_id)
@@ -453,12 +723,12 @@ Arogyam Clinic Team
               // Found patient
 
       setSelectedPatientCredentials({
-        name: patient.name,
-        email: patient.email,
-        patientId: patient.patient_id,
-        password: patient.password,
-        generatedAt: patient.credentials_generated_at,
-        emailSent: patient.email_sent
+        name: (patient as any).name,
+        email: (patient as any).email,
+        patientId: (patient as any).patient_id,
+        password: (patient as any).password,
+        generatedAt: (patient as any).credentials_generated_at,
+        emailSent: (patient as any).email_sent
       });
 
       setShowCredentialsModal(true);
@@ -602,7 +872,16 @@ Keep these credentials safe!
               
               {/* User Info & Actions */}
               <div className="flex items-center space-x-3">
-                <span className="text-blue-100 text-xs">Dr. {user?.name || 'Admin'}</span>
+                <span className="text-blue-100 text-xs">
+                  {user?.name || (() => {
+                    const adminSession = localStorage.getItem('admin_session');
+                    if (adminSession) {
+                      const session = JSON.parse(adminSession);
+                      return session.name || 'Admin';
+                    }
+                    return 'Admin';
+                  })()}
+                </span>
                 <button
                   onClick={goHome}
                   className="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10 border border-white/20 text-xs"
@@ -673,19 +952,47 @@ Keep these credentials safe!
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
+              
+              // Define static classes for each tab
+              const getActiveClasses = (tabId: string) => {
+                switch (tabId) {
+                  case 'new_entry':
+                    return 'bg-gradient-to-b from-blue-50 to-blue-100 border-b-4 border-blue-500 text-blue-700';
+                  case 'interacting':
+                    return 'bg-gradient-to-b from-green-50 to-green-100 border-b-4 border-green-500 text-green-700';
+                  case 'live_patients':
+                    return 'bg-gradient-to-b from-purple-50 to-purple-100 border-b-4 border-purple-500 text-purple-700';
+                  default:
+                    return 'bg-gradient-to-b from-gray-50 to-gray-100 border-b-4 border-gray-500 text-gray-700';
+                }
+              };
+              
+              const getIconClasses = (tabId: string) => {
+                switch (tabId) {
+                  case 'new_entry':
+                    return 'bg-blue-100 text-blue-600';
+                  case 'interacting':
+                    return 'bg-green-100 text-green-600';
+                  case 'live_patients':
+                    return 'bg-purple-100 text-purple-600';
+                  default:
+                    return 'bg-gray-100 text-gray-600';
+                }
+              };
+              
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`flex-1 flex flex-col items-center py-4 px-3 transition-all duration-300 ${
                     isActive
-                      ? `bg-gradient-to-b from-${tab.color}-50 to-${tab.color}-100 border-b-4 border-${tab.color}-500 text-${tab.color}-700`
+                      ? getActiveClasses(tab.id)
                       : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50 border-b-4 border-transparent'
                   }`}
                 >
                   <div className={`p-2 rounded-lg mb-2 ${
                     isActive 
-                      ? `bg-${tab.color}-100 text-${tab.color}-600` 
+                      ? getIconClasses(tab.id)
                       : 'bg-gray-100 text-gray-500'
                   }`}>
                     <Icon className="w-5 h-5" />
@@ -703,10 +1010,10 @@ Keep these credentials safe!
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* New Entries Tab - Fresh consultations that need attention */}
         {activeTab === 'new_entry' && (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-              <h2 className="text-2xl font-bold text-blue-900 mb-2">🆕 New Entries</h2>
-              <p className="text-blue-700 text-base">Fresh consultation requests awaiting your review and confirmation</p>
+          <div className="space-y-4">
+            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+              <h2 className="text-lg font-bold text-blue-900">🆕 New Entries</h2>
+              <p className="text-blue-700 text-sm">Fresh consultation requests awaiting review</p>
             </div>
             
             {/* Error Display */}
@@ -805,11 +1112,26 @@ Keep these credentials safe!
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {consultations
-                        .filter(c => c.status === CONSULTATION_STATUS.PENDING)
+                      {(quickSearchTerm ? searchResults : consultations)
+                        .filter(c => {
+                          // If searching, show all search results (already filtered by database)
+                          if (quickSearchTerm) {
+                            return true; // searchResults are already filtered
+                          }
+                          
+                          // If not searching, show only pending entries
+                          return c.status === CONSULTATION_STATUS.PENDING;
+                        })
                         .slice(0, 10)
                         .map((consultation) => (
-                        <tr key={consultation.id} className="hover:bg-blue-50 transition-colors">
+                        <tr 
+                          key={consultation.id} 
+                          className="hover:bg-blue-50 transition-colors cursor-pointer"
+                          onClick={() => {
+                            setEditingConsultation(consultation);
+                            setIsEditModalOpen(true);
+                          }}
+                        >
                           <td className="px-4 py-3">
                             <div className="flex items-center">
                               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -838,21 +1160,30 @@ Keep these credentials safe!
                           <td className="px-4 py-3">
                             <div className="flex space-x-2">
                               <button
-                                onClick={() => handleConfirmPatient(consultation)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleConfirmPatient(consultation);
+                                }}
                                 className="inline-flex items-center px-2 py-1 border border-transparent text-xs leading-4 font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
                               >
                                 <CheckCircle className="w-3 h-3 mr-1" />
                                 Confirm
                               </button>
                               <button
-                                onClick={() => handleStartConsultation(consultation)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStartConsultation(consultation);
+                                }}
                                 className="inline-flex items-center px-2 py-1 border border-transparent text-xs leading-4 font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                               >
                                 <Calendar className="w-3 h-3 mr-1" />
                                 Start
                               </button>
                               <button
-                                onClick={() => handleEditConsultation(consultation)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditConsultation(consultation);
+                                }}
                                 className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs leading-4 font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
                               >
                                 <Edit className="w-3 h-3 mr-1" />
@@ -887,24 +1218,19 @@ Keep these credentials safe!
 
         {/* Interacting Tab - Consultations in progress */}
         {activeTab === 'interacting' && (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-2xl font-bold text-green-900 mb-2">🔄 Interacting</h2>
-                  <p className="text-green-700 text-base">Active consultations in progress & follow-up entries that need attention</p>
-                  <div className="flex items-center space-x-2 mt-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50"></div>
-                    <span className="text-xs text-green-700 font-medium">Live Updates Active</span>
-                    <span className="text-xs text-green-600">(Real-time synchronization)</span>
-                  </div>
+          <div className="space-y-4">
+            <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <h2 className="text-lg font-bold text-green-900">🔄 Interacting</h2>
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-green-600">Live</span>
                 </div>
                 <button 
                   onClick={refreshConsultations}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg text-sm"
+                  className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
                 >
-                  <Calendar className="w-4 h-4" />
-                  <span>Refresh</span>
+                  Refresh
                 </button>
               </div>
             </div>
@@ -928,23 +1254,51 @@ Keep these credentials safe!
               </div>
             )}
 
-            {/* Search */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex space-x-4">
+            {/* Compact Search */}
+            <div className="bg-white rounded-lg shadow p-3 mb-3">
+              <div className="flex items-center space-x-3">
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    {isSearching ? (
+                      <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    ) : (
+                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    )}
                     <input
                       type="text"
-                      placeholder="Search consultations by name, email, or treatment..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      placeholder="Search all consultations..."
+                      value={quickSearchTerm}
+                      onChange={(e) => setQuickSearchTerm(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
                     />
                   </div>
                 </div>
+                {quickSearchTerm && (
+                  <button
+                    onClick={() => setQuickSearchTerm('')}
+                    className="px-2 py-1 rounded text-gray-500 hover:text-gray-700 text-sm"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
+              
+              {/* Search Results Indicator */}
+              {quickSearchTerm && (
+                <div className="mt-2 text-xs text-gray-600">
+                  {isSearching ? (
+                    <span>Searching database...</span>
+                  ) : (
+                    <span>
+                      Found {searchResults.length} patient{searchResults.length !== 1 ? 's' : ''} matching "{quickSearchTerm}"
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
+
 
             {/* Loading State */}
             {loading ? (
@@ -969,18 +1323,26 @@ Keep these credentials safe!
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {consultations
-                      .filter(consultation => 
-                        // Show in_progress AND follow_up entries in Interacting section
-                        (consultation.status === CONSULTATION_STATUS.IN_PROGRESS || 
-                         consultation.status === CONSULTATION_STATUS.FOLLOW_UP) &&
-                        // Then filter by search term
-                        (consultation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         consultation.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         consultation.treatment_type.toLowerCase().includes(searchTerm.toLowerCase()))
-                      )
+                    {(quickSearchTerm ? searchResults : consultations)
+                      .filter(consultation => {
+                        // If searching, show all search results (already filtered by database)
+                        if (quickSearchTerm) {
+                          return true; // searchResults are already filtered
+                        }
+                        
+                        // If not searching, show only in_progress AND follow_up entries in Interacting section
+                        return (consultation.status === CONSULTATION_STATUS.IN_PROGRESS || 
+                                consultation.status === CONSULTATION_STATUS.FOLLOW_UP);
+                      })
                       .map((consultation) => (
-                      <tr key={consultation.id} className="hover:bg-gray-50">
+                      <tr 
+                        key={consultation.id} 
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => {
+                          setEditingConsultation(consultation);
+                          setIsEditModalOpen(true);
+                        }}
+                      >
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             {consultation.name}
@@ -1011,14 +1373,20 @@ Keep these credentials safe!
                         <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
                             <button 
-                              onClick={() => handleEditConsultation(consultation)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditConsultation(consultation);
+                              }}
                               className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50" 
                               title="Edit Consultation"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
                             <button 
-                              onClick={() => handleEditConsultation(consultation)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditConsultation(consultation);
+                              }}
                               className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50" 
                               title="Add Prescription"
                             >
@@ -1026,7 +1394,11 @@ Keep these credentials safe!
                             </button>
                             <select
                               value={consultation.status}
-                              onChange={(e) => updateConsultationStatus(consultation.id, e.target.value)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                updateConsultationStatus(consultation.id, e.target.value);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
                               className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
                               <option value={CONSULTATION_STATUS.PENDING}>{STATUS_LABELS[CONSULTATION_STATUS.PENDING]}</option>
@@ -1069,19 +1441,18 @@ Keep these credentials safe!
 
         {/* Live Patients Tab - Completed consultations and patient history */}
         {activeTab === 'live_patients' && (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
-              <div className="flex justify-between items-start">
+          <div className="space-y-4">
+            <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+              <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-2xl font-bold text-purple-900 mb-2">👥 Live Patients</h2>
-                  <p className="text-purple-700 text-base">Confirmed patients, completed consultations, and treatment history</p>
+                  <h2 className="text-lg font-bold text-purple-900">👥 Live Patients</h2>
+                  <p className="text-purple-700 text-sm">Confirmed patients and completed consultations</p>
                 </div>
                 <button 
                   onClick={refreshConsultations}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg text-sm"
+                  className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
                 >
-                  <Users className="w-4 h-4" />
-                  <span>Refresh</span>
+                  Refresh
                 </button>
               </div>
             </div>
@@ -1154,15 +1525,30 @@ Keep these credentials safe!
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {consultations
-                      .filter(c => [
-                        CONSULTATION_STATUS.CONFIRMED, 
-                        CONSULTATION_STATUS.COMPLETED
-                        // Note: FOLLOW_UP entries now go to Interacting section
-                      ].includes(c.status as any))
+                    {(quickSearchTerm ? searchResults : consultations)
+                      .filter(c => {
+                        // If searching, show all search results (already filtered by database)
+                        if (quickSearchTerm) {
+                          return true; // searchResults are already filtered
+                        }
+                        
+                        // If not searching, show only confirmed and completed entries
+                        return [
+                          CONSULTATION_STATUS.CONFIRMED, 
+                          CONSULTATION_STATUS.COMPLETED
+                          // Note: FOLLOW_UP entries now go to Interacting section
+                        ].includes(c.status as any);
+                      })
                       .slice(0, 15)
                       .map((consultation) => (
-                      <tr key={consultation.id} className="hover:bg-purple-50 transition-colors">
+                      <tr 
+                        key={consultation.id} 
+                        className="hover:bg-purple-50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          setEditingConsultation(consultation);
+                          setIsEditModalOpen(true);
+                        }}
+                      >
                         <td className="px-4 py-3">
                           <div className="flex items-center">
                             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
@@ -1198,7 +1584,10 @@ Keep these credentials safe!
                           <div className="flex space-x-2">
                             {/* Generate Login Button */}
                             <button 
-                              onClick={() => generatePatientCredentials(consultation)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                generatePatientCredentials(consultation);
+                              }}
                               disabled={generatingCredentials === consultation.id}
                               className="inline-flex items-center px-2 py-1 border border-transparent text-xs leading-4 font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Generate Patient Portal Login"
@@ -1218,7 +1607,10 @@ Keep these credentials safe!
                             
                             {/* View Credentials Button (shown after generation) */}
                             <button 
-                              onClick={() => viewPatientCredentials(consultation)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                viewPatientCredentials(consultation);
+                              }}
                               className="inline-flex items-center px-2 py-1 border border-blue-300 text-xs leading-4 font-medium rounded text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                               title="View Patient Credentials"
                             >
@@ -1230,14 +1622,20 @@ Keep these credentials safe!
                         <td className="px-4 py-3">
                           <div className="flex space-x-2">
                             <button 
-                              onClick={() => handleEditConsultation(consultation)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditConsultation(consultation);
+                              }}
                               className="inline-flex items-center px-2 py-1 border border-transparent text-xs leading-4 font-medium rounded text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
                             >
                               <Eye className="w-3 h-3 mr-1" />
                               View
                             </button>
                             <button 
-                              onClick={() => handleEditConsultation(consultation)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditConsultation(consultation);
+                              }}
                               className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs leading-4 font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
                             >
                               <Edit className="w-3 h-3 mr-1" />
@@ -1308,11 +1706,51 @@ Keep these credentials safe!
                 </div>
               </div>
 
+              {/* Search Bar for Recycle Bin */}
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex space-x-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <input
+                        type="text"
+                        placeholder="Search in recycle bin by name, email, or treatment..."
+                        value={recycleBinSearchTerm}
+                        onChange={(e) => setRecycleBinSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setRecycleBinSearchTerm('')}
+                    className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Clear</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recycleBinConsultations.map((consultation) => (
-                    <div key={consultation.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-orange-300 transition-colors">
+                  {recycleBinConsultations
+                    .filter(consultation => 
+                      !recycleBinSearchTerm || 
+                      consultation.name.toLowerCase().includes(recycleBinSearchTerm.toLowerCase()) ||
+                      consultation.email.toLowerCase().includes(recycleBinSearchTerm.toLowerCase()) ||
+                      consultation.treatment_type.toLowerCase().includes(recycleBinSearchTerm.toLowerCase())
+                    )
+                    .map((consultation) => (
+                    <div 
+                      key={consultation.id} 
+                      className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-orange-300 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setEditingConsultation(consultation);
+                        setIsEditModalOpen(true);
+                        setShowRecycleBin(false);
+                      }}
+                    >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center space-x-2">
                           <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
@@ -1339,14 +1777,20 @@ Keep these credentials safe!
 
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => handleRestoreConsultation(consultation)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRestoreConsultation(consultation);
+                          }}
                           className="flex-1 flex items-center justify-center space-x-2 bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm"
                         >
                           <RotateCcw className="w-4 h-4" />
                           <span>Restore</span>
                         </button>
                         <button
-                          onClick={() => handleEditConsultation(consultation)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditConsultation(consultation);
+                          }}
                           className="flex-1 flex items-center justify-center space-x-2 bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm"
                         >
                           <Edit className="w-4 h-4" />

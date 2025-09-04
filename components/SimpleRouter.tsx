@@ -3,6 +3,7 @@ import { AdminPanel } from './AdminPanel';
 import { PatientPortal } from './PatientPortal';
 import { HomePage } from './HomePage';
 import { ContactPage } from './ContactPage';
+import AdminLoginPage from './AdminLoginPage';
 
 export function SimpleRouter() {
   const [currentRoute, setCurrentRoute] = useState<string>(window.location.pathname);
@@ -10,13 +11,11 @@ export function SimpleRouter() {
   useEffect(() => {
     // Get the current pathname
     const path = window.location.pathname;
-    // SimpleRouter - Initial path
     setCurrentRoute(path);
 
     // Listen for navigation changes
     const handleRouteChange = () => {
       const newPath = window.location.pathname;
-              // SimpleRouter - Route changed to
       setCurrentRoute(newPath);
     };
 
@@ -30,16 +29,20 @@ export function SimpleRouter() {
 
   // Route rendering logic
   if (currentRoute === '/admin') {
-    // SimpleRouter - Rendering Admin Panel
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <AdminPanel />
-      </div>
-    );
+    // Check if admin is logged in
+    const adminSession = localStorage.getItem('admin_session');
+    if (adminSession) {
+      return (
+        <div className="min-h-screen bg-gray-50">
+          <AdminPanel />
+        </div>
+      );
+    } else {
+      return <AdminLoginPage />;
+    }
   }
 
   if (currentRoute === '/patient-portal') {
-    // SimpleRouter - Rendering Patient Portal
     return (
       <div className="min-h-screen bg-gray-50">
         <PatientPortal />
@@ -48,11 +51,9 @@ export function SimpleRouter() {
   }
 
   if (currentRoute === '/contact') {
-    // SimpleRouter - Rendering Contact Page
     return <ContactPage />;
   }
 
   // Default to home page
-      // SimpleRouter - Rendering Home Page
   return <HomePage />;
 }

@@ -148,7 +148,7 @@ describe('Consultation Form Validation Debug', () => {
         err.path.includes('preferred_date')
       );
       expect(dateError).toBeDefined();
-      expect(dateError?.message).toContain('Preferred date must be tomorrow or in the future');
+              expect(dateError?.message).toContain('Preferred date must be today or in the future');
     }
   });
 });

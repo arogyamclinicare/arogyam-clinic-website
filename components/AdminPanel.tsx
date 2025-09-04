@@ -1,13 +1,25 @@
 import { useAuth } from './context/AuthContext';
-import { AdminLoginPage } from './AdminLoginPage';
+import AdminLoginPage from './AdminLoginPage';
 import { AdminDashboard } from './AdminDashboard';
+import { validateAdminSession } from '../lib/secure-auth';
 
 export function AdminPanel() {
   const { isAuthenticated, loading } = useAuth();
 
-  // AdminPanel render
+  // Check for secure admin session
+  const adminSession = validateAdminSession();
+  const isAdminLoggedIn = adminSession !== null;
 
-  // Show loading while checking authentication
+  // If we have a simple admin session, show the dashboard
+  if (isAdminLoggedIn) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AdminDashboard />
+      </div>
+    );
+  }
+
+  // Show loading while checking authentication (only for complex auth)
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

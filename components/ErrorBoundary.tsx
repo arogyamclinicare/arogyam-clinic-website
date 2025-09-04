@@ -37,7 +37,7 @@ class ErrorBoundary extends Component<Props, State> {
     });
 
     // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.error('ErrorBoundary caught an error:', error, errorInfo);
     }
 
@@ -71,7 +71,7 @@ class ErrorBoundary extends Component<Props, State> {
         },
         userAgent: navigator.userAgent,
         url: window.location.href,
-        version: process.env.npm_package_version || '1.0.0',
+        version: import.meta.env.VITE_APP_VERSION || '1.0.0',
       };
 
       try {

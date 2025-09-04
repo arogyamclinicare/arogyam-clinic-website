@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { supabase, Consultation, ConsultationInsert, ConsultationUpdate } from '../../lib/supabase'
+import { getSupabaseClient, Consultation, ConsultationInsert, ConsultationUpdate } from '../../lib/supabase'
 import { createLogger } from '../../lib/utils/logger'
 
 interface SupabaseContextType {
@@ -25,13 +25,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'connected' | 'error' | 'disconnected' | 'failed'>('connecting')
 
-  // Fetch all consultations on component mount
+  // Fetch all consultations - but not immediately on mount
   const fetchConsultations = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError } = await getSupabaseClient()
         .from('consultations')
         .select('*')
         .order('created_at', { ascending: false })
@@ -57,7 +57,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       logger.info('Adding consultation', consultationData)
       
       // Check for potential duplicates before inserting
-      const { data: existingData, error: checkError } = await supabase
+      const { data: existingData, error: checkError } = await getSupabaseClient()
         .from('consultations')
         .select('id, name, phone, created_at')
         .eq('name', consultationData.name)
@@ -72,7 +72,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: 'A similar consultation was recently submitted. Please wait before submitting again.' }
       }
       
-      const { data, error: insertError } = await supabase
+      const { data, error: insertError } = await (getSupabaseClient() as any)
         .from('consultations')
         .insert([consultationData])
         .select()
@@ -100,7 +100,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // Update consultation status
   const updateConsultationStatus = async (id: string, status: string) => {
     try {
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (getSupabaseClient() as any)
         .from('consultations')
         .update({ status })
         .eq('id', id)
@@ -127,7 +127,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // Update consultation with full data
   const updateConsultation = async (id: string, updates: Partial<ConsultationUpdate>) => {
     try {
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (getSupabaseClient() as any)
         .from('consultations')
         .update(updates)
         .eq('id', id)
@@ -154,7 +154,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // Delete consultation
   const deleteConsultation = async (id: string) => {
     try {
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await getSupabaseClient()
         .from('consultations')
         .delete()
         .eq('id', id)
@@ -187,11 +187,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     fetchConsultations()
   }
 
-  // Load consultations on mount
-  useEffect(() => {
-    logger.info('Initial load of consultations')
-    fetchConsultations()
-  }, [])
+  // Don't load consultations on mount to avoid immediate client creation
+  // They will be loaded when needed by components
 
   // Set up real-time subscription for live updates
   useEffect(() => {
@@ -207,7 +204,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         logger.debug(`Attempt ${retryCount + 1} to setup real-time subscription`)
         
         // Use the modern real-time subscription method
-        const channel = supabase
+        const channel = getSupabaseClient()
           .channel(`consultations_changes_${Date.now()}`) // Unique channel name
           .on(
             'postgres_changes',

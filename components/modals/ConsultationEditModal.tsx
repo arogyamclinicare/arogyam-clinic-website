@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { 
   X, 
@@ -8,42 +8,125 @@ import {
   Trash2,
   FileText,
   AlertCircle,
-  Settings
+  Settings,
+  Download,
+  Plus
 } from 'lucide-react';
-import { 
-  serviceOptions, 
-  caseTypeOptions, 
-  associatedSegmentOptions,
-  getSegmentsForService,
-  getSubSegmentsForSegment,
-  resetDependentFields
-} from '../../lib/admin-services';
-import type { Consultation, ConsultationUpdate } from '../../lib/supabase';
+// Service options and related functions (inline for now)
+const serviceOptions = [
+  { value: 'consultation', label: 'Consultation' },
+  { value: 'follow_up', label: 'Follow Up' },
+  { value: 'emergency', label: 'Emergency' }
+];
+
+const caseTypeOptions = [
+  { value: 'routine', label: 'Routine' },
+  { value: 'urgent', label: 'Urgent' },
+  { value: 'emergency', label: 'Emergency' }
+];
+
+const associatedSegmentOptions = [
+  { value: 'general', label: 'General' },
+  { value: 'specialist', label: 'Specialist' }
+];
+
+const getSegmentsForService = (serviceType: string) => {
+  if (serviceType === 'consultation') {
+    return [
+      { value: 'general', label: 'General' },
+      { value: 'specialist', label: 'Specialist' }
+    ];
+  }
+  return [];
+};
+
+const getSubSegmentsForSegment = (serviceType: string, segment: string) => {
+  if (serviceType === 'consultation' && segment === 'specialist') {
+    return [
+      { value: 'cardiology', label: 'Cardiology' },
+      { value: 'neurology', label: 'Neurology' }
+    ];
+  }
+  return [];
+};
+
+const resetDependentFields = (formData: any, field: string) => {
+  const updates: any = {};
+  if (field === 'service_type') {
+    updates.segment = '';
+    updates.sub_segment = '';
+  } else if (field === 'segment') {
+    updates.sub_segment = '';
+  }
+  return { ...formData, ...updates };
+};
+import { pdfGenerator } from '../../lib/pdf-generator';
+import { MultiplePrescriptionDrugForm } from './MultiplePrescriptionDrugForm';
+import { MultiplePrescriptionService } from '../../lib/multiple-prescription-service';
+import type { Consultation, ConsultationUpdate, PrescriptionDrug } from '../../lib/supabase';
 import { CONSULTATION_STATUS, STATUS_LABELS } from '../../lib/constants';
 
 interface ConsultationEditModalProps {
   consultation: Consultation | null;
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
-  onSave: (updates: Partial<ConsultationUpdate>) => Promise<{ success: boolean; error?: string }>;
-  onDelete: () => Promise<{ success: boolean; error?: string }>;
+  onSave?: (updates: Partial<ConsultationUpdate>) => Promise<{ success: boolean; error?: string }>;
+  onDelete?: () => Promise<{ success: boolean; error?: string }>;
+  isReadOnly?: boolean;
 }
 
 export function ConsultationEditModal({ 
   consultation, 
-  isOpen, 
+  isOpen = true, 
   onClose, 
   onSave, 
-  onDelete 
+  onDelete,
+  isReadOnly = false
 }: ConsultationEditModalProps) {
   const [formData, setFormData] = useState<Partial<ConsultationUpdate>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'details' | 'prescription' | 'notes' | 'services'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'prescription' | 'notes' | 'services' | 'drugs'>('details');
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [prescriptionData, setPrescriptionData] = useState<Partial<ConsultationUpdate>>({});
+  const [multiplePrescriptions, setMultiplePrescriptions] = useState<PrescriptionDrug[]>([]);
+  const [loadingPrescriptions, setLoadingPrescriptions] = useState(false);
+
+
+  // Memoized callback for multiple prescription updates
+  const handleMultiplePrescriptionsUpdate = useCallback((prescriptions: PrescriptionDrug[]) => {
+    console.log('🔍 ConsultationEditModal: Multiple prescriptions updated:', prescriptions);
+    setMultiplePrescriptions(prescriptions);
+  }, []);
+
+  // Load multiple prescriptions when consultation changes
+  useEffect(() => {
+    const loadPrescriptions = async () => {
+      if (!consultation?.id) {
+        setMultiplePrescriptions([]);
+        return;
+      }
+
+      setLoadingPrescriptions(true);
+      try {
+        const prescriptions = await MultiplePrescriptionService.getPrescriptionDrugs(consultation.id);
+        setMultiplePrescriptions(prescriptions);
+        console.log('✅ Loaded prescriptions:', prescriptions);
+      } catch (error) {
+        console.error('❌ Failed to load prescriptions:', error);
+        setError('Failed to load prescription data');
+      } finally {
+        setLoadingPrescriptions(false);
+      }
+    };
+
+    loadPrescriptions();
+  }, [consultation?.id]);
 
   // Initialize form data when consultation changes
   useEffect(() => {
     if (consultation) {
+      console.log('🔍 ConsultationEditModal: Initializing with consultation data:', consultation);
       setFormData({
         status: consultation.status,
         prescription: consultation.prescription || '',
@@ -68,6 +151,21 @@ export function ConsultationEditModal({
         manual_case_type: consultation.manual_case_type || '',
         associated_segments: consultation.associated_segments || []
       });
+      
+      // Initialize prescription data
+      const prescriptionData = {
+        drug_name: consultation.drug_name || null,
+        potency: consultation.potency || null,
+        dosage: consultation.dosage || null,
+        repetition_frequency: consultation.repetition_frequency || null,
+        repetition_interval: consultation.repetition_interval || null,
+        repetition_unit: consultation.repetition_unit || null,
+        quantity: consultation.quantity || null,
+        period: consultation.period || null,
+        prescription_remarks: consultation.prescription_remarks || null
+      };
+      console.log('🔍 ConsultationEditModal: Setting prescription data:', prescriptionData);
+      setPrescriptionData(prescriptionData);
     }
   }, [consultation]);
 
@@ -100,8 +198,29 @@ export function ConsultationEditModal({
     setError(null);
     
     try {
+      // Save multiple prescriptions first
+      if (multiplePrescriptions.length > 0) {
+        const prescriptionInserts = multiplePrescriptions.map(p => ({
+          drug_name: p.drug_name,
+          potency: p.potency,
+          dosage: p.dosage,
+          repetition_frequency: p.repetition_frequency,
+          repetition_interval: p.repetition_interval,
+          repetition_unit: p.repetition_unit,
+          quantity: p.quantity,
+          period: p.period,
+          remarks: p.remarks
+        }));
+        
+        await MultiplePrescriptionService.savePrescriptionDrugs(consultation.id, prescriptionInserts);
+        console.log('✅ Multiple prescriptions saved successfully');
+      }
+
+      // Merge form data with prescription data
+      const mergedData = { ...formData, ...prescriptionData };
+      
       // Clean up empty date fields to prevent database errors
-      const cleanedFormData = { ...formData };
+      const cleanedFormData = { ...mergedData };
       
       // Convert empty strings to null for date fields
       if (cleanedFormData.follow_up_date === '') {
@@ -166,12 +285,17 @@ export function ConsultationEditModal({
         cleanedFormData.associated_segments = null;
       }
       
-      const result = await onSave(cleanedFormData);
-      
-      if (result.success) {
-        onClose();
+      console.log('🔍 ConsultationEditModal: Saving with merged data:', cleanedFormData);
+      if (onSave) {
+        const result = await onSave(cleanedFormData);
+        
+        if (result.success) {
+          onClose();
+        } else {
+          setError(result.error || 'Failed to save changes');
+        }
       } else {
-        setError(result.error || 'Failed to save changes');
+        setError('Save function not available');
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -189,17 +313,69 @@ export function ConsultationEditModal({
     setError(null);
     
     try {
-      const result = await onDelete();
-      
-      if (result.success) {
-        onClose();
+      if (onDelete) {
+        const result = await onDelete();
+        
+        if (result.success) {
+          onClose();
+        } else {
+          setError(result.error || 'Failed to delete consultation');
+        }
       } else {
-        setError(result.error || 'Failed to delete consultation');
+        setError('Delete function not available');
       }
     } catch (err) {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDownloadUserPDF = async () => {
+    if (!consultation) return;
+    
+    setIsGeneratingPDF(true);
+    try {
+      const pdfBlob = await pdfGenerator.generatePatientPrescriptionPDF(consultation);
+      
+      // Create download link
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${consultation.name}_user_info_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const handleDownloadAdminPDF = async () => {
+    if (!consultation) return;
+    
+    setIsGeneratingPDF(true);
+    try {
+      const pdfBlob = await pdfGenerator.generateAdminPrescriptionPDF(consultation);
+      
+      // Create download link
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${consultation.name}_admin_complete_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      setIsGeneratingPDF(false);
     }
   };
 
@@ -238,7 +414,8 @@ export function ConsultationEditModal({
               { id: 'details', name: 'Details', icon: FileText },
               { id: 'prescription', name: 'Prescription', icon: Pill },
               { id: 'notes', name: 'Notes', icon: Stethoscope },
-              { id: 'services', name: 'Services', icon: Settings }
+              { id: 'services', name: 'Services', icon: Settings },
+              { id: 'drugs', name: 'Prescription Drugs', icon: Plus }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -271,7 +448,8 @@ export function ConsultationEditModal({
                                      <select
                      value={formData.status || ''}
                      onChange={(e) => handleInputChange('status', e.target.value)}
-                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                     disabled={isReadOnly}
+                     className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                    >
                      <option value={CONSULTATION_STATUS.PENDING}>{STATUS_LABELS[CONSULTATION_STATUS.PENDING]}</option>
                      <option value={CONSULTATION_STATUS.CONFIRMED}>{STATUS_LABELS[CONSULTATION_STATUS.CONFIRMED]}</option>
@@ -288,7 +466,8 @@ export function ConsultationEditModal({
                     type="date"
                     value={formData.next_appointment_date || ''}
                     onChange={(e) => handleInputChange('next_appointment_date', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    readOnly={isReadOnly}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   />
                 </div>
               </div>
@@ -299,8 +478,9 @@ export function ConsultationEditModal({
                   rows={3}
                   value={formData.patient_concerns || ''}
                   onChange={(e) => handleInputChange('patient_concerns', e.target.value)}
+                  readOnly={isReadOnly}
                   placeholder="Document patient's main concerns..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 />
               </div>
 
@@ -429,7 +609,29 @@ export function ConsultationEditModal({
 
           {activeTab === 'services' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Services Classification</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Services Classification</h3>
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleDownloadUserPDF}
+                    disabled={isGeneratingPDF}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg flex items-center space-x-1"
+                  >
+                    <Download className="w-3 h-3" />
+                    <span>{isGeneratingPDF ? 'Generating...' : 'User PDF'}</span>
+                  </Button>
+                  <Button
+                    onClick={handleDownloadAdminPDF}
+                    disabled={isGeneratingPDF}
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg flex items-center space-x-1"
+                  >
+                    <Download className="w-3 h-3" />
+                    <span>{isGeneratingPDF ? 'Generating...' : 'Admin PDF'}</span>
+                  </Button>
+                </div>
+              </div>
               
               {/* Service Type Selection */}
               <div>
@@ -566,6 +768,50 @@ export function ConsultationEditModal({
             </div>
           )}
 
+          {activeTab === 'drugs' && consultation && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Prescription Drugs Management</h3>
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleDownloadUserPDF}
+                    disabled={isGeneratingPDF}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg flex items-center space-x-1"
+                  >
+                    <Download className="w-3 h-3" />
+                    <span>{isGeneratingPDF ? 'Generating...' : 'User PDF'}</span>
+                  </Button>
+                  <Button
+                    onClick={handleDownloadAdminPDF}
+                    disabled={isGeneratingPDF}
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg flex items-center space-x-1"
+                  >
+                    <Download className="w-3 h-3" />
+                    <span>{isGeneratingPDF ? 'Generating...' : 'Admin PDF'}</span>
+                  </Button>
+                </div>
+              </div>
+              
+              {loadingPrescriptions ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-center">
+                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Loading prescriptions...</p>
+                  </div>
+                </div>
+              ) : (
+                <MultiplePrescriptionDrugForm
+                  key={consultation.id}
+                  consultationId={consultation.id}
+                  initialPrescriptions={multiplePrescriptions}
+                  onPrescriptionsUpdate={handleMultiplePrescriptionsUpdate}
+                />
+              )}
+            </div>
+          )}
+
           {/* Error Display */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -580,34 +826,40 @@ export function ConsultationEditModal({
         {/* Footer Actions */}
         <div className="p-3 sm:p-4 lg:p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
           <div className="flex flex-col sm:flex-row gap-3 justify-between">
-            <div className="flex gap-3">
-              <Button
-                onClick={handleDelete}
-                disabled={isLoading}
-                variant="outline"
-                className="border-red-300 text-red-600 hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-            </div>
-            
+            {!isReadOnly && (
+              <div className="flex gap-3">
+                {onDelete && (
+                  <Button
+                    onClick={handleDelete}
+                    disabled={isLoading}
+                    variant="outline"
+                    className="border-red-300 text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-3">
               <Button
                 onClick={onClose}
                 variant="outline"
                 disabled={isLoading}
               >
-                Cancel
+                {isReadOnly ? 'Close' : 'Cancel'}
               </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {isLoading ? 'Saving...' : 'Save Changes'}
-              </Button>
+              {!isReadOnly && onSave && (
+                <Button
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {isLoading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              )}
             </div>
           </div>
         </div>

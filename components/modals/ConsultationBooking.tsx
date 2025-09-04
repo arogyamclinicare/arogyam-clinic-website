@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
-import { useSupabase } from '../context/SupabaseContext';
+import { getSupabaseAdmin } from '../../lib/supabase-admin';
 import { consultationBookingSchema, sanitizeInput, formatValidationErrors } from '../../lib/validation';
 import { 
   X, 
@@ -37,8 +37,27 @@ interface BookingData {
 }
 
 export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General Consultation' }: ConsultationBookingProps) {
-  const { addConsultation } = useSupabase();
+  // Use admin client directly instead of SupabaseContext
   const [currentStep, setCurrentStep] = useState<Step>('booking');
+  
+  // Add consultation function using admin client
+  const addConsultation = async (consultationData: any) => {
+    try {
+      const { data, error } = await (getSupabaseAdmin() as any)
+        .from('consultations')
+        .insert([consultationData])
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: 'Failed to add consultation' };
+    }
+  };
   const [bookingData, setBookingData] = useState<BookingData>({
     name: '',
     email: '',
