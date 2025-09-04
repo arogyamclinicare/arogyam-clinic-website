@@ -1,118 +1,166 @@
-# Arogyam Homeopathy Clinic Website
+# 🏥 Arogyam Clinic Management System
 
-A modern, responsive website for Arogyam Homeopathy Clinic featuring Dr. Kajal Kumari's expert homeopathic care services.
+A comprehensive healthcare management system built with React, TypeScript, and Supabase.
 
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![React](https://img.shields.io/badge/React-18.2.0-blue)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.2.2-blue)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.3-blue)
+## ✨ Features
 
-## ✅ FULLY FUNCTIONAL & READY TO RUN!
+### 🔐 Admin Dashboard
+- **Secure Authentication**: Browser-compatible admin login
+- **Patient Management**: View, edit, and manage patient records
+- **Consultation Management**: Book, edit, and track consultations
+- **Prescription Management**: Create and manage prescriptions
+- **Analytics Dashboard**: View system statistics and reports
 
-This application has been completely fixed and is now fully functional with:
-- ✅ All dependencies properly configured
-- ✅ TypeScript compilation working
-- ✅ Build process successful
-- ✅ Development server running
-- ✅ Production build optimized
-- ✅ All components rendering properly
+### 👥 Patient Portal
+- **Patient Login**: Secure patient authentication
+- **Appointment Booking**: Book consultations online
+- **Medical History**: View consultation history
+- **Prescription Access**: Download prescription PDFs
+
+### 🛡️ Security Features
+- **Rate Limiting**: Prevents brute force attacks
+- **Session Management**: Secure session handling
+- **Input Validation**: Comprehensive form validation
+- **Error Handling**: Robust error boundaries
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ (you have v22.17.1 ✅)
-- npm 10+ (you have v10.9.2 ✅)
+- Node.js 18+ 
+- npm or yarn
+- Supabase account
 
-### Installation & Running
+### Installation
 
-1. **Install dependencies:**
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd arogyam-clinic
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. **Start development server:**
+3. **Environment Setup**
+   ```bash
+   cp env.template .env
+   ```
+   
+   Configure your `.env` file with:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_ADMIN_EMAIL=admin@arogyam.com
+   VITE_ADMIN_PASSWORD=your_admin_password
+   ```
+
+4. **Start Development Server**
    ```bash
    npm run dev
    ```
-   Opens at `http://localhost:3000`
 
-3. **Build for production:**
-   ```bash
-   npm run build
+5. **Open in Browser**
+   ```
+   http://localhost:3000
    ```
 
-4. **Preview production build:**
-   ```bash
-   npm run preview
-   ```
+## 🔑 Admin Access
 
-### Available Scripts
+- **URL**: `http://localhost:3000/admin`
+- **Email**: `admin@arogyam.com`
+- **Password**: `Admin123` (change in production!)
+
+## 📁 Project Structure
+
+```
+arogyam-clinic/
+├── components/          # React components
+│   ├── admin/          # Admin-specific components
+│   ├── modals/         # Modal components
+│   ├── ui/             # Reusable UI components
+│   └── ...
+├── lib/                # Utility libraries
+│   ├── security/       # Security utilities
+│   ├── supabase.ts     # Database client
+│   └── ...
+├── styles/             # CSS styles
+├── __tests__/          # Test files
+└── public/             # Static assets
+```
+
+## 🛠️ Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
+- `npm run test` - Run tests
 - `npm run lint` - Run ESLint
 
-## 🏗️ Project Structure
+## 🔒 Security
 
-```
-arogyam-clinic/
-├── public/                 # Static assets
-├── src/                   # Source files
-│   └── main.tsx          # Application entry point
-├── components/           # React components
-│   ├── ui/              # Reusable UI components
-│   ├── constants/       # App constants
-│   └── utils/           # Utility functions
-├── styles/              # Global styles
-└── guidelines/          # Development guidelines
-```
+This application implements several security measures:
 
-## 🎨 Features
+- **Environment Variables**: All sensitive data stored in environment variables
+- **Rate Limiting**: Login attempt limiting
+- **Input Validation**: Comprehensive form validation with Zod
+- **Error Boundaries**: Graceful error handling
+- **Secure Sessions**: Browser-compatible session management
 
-- **Responsive Design** - Mobile-first approach
-- **Modern UI/UX** - Built with Radix UI and Tailwind CSS
-- **Type Safety** - Full TypeScript support
-- **Performance** - Optimized with Vite
-- **Accessibility** - WCAG compliant components
+## 🚀 Deployment
 
-## 📱 Sections
+### Vercel (Recommended)
 
-- **Hero Section** - Introduction and call-to-action
-- **About Us** - Dr. Kajal's profile and expertise
-- **Online Consultation** - Consultation booking process
-- **Health Evaluation** - Free assessment information
-- **Patient Portal** - User account access
-- **FAQs** - Common questions and answers
-- **Contact** - Clinic information and contact form
+1. **Connect to Vercel**
+   ```bash
+   npm install -g vercel
+   vercel
+   ```
 
-## 🛠️ Tech Stack
+2. **Configure Environment Variables**
+   - Add all `VITE_*` variables in Vercel dashboard
+   - Ensure production values are set
 
-- **Framework:** React 18 + TypeScript
-- **Build Tool:** Vite
-- **Styling:** Tailwind CSS
-- **UI Components:** Radix UI
-- **Icons:** Lucide React
-- **Form Handling:** React Hook Form + Zod
-- **Animations:** CSS animations + Tailwind
+3. **Deploy**
+   ```bash
+   vercel --prod
+   ```
 
-## 🔧 Configuration
+### Manual Deployment
 
-The project includes:
-- TypeScript configuration
-- ESLint for code quality
-- PostCSS for CSS processing
-- Tailwind CSS for styling
-- Vite for fast development
+1. **Build the project**
+   ```bash
+   npm run build
+   ```
 
-## 📞 Contact Information
+2. **Deploy the `dist/` folder** to your hosting provider
 
-**Dr. Kajal Kumari**
-- Phone: Coming Soon
-- Email: arogyambihar@gmail.com
-- Address: Teacher Colony, Sri Narayan Nagar, Manpur, Gaya - 823003
+## 📊 Database Schema
 
-## 📄 License
+The application uses Supabase with the following main tables:
 
-This project is proprietary software for Arogyam Homeopathy Clinic.
+- `patients` - Patient information
+- `consultations` - Consultation records
+- `prescription_drugs` - Prescription details
+- `drug_templates` - Medicine templates
 
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For support, email support@arogyam.com or create an issue in the repository.
+
+---
+
+**Built with ❤️ for Arogyam Clinic**
