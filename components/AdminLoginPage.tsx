@@ -4,14 +4,15 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Alert, AlertDescription } from './ui/alert';
-import { Loader2, User, Lock, Shield, ArrowLeft } from 'lucide-react';
-import { authenticateAdmin } from '../lib/secure-auth';
+import { Loader2, User, Lock, Shield, ArrowLeft, Users } from 'lucide-react';
+import { authenticateAdmin, authenticateStaff } from '../lib/secure-auth';
 
 const AdminLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isStaffLogin, setIsStaffLogin] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,20 +20,41 @@ const AdminLoginPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Use secure authentication
-      const result = await authenticateAdmin(email, password);
-
-      if (result.success && result.session) {
-        // Store secure session
-        localStorage.setItem('admin_session', JSON.stringify(result.session));
+      let result;
+      
+      if (isStaffLogin) {
+        // Staff authentication
+        result = await authenticateStaff(email, password);
         
-        // Redirect to admin panel
-        window.location.href = '/admin';
-      } else {
-        if (result.rateLimited) {
-          setError('Too many failed login attempts. Please try again in 15 minutes.');
+        if (result.success && result.session) {
+          // Store staff session
+          localStorage.setItem('staff_session', JSON.stringify(result.session));
+          
+          // Redirect to staff dashboard
+          window.location.href = '/staff';
         } else {
-          setError(result.error || 'Invalid admin credentials');
+          if (result.rateLimited) {
+            setError('Too many failed login attempts. Please try again in 15 minutes.');
+          } else {
+            setError(result.error || 'Invalid staff credentials');
+          }
+        }
+      } else {
+        // Admin authentication
+        result = await authenticateAdmin(email, password);
+
+        if (result.success && result.session) {
+          // Store admin session
+          localStorage.setItem('admin_session', JSON.stringify(result.session));
+          
+          // Redirect to admin panel
+          window.location.href = '/admin';
+        } else {
+          if (result.rateLimited) {
+            setError('Too many failed login attempts. Please try again in 15 minutes.');
+          } else {
+            setError(result.error || 'Invalid admin credentials');
+          }
         }
       }
     } catch (err) {
@@ -53,23 +75,57 @@ const AdminLoginPage: React.FC = () => {
         <Card className="w-full shadow-lg">
           <CardHeader className="text-center">
             <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <Shield className="w-6 h-6 text-blue-600" />
+              {isStaffLogin ? (
+                <Users className="w-6 h-6 text-blue-600" />
+              ) : (
+                <Shield className="w-6 h-6 text-blue-600" />
+              )}
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-800">Admin Login</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-800">
+              {isStaffLogin ? 'Staff Login' : 'Admin Login'}
+            </CardTitle>
             <CardDescription>
-              Access the Arogyam Healthcare Administration Panel
+              {isStaffLogin 
+                ? 'Access the Arogyam Healthcare Staff Portal'
+                : 'Access the Arogyam Healthcare Administration Panel'
+              }
             </CardDescription>
+            
+            {/* Toggle Switch */}
+            <div className="mt-4 flex items-center justify-center space-x-3">
+              <span className={`text-sm font-medium ${!isStaffLogin ? 'text-blue-600' : 'text-gray-500'}`}>
+                Admin
+              </span>
+              <button
+                onClick={() => {
+                  setIsStaffLogin(!isStaffLogin);
+                  setError('');
+                  setEmail('');
+                  setPassword('');
+                }}
+                className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                <span
+                  className={`${
+                    isStaffLogin ? 'translate-x-6' : 'translate-x-1'
+                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                />
+              </button>
+              <span className={`text-sm font-medium ${isStaffLogin ? 'text-blue-600' : 'text-gray-500'}`}>
+                Staff
+              </span>
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Admin Email</Label>
+                <Label htmlFor="email">{isStaffLogin ? 'Staff Email' : 'Admin Email'}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter admin email"
+                    placeholder={isStaffLogin ? 'Enter staff email' : 'Enter admin email'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -79,13 +135,13 @@ const AdminLoginPage: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Admin Password</Label>
+                <Label htmlFor="password">{isStaffLogin ? 'Staff Password' : 'Admin Password'}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter admin password"
+                    placeholder={isStaffLogin ? 'Enter staff password' : 'Enter admin password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
@@ -111,7 +167,7 @@ const AdminLoginPage: React.FC = () => {
                     Signing in...
                   </>
                 ) : (
-                  'Sign In as Admin'
+                  isStaffLogin ? 'Sign In as Staff' : 'Sign In as Admin'
                 )}
               </Button>
             </form>
@@ -130,7 +186,10 @@ const AdminLoginPage: React.FC = () => {
 
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-600">
-                Need access? Contact the system administrator.
+                {isStaffLogin 
+                  ? 'Need staff access? Contact the administrator.'
+                  : 'Need access? Contact the system administrator.'
+                }
               </p>
             </div>
           </CardContent>

@@ -256,6 +256,200 @@ export function clearAdminSession(): void {
 }
 
 /**
+ * Clear staff session
+ */
+export function clearStaffSession(): void {
+  localStorage.removeItem('staff_session');
+}
+
+// Staff credentials interface
+interface StaffCredentials {
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+  role: string;
+  permissions: any;
+  isActive: boolean;
+}
+
+// Staff session interface
+interface StaffSession {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  permissions: any;
+  loginTime: string;
+  expiresAt: string;
+  sessionId: string;
+}
+
+/**
+ * Create a secure staff session
+ */
+export function createStaffSession(staff: StaffCredentials): StaffSession {
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + SESSION_TIMEOUT);
+  
+  return {
+    id: staff.id,
+    email: staff.email,
+    name: staff.name,
+    role: staff.role,
+    permissions: staff.permissions,
+    loginTime: now.toISOString(),
+    expiresAt: expiresAt.toISOString(),
+    sessionId: generateSessionId()
+  };
+}
+
+/**
+ * Validate staff session
+ */
+export function isStaffSessionValid(session: StaffSession): boolean {
+  const now = new Date();
+  const expiresAt = new Date(session.expiresAt);
+  return now < expiresAt;
+}
+
+/**
+ * Validate staff session from localStorage
+ */
+export function validateStaffSession(): StaffSession | null {
+  try {
+    const sessionData = localStorage.getItem('staff_session');
+    
+    if (!sessionData) {
+      return null;
+    }
+
+    const session: StaffSession = JSON.parse(sessionData);
+    
+    if (!isStaffSessionValid(session)) {
+      localStorage.removeItem('staff_session');
+      return null;
+    }
+
+    return session;
+  } catch (error) {
+    console.error('Staff session validation error:', error);
+    localStorage.removeItem('staff_session');
+    return null;
+  }
+}
+
+/**
+ * Get staff from database by email
+ */
+export async function getStaffByEmail(email: string): Promise<StaffCredentials | null> {
+  try {
+    // Import Supabase admin client
+    const { getSupabaseAdmin } = await import('./supabase-admin');
+    const supabase = getSupabaseAdmin();
+    
+    const { data, error } = await supabase
+      .from('staff')
+      .select('*')
+      .eq('email', email)
+      .eq('is_active', true)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return {
+      id: (data as any).id,
+      email: (data as any).email,
+      password: (data as any).password,
+      name: (data as any).name,
+      role: (data as any).role,
+      permissions: (data as any).permissions || {},
+      isActive: (data as any).is_active
+    };
+  } catch (error) {
+    console.error('Error fetching staff:', error);
+    return null;
+  }
+}
+
+/**
+ * Verify staff password
+ */
+export async function verifyStaffPassword(password: string, storedPassword: string): Promise<boolean> {
+  try {
+    // For now, simple string comparison (same as admin)
+    // In production, this should use proper bcrypt verification
+    return password === storedPassword;
+  } catch (error) {
+    console.error('Error verifying staff password:', error);
+    return false;
+  }
+}
+
+/**
+ * Secure staff authentication
+ */
+export async function authenticateStaff(email: string, password: string): Promise<{
+  success: boolean;
+  session?: StaffSession;
+  error?: string;
+  rateLimited?: boolean;
+}> {
+  try {
+    // Check rate limiting
+    if (rateLimiter.isRateLimited(email)) {
+      return {
+        success: false,
+        error: 'Too many failed login attempts. Please try again in 15 minutes.',
+        rateLimited: true
+      };
+    }
+
+    // Get staff from database
+    const staff = await getStaffByEmail(email);
+    
+    if (!staff) {
+      rateLimiter.recordAttempt(email);
+      return {
+        success: false,
+        error: 'Invalid credentials'
+      };
+    }
+
+    // Verify password
+    const isValidPassword = await verifyStaffPassword(password, staff.password);
+    
+    if (!isValidPassword) {
+      rateLimiter.recordAttempt(email);
+      return {
+        success: false,
+        error: 'Invalid credentials'
+      };
+    }
+
+    // Reset rate limiting on successful login
+    rateLimiter.resetAttempts(email);
+
+    // Create secure session
+    const session = createStaffSession(staff);
+    
+    return {
+      success: true,
+      session
+    };
+
+  } catch (error) {
+    console.error('Staff authentication error:', error);
+    return {
+      success: false,
+      error: 'Authentication failed. Please try again.'
+    };
+  }
+}
+
+/**
  * Generate a secure password hash for environment setup
  * This should be run once to generate the hash for VITE_ADMIN_PASSWORD_HASH
  */

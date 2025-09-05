@@ -192,7 +192,7 @@ export function AdminDashboard() {
   // Don't fetch consultations immediately - only when user interacts
   // This prevents the admin client from being created at component mount
   
-  const [activeTab, setActiveTab] = useState<'new_entry' | 'interacting' | 'live_patients'>('new_entry');
+  const [activeTab, setActiveTab] = useState<'new_entry' | 'interacting' | 'live_patients' | 'staff_management'>('new_entry');
   
   // Load consultations when user switches to a tab that needs them
   useEffect(() => {
@@ -346,10 +346,16 @@ export function AdminDashboard() {
 
 
   const getStatusColor = (status: string) => {
+    if (status === 'reachinglead') {
+      return 'text-orange-600 bg-orange-100';
+    }
     return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'text-gray-600 bg-gray-100';
   };
 
   const getStatusIcon = (status: string) => {
+    if (status === 'reachinglead') {
+      return <Users className="w-4 h-4" />;
+    }
     const IconName = STATUS_ICONS[status as keyof typeof STATUS_ICONS];
     switch (IconName) {
       case 'CheckCircle': return <CheckCircle className="w-4 h-4" />;
@@ -949,6 +955,13 @@ Keep these credentials safe!
                 description: 'Confirmed patients',
                 color: 'purple'
               },
+              { 
+                id: 'staff_management', 
+                name: 'Staff Management', 
+                icon: Users, 
+                description: 'Manage staff access',
+                color: 'orange'
+              },
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -962,6 +975,8 @@ Keep these credentials safe!
                     return 'bg-gradient-to-b from-green-50 to-green-100 border-b-4 border-green-500 text-green-700';
                   case 'live_patients':
                     return 'bg-gradient-to-b from-purple-50 to-purple-100 border-b-4 border-purple-500 text-purple-700';
+                  case 'staff_management':
+                    return 'bg-gradient-to-b from-orange-50 to-orange-100 border-b-4 border-orange-500 text-orange-700';
                   default:
                     return 'bg-gradient-to-b from-gray-50 to-gray-100 border-b-4 border-gray-500 text-gray-700';
                 }
@@ -975,6 +990,8 @@ Keep these credentials safe!
                     return 'bg-green-100 text-green-600';
                   case 'live_patients':
                     return 'bg-purple-100 text-purple-600';
+                  case 'staff_management':
+                    return 'bg-orange-100 text-orange-600';
                   default:
                     return 'bg-gray-100 text-gray-600';
                 }
@@ -1330,9 +1347,9 @@ Keep these credentials safe!
                           return true; // searchResults are already filtered
                         }
                         
-                        // If not searching, show only in_progress AND follow_up entries in Interacting section
-                        return (consultation.status === CONSULTATION_STATUS.IN_PROGRESS || 
-                                consultation.status === CONSULTATION_STATUS.FOLLOW_UP);
+                        // If not searching, show confirmed and reachinglead entries in Interacting section
+                        return (consultation.status === 'confirmed' || 
+                                consultation.status === 'reachinglead');
                       })
                       .map((consultation) => (
                       <tr 
@@ -1367,7 +1384,21 @@ Keep these credentials safe!
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(consultation.status)}`}>
                             {getStatusIcon(consultation.status)}
-                            <span className="ml-1">{consultation.status}</span>
+                            <span className="ml-1">
+                              {consultation.status === 'reachinglead' && (consultation as any).is_lead ? 'LEAD' : 
+                               consultation.status === 'reachinglead' && !(consultation as any).is_lead ? 'REACHING' :
+                               consultation.status}
+                            </span>
+                            {/* Lead indicator icon */}
+                            {consultation.status === 'reachinglead' && (
+                              <span className="ml-1">
+                                {(consultation as any).is_lead ? (
+                                  <span className="text-green-500" title="Staff has talked to patient">📞</span>
+                                ) : (
+                                  <span className="text-yellow-500" title="Staff has not talked to patient yet">⏳</span>
+                                )}
+                              </span>
+                            )}
                           </span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
@@ -1403,6 +1434,7 @@ Keep these credentials safe!
                             >
                               <option value={CONSULTATION_STATUS.PENDING}>{STATUS_LABELS[CONSULTATION_STATUS.PENDING]}</option>
                               <option value={CONSULTATION_STATUS.CONFIRMED}>{STATUS_LABELS[CONSULTATION_STATUS.CONFIRMED]}</option>
+                              <option value="reachinglead">Reaching Lead</option>
                               <option value={CONSULTATION_STATUS.IN_PROGRESS}>{STATUS_LABELS[CONSULTATION_STATUS.IN_PROGRESS]}</option>
                               <option value={CONSULTATION_STATUS.COMPLETED}>{STATUS_LABELS[CONSULTATION_STATUS.COMPLETED]}</option>
                               <option value={CONSULTATION_STATUS.CANCELLED}>{STATUS_LABELS[CONSULTATION_STATUS.CANCELLED]}</option>
@@ -1413,8 +1445,8 @@ Keep these credentials safe!
                       </tr>
                     ))}
                     {consultations.filter(c => 
-                      c.status === CONSULTATION_STATUS.IN_PROGRESS || 
-                      c.status === CONSULTATION_STATUS.FOLLOW_UP
+                      c.status === 'confirmed' || 
+                      c.status === 'reachinglead'
                     ).length === 0 && (
                       <tr>
                         <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
@@ -1664,6 +1696,84 @@ Keep these credentials safe!
                     )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Staff Management Tab */}
+        {activeTab === 'staff_management' && (
+          <div className="space-y-4">
+            <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-bold text-orange-900">👥 Staff Management</h2>
+                  <p className="text-orange-700 text-sm">Manage staff accounts and permissions</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    // Add new staff functionality
+                    setNotificationMessage('Add new staff feature coming soon!');
+                    setShowNotification(true);
+                    setTimeout(() => setShowNotification(false), 3000);
+                  }}
+                  className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700"
+                >
+                  Add Staff
+                </button>
+              </div>
+            </div>
+
+            {/* Staff Management Content */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-orange-100">
+                <h3 className="text-lg font-semibold text-orange-900">Staff Accounts</h3>
+                <p className="text-orange-700 text-xs">Manage staff login credentials and permissions</p>
+              </div>
+              
+              <div className="p-6">
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users className="w-8 h-8 text-orange-600" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Staff Management</h3>
+                  <p className="text-gray-500 mb-4">
+                    Add and manage staff members who can access the staff portal with limited permissions.
+                  </p>
+                  
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                    <h4 className="font-medium text-orange-900 mb-2">Staff Permissions Include:</h4>
+                    <ul className="text-sm text-orange-700 space-y-1 text-left">
+                      <li>✅ View all patients and consultations</li>
+                      <li>✅ Edit basic patient information (name, contact, appointment times)</li>
+                      <li>✅ Add new consultations</li>
+                      <li>✅ Change consultation status (pending → confirmed → completed)</li>
+                      <li>✅ Generate patient portal credentials</li>
+                      <li>✅ Download basic PDFs</li>
+                      <li>❌ Cannot edit prescriptions or medical details</li>
+                      <li>❌ Cannot delete consultations</li>
+                      <li>❌ Cannot access Live Patients section</li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        setNotificationMessage('Add staff feature will be implemented in the next update!');
+                        setShowNotification(true);
+                        setTimeout(() => setShowNotification(false), 3000);
+                      }}
+                      className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                    >
+                      <Users className="w-5 h-5 inline mr-2" />
+                      Add New Staff Member
+                    </button>
+                    
+                    <p className="text-sm text-gray-500">
+                      Staff members will be able to login at <code className="bg-gray-100 px-2 py-1 rounded">/admin</code> using the Staff toggle
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

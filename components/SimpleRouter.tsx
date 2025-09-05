@@ -4,6 +4,7 @@ import { PatientPortal } from './PatientPortal';
 import { HomePage } from './HomePage';
 import { ContactPage } from './ContactPage';
 import AdminLoginPage from './AdminLoginPage';
+import StaffDashboard from './StaffDashboard';
 
 export function SimpleRouter() {
   const [currentRoute, setCurrentRoute] = useState<string>(window.location.pathname);
@@ -35,6 +36,20 @@ export function SimpleRouter() {
       return (
         <div className="min-h-screen bg-gray-50">
           <AdminPanel />
+        </div>
+      );
+    } else {
+      return <AdminLoginPage />;
+    }
+  }
+
+  if (currentRoute === '/staff') {
+    // Check if staff is logged in
+    const staffSession = localStorage.getItem('staff_session');
+    if (staffSession) {
+      return (
+        <div className="min-h-screen bg-gray-50">
+          <StaffDashboard />
         </div>
       );
     } else {

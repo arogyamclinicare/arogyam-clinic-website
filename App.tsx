@@ -54,7 +54,7 @@ function AppContent() {
 
   // Check current route to conditionally render header/footer
   const currentPath = window.location.pathname;
-  const isSpecialRoute = currentPath === '/admin' || currentPath === '/patient-portal';
+  const isSpecialRoute = currentPath === '/admin' || currentPath === '/patient-portal' || currentPath === '/staff';
 
   // Always render the SimpleRouter - it will handle all routing internally
   return (

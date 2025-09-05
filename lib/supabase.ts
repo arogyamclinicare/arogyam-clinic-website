@@ -65,6 +65,8 @@ export interface Database {
           quantity: number | null
           period: number | null
           prescription_remarks: string | null
+          is_lead: boolean | null
+          lead_marked_at: string | null
         }
         Insert: {
           id?: string
@@ -122,6 +124,8 @@ export interface Database {
           quantity?: number | null
           period?: number | null
           prescription_remarks?: string | null
+          is_lead?: boolean | null
+          lead_marked_at?: string | null
         }
         Update: {
           id?: string
@@ -179,6 +183,8 @@ export interface Database {
           quantity?: number | null
           period?: number | null
           prescription_remarks?: string | null
+          is_lead?: boolean | null
+          lead_marked_at?: string | null
         }
       }
       patients: {
@@ -295,6 +301,41 @@ export interface Database {
           updated_at?: string
         }
       }
+      staff: {
+        Row: {
+          id: string
+          email: string
+          password: string
+          name: string
+          role: string
+          permissions: any
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          password: string
+          name: string
+          role: string
+          permissions?: any
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          password?: string
+          name?: string
+          role?: string
+          permissions?: any
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
@@ -356,3 +397,6 @@ export type PrescriptionDrugUpdate = Database['public']['Tables']['prescription_
 export type DrugTemplate = Database['public']['Tables']['drug_templates']['Row']
 export type DrugTemplateInsert = Database['public']['Tables']['drug_templates']['Insert']
 export type DrugTemplateUpdate = Database['public']['Tables']['drug_templates']['Update']
+export type Staff = Database['public']['Tables']['staff']['Row']
+export type StaffInsert = Database['public']['Tables']['staff']['Insert']
+export type StaffUpdate = Database['public']['Tables']['staff']['Update']
