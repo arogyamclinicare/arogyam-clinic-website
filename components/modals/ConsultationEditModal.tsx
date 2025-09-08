@@ -12,42 +12,160 @@ import {
   Download,
   Plus
 } from 'lucide-react';
-// Service options and related functions (inline for now)
+// Service options and related functions based on actual database data
 const serviceOptions = [
   { value: 'consultation', label: 'Consultation' },
-  { value: 'follow_up', label: 'Follow Up' },
-  { value: 'emergency', label: 'Emergency' }
+  { value: 'homeopathy', label: 'Homeopathy' },
+  { value: 'aesthetics', label: 'Aesthetics' }
 ];
 
 const caseTypeOptions = [
-  { value: 'routine', label: 'Routine' },
-  { value: 'urgent', label: 'Urgent' },
-  { value: 'emergency', label: 'Emergency' }
+  { value: '', label: 'Select Case Type' },
+  { value: 'normal_case', label: 'Normal Case' },
+  { value: 'difficult_case', label: 'Difficult Case' },
+  { value: 'rare_case', label: 'Rare Case' },
+  { value: 'rare_difficult_case', label: 'Rare & Difficult Case' }
 ];
 
 const associatedSegmentOptions = [
-  { value: 'general', label: 'General' },
-  { value: 'specialist', label: 'Specialist' }
+  // Complete list of Associated Segments
+  { value: 'allergy', label: 'ALLERGY' },
+  { value: 'ano_rectal_disorder', label: 'ANO RECTAL DISORDER' },
+  { value: 'anorectal_disease', label: 'ANORECTAL DISEASE' },
+  { value: 'b_fit_weight_management', label: 'B-FIT+ WEIGHT MANAGEMENT' },
+  { value: 'cancer_malignancy', label: 'CANCER/MALIGNANCY' },
+  { value: 'cardiovascular', label: 'CARDIOVASCULAR' },
+  { value: 'children_disorders', label: 'CHILDREN DISORDERS' },
+  { value: 'circulatory_disorder', label: 'CIRCULATORY DISORDER' },
+  { value: 'cns', label: 'CNS' },
+  { value: 'de_addiction', label: 'DE ADDICTION' },
+  { value: 'dentition', label: 'DENTITION' },
+  { value: 'endocrine', label: 'ENDOCRINE' },
+  { value: 'ent', label: 'ENT' },
+  { value: 'gastrointestinal', label: 'GASTROINTESTINAL' },
+  { value: 'haematological', label: 'HAEMATOLOGICAL' },
+  { value: 'hair', label: 'HAIR' },
+  { value: 'mindfit', label: 'MINDFIT' },
+  { value: 'musculoskeletal_system', label: 'MUSCULOSKELETAL SYSTEM' },
+  { value: 'neurological', label: 'NEUROLOGICAL' },
+  { value: 'ophthalmological_disorder', label: 'OPHTHALMOLOGICAL DISORDER' },
+  { value: 'pain_management', label: 'PAIN MANAGEMENT' },
+  { value: 'post_covid_ailments', label: 'POST COVID AILMENTS' },
+  { value: 'psychiatric', label: 'PSYCHIATRIC' },
+  { value: 'renal', label: 'RENAL' },
+  { value: 'respiratory', label: 'RESPIRATORY' },
+  { value: 'rheumatology', label: 'RHEUMATOLOGY' },
+  { value: 'sexual_health', label: 'SEXUAL HEALTH' },
+  { value: 'skin', label: 'SKIN' },
+  { value: 'speech_disorder', label: 'SPEECH DISORDER' },
+  { value: 'stress_management', label: 'STRESS MANAGEMENT' },
+  { value: 'teen_and_adolescence', label: 'TEEN AND ADOLSCENCE' },
+  { value: 'urinary', label: 'URINARY' },
+  { value: 'weight_management', label: 'WEIGHT MANAGEMENT' },
+  { value: 'womens_health', label: 'WOMENS HEALTH' }
 ];
 
 const getSegmentsForService = (serviceType: string) => {
-  if (serviceType === 'consultation') {
+  if (serviceType === 'homeopathy') {
+    return [
+      { value: 'allergy', label: 'ALLERGY' },
+      { value: 'ano_rectal_disorder', label: 'ANO RECTAL DISORDER' },
+      { value: 'anorectal_disease', label: 'ANORECTAL DISEASE' },
+      { value: 'b_fit_weight_management', label: 'B-FIT+ WEIGHT MANAGEMENT' },
+      { value: 'cancer_malignancy', label: 'CANCER/MALIGNANCY' },
+      { value: 'cardiovascular', label: 'CARDIOVASCULAR' },
+      { value: 'children_disorders', label: 'CHILDREN DISORDERS' },
+      { value: 'circulatory_disorder', label: 'CIRCULATORY DISORDER' },
+      { value: 'cns', label: 'CNS' },
+      { value: 'de_addiction', label: 'DE ADDICTION' },
+      { value: 'dentition', label: 'DENTITION' },
+      { value: 'endocrine', label: 'ENDOCRINE' },
+      { value: 'ent', label: 'ENT' },
+      { value: 'gastrointestinal', label: 'GASTROINTESTINAL' },
+      { value: 'haematological', label: 'HAEMATOLOGICAL' },
+      { value: 'hair', label: 'HAIR' },
+      { value: 'mindfit', label: 'MINDFIT' },
+      { value: 'musculoskeletal_system', label: 'MUSCULOSKELETAL SYSTEM' },
+      { value: 'neurological', label: 'NEUROLOGICAL' },
+      { value: 'ophthalmological_disorder', label: 'OPHTHALMOLOGICAL DISORDER' },
+      { value: 'pain_management', label: 'PAIN MANAGEMENT' },
+      { value: 'post_covid_ailments', label: 'POST COVID AILMENTS' },
+      { value: 'psychiatric', label: 'PSYCHIATRIC' },
+      { value: 'renal', label: 'RENAL' },
+      { value: 'respiratory', label: 'RESPIRATORY' },
+      { value: 'rheumatology', label: 'RHEUMATOLOGY' },
+      { value: 'sexual_health', label: 'SEXUAL HEALTH' },
+      { value: 'skin', label: 'SKIN' },
+      { value: 'speech_disorder', label: 'SPEECH DISORDER' },
+      { value: 'stress_management', label: 'STRESS MANAGEMENT' },
+      { value: 'teen_and_adolescence', label: 'TEEN AND ADOLSCENCE' },
+      { value: 'urinary', label: 'URINARY' },
+      { value: 'weight_management', label: 'WEIGHT MANAGEMENT' },
+      { value: 'womens_health', label: 'WOMENS HEALTH' }
+    ];
+  } else if (serviceType === 'aesthetics') {
     return [
       { value: 'general', label: 'General' },
       { value: 'specialist', label: 'Specialist' }
+    ];
+  } else if (serviceType === 'consultation') {
+    return [
+      { value: 'general', label: 'General' }
     ];
   }
   return [];
 };
 
-const getSubSegmentsForSegment = (serviceType: string, segment: string) => {
-  if (serviceType === 'consultation' && segment === 'specialist') {
-    return [
-      { value: 'cardiology', label: 'Cardiology' },
-      { value: 'neurology', label: 'Neurology' }
-    ];
-  }
-  return [];
+const getSubSegmentsForSegment = (_serviceType: string, segment: string) => {
+  // Define sub-segments based on actual database data
+  const subSegmentMap: { [key: string]: { value: string; label: string }[] } = {
+    'allergy': [
+      { value: 'allergic_rhinitis', label: 'Allergic Rhinitis' },
+      { value: 'skin_allergy', label: 'Skin Allergy' },
+      { value: 'food_allergy', label: 'Food Allergy' }
+    ],
+    'children_disorders': [
+      { value: 'growth', label: 'Growth' },
+      { value: 'behavioral', label: 'Behavioral' },
+      { value: 'developmental', label: 'Developmental' }
+    ],
+    'de_addiction': [
+      { value: 'digital_addiction', label: 'Digital Addiction' },
+      { value: 'substance_addiction', label: 'Substance Addiction' },
+      { value: 'gambling_addiction', label: 'Gambling Addiction' }
+    ],
+    'dentition': [
+      { value: 'caries', label: 'Caries' },
+      { value: 'gum_disease', label: 'Gum Disease' },
+      { value: 'tooth_eruption', label: 'Tooth Eruption' }
+    ],
+    'ent': [
+      { value: 'thyroid_disorders', label: 'Thyroid Disorders' },
+      { value: 'hearing_problems', label: 'Hearing Problems' },
+      { value: 'sinus_issues', label: 'Sinus Issues' }
+    ],
+    'gastrointestinal': [
+      { value: 'dyspepsia_indigestion', label: 'Dyspepsia/Indigestion' },
+      { value: 'ibs', label: 'IBS' },
+      { value: 'acid_reflux', label: 'Acid Reflux' }
+    ],
+    'urinary': [
+      { value: 'kidney_stones', label: 'Kidney Stones' },
+      { value: 'uti', label: 'UTI' },
+      { value: 'prostate_issues', label: 'Prostate Issues' }
+    ],
+    'weight_management': [
+      { value: 'under_weight', label: 'Under Weight' },
+      { value: 'over_weight', label: 'Over Weight' },
+      { value: 'obesity', label: 'Obesity' }
+    ],
+    'general': [
+      { value: 'general_consultation', label: 'General Consultation' },
+      { value: 'health_checkup', label: 'Health Checkup' }
+    ]
+  };
+
+  return subSegmentMap[segment] || [];
 };
 
 const resetDependentFields = (formData: any, field: string) => {
@@ -743,26 +861,26 @@ export function ConsultationEditModal({
               {/* Associated Segments Multi-Select */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Associated Segments</label>
-                <div className="border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="border border-gray-300 rounded-lg p-4 max-h-80 overflow-y-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                     {associatedSegmentOptions.map((segment) => {
                       const isSelected = formData.associated_segments?.includes(segment.value) || false;
                       return (
-                        <label key={segment.value} className="flex items-center space-x-2 cursor-pointer">
+                        <label key={segment.value} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded border border-transparent hover:border-gray-200 transition-colors">
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={(e) => handleAssociatedSegmentChange(segment.value, e.target.checked)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                           />
-                          <span className="text-sm text-gray-700">{segment.label}</span>
+                          <span className="text-xs text-gray-700 font-medium leading-tight">{segment.label}</span>
                         </label>
                       );
                     })}
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Select multiple segments that are relevant to this case
+                <p className="text-xs text-gray-500 mt-2">
+                  Select multiple segments that are relevant to this case. You can choose from all available medical specialties and conditions.
                 </p>
               </div>
             </div>
