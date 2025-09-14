@@ -15,14 +15,14 @@ interface UseAccessibilityOptions {
   enableScreenReader?: boolean;
 }
 
-export const useAccessibility = (options: UseAccessibilityOptions = {}) => {
+export const useAccessibility = (_options: UseAccessibilityOptions = {}) => {
   const {
     pageTitle,
     announcePageLoad = true,
     enableFocusTrap = false,
     enableKeyboardNavigation = true,
     enableScreenReader = true
-  } = options;
+  } = _options;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const focusTrapCleanup = useRef<(() => void) | null>(null);

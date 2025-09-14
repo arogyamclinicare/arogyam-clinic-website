@@ -69,14 +69,13 @@ export function PrescriptionDrugForm({ initialPrescription, onPrescriptionUpdate
         .order('drug_name', { ascending: true });
 
       if (error) {
-        console.error('❌ Error loading drug templates:', error);
         return;
       }
 
       setDrugTemplates(data || []);
     } catch (error) {
-      console.error('❌ Failed to load drug templates:', error);
-    }
+    // Empty block
+  }
   };
 
 
@@ -96,14 +95,11 @@ export function PrescriptionDrugForm({ initialPrescription, onPrescriptionUpdate
   };
 
   const handleInputChange = (field: keyof ConsultationPrescription, value: any) => {
-    console.log('🔍 PrescriptionDrugForm: Input change:', { field, value });
-    console.log('🔍 PrescriptionDrugForm: Previous state:', currentPrescription);
     setCurrentPrescription(prev => {
       const updated = {
         ...prev,
         [field]: value
       };
-      console.log('🔍 PrescriptionDrugForm: Updated prescription state:', updated);
       return updated;
     });
   };
@@ -111,7 +107,6 @@ export function PrescriptionDrugForm({ initialPrescription, onPrescriptionUpdate
   // Update parent component when prescription data changes (but not during initialization)
   useEffect(() => {
     if (!isInitializing.current && currentPrescription.drug_name && currentPrescription.drug_name.trim()) {
-      console.log('🔍 PrescriptionDrugForm: Updating parent with prescription data:', currentPrescription);
       onPrescriptionUpdate(currentPrescription);
     }
   }, [currentPrescription]);

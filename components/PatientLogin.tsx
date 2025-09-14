@@ -12,13 +12,17 @@ export function PatientLogin() {
   const [patientId, setPatientId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({
+    // Empty block
+  });
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setValidationErrors({});
+    setValidationErrors({
+    // Empty block
+  });
 
     // Form submission started
     // Form data logged
@@ -78,12 +82,16 @@ export function PatientLogin() {
   };
 
   const goHome = () => {
-    window.history.pushState({}, '', '/');
+    window.history.pushState({
+    // Empty block
+  }, '', '/');
     window.location.reload();
   };
 
   const bookAppointment = () => {
-    window.history.pushState({}, '', '/');
+    window.history.pushState({
+    // Empty block
+  }, '', '/');
     window.location.reload();
     // Scroll to booking section after navigation
     setTimeout(() => {

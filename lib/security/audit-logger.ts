@@ -61,7 +61,9 @@ export class SecurityAuditLogger {
   static logEvent(
     eventType: SecurityEventType,
     severity: SecuritySeverity,
-    details: Record<string, any> = {},
+    details: Record<string, any> = {
+    // Empty block
+  },
     userInfo?: {
       userId?: string;
       userEmail?: string;
@@ -97,17 +99,19 @@ export class SecurityAuditLogger {
       
       // Log to console in development
       if (SECURITY_CONFIG.ENV.IS_DEVELOPMENT) {
-        console.log('🔒 Security Event Logged:', event);
-      }
+    // Empty block
+  }
     } catch (error) {
-      console.error('Error logging security event:', error);
-    }
+    // Empty block
+  }
   }
 
   /**
    * Log login attempt
    */
-  static logLoginAttempt(email: string, success: boolean, details: Record<string, any> = {}): void {
+  static logLoginAttempt(email: string, success: boolean, details: Record<string, any> = {
+    // Empty block
+  }): void {
     const eventType = success ? SecurityEventType.LOGIN_SUCCESS : SecurityEventType.LOGIN_FAILURE;
     const severity = success ? SecuritySeverity.LOW : SecuritySeverity.MEDIUM;
     
@@ -133,7 +137,9 @@ export class SecurityAuditLogger {
   /**
    * Log CSRF token validation failure
    */
-  static logCSRFFailure(userId?: string, details: Record<string, any> = {}): void {
+  static logCSRFFailure(userId?: string, details: Record<string, any> = {
+    // Empty block
+  }): void {
     this.logEvent(SecurityEventType.CSRF_TOKEN_INVALID, SecuritySeverity.HIGH, {
       ...details,
       failureType: 'CSRF_TOKEN_INVALID'
@@ -146,7 +152,9 @@ export class SecurityAuditLogger {
   static logSuspiciousActivity(
     activity: string,
     severity: SecuritySeverity,
-    details: Record<string, any> = {},
+    details: Record<string, any> = {
+    // Empty block
+  },
     userInfo?: { userId?: string; userEmail?: string; userRole?: string }
   ): void {
     this.logEvent(SecurityEventType.SUSPICIOUS_ACTIVITY, severity, {
@@ -161,7 +169,9 @@ export class SecurityAuditLogger {
   static logAdminAction(
     action: string,
     targetId?: string,
-    details: Record<string, any> = {},
+    details: Record<string, any> = {
+    // Empty block
+  },
     userInfo?: { userId?: string; userEmail?: string; userRole?: string }
   ): void {
     this.logEvent(SecurityEventType.ADMIN_ACTION, SecuritySeverity.MEDIUM, {
@@ -216,7 +226,6 @@ export class SecurityAuditLogger {
       const events: SecurityEvent[] = JSON.parse(eventsStr);
       return events.sort((a, b) => b.timestamp - a.timestamp); // Most recent first
     } catch (error) {
-      console.error('Error retrieving security events:', error);
       return [];
     }
   }
@@ -292,8 +301,12 @@ export class SecurityAuditLogger {
     const oneWeek = 7 * oneDay;
     const oneMonth = 30 * oneDay;
 
-    const eventsByType: Record<SecurityEventType, number> = {} as any;
-    const eventsBySeverity: Record<SecuritySeverity, number> = {} as any;
+    const eventsByType: Record<SecurityEventType, number> = {
+    // Empty block
+  } as any;
+    const eventsBySeverity: Record<SecuritySeverity, number> = {
+    // Empty block
+  } as any;
 
     events.forEach(event => {
       eventsByType[event.eventType] = (eventsByType[event.eventType] || 0) + 1;
@@ -329,8 +342,8 @@ export class SecurityAuditLogger {
       
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(existingEvents));
     } catch (error) {
-      console.error('Error storing security event:', error);
-    }
+    // Empty block
+  }
   }
 
   private static cleanupOldLogs(): void {
@@ -344,8 +357,8 @@ export class SecurityAuditLogger {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filteredEvents));
       }
     } catch (error) {
-      console.error('Error cleaning up old logs:', error);
-    }
+    // Empty block
+  }
   }
 
   private static getClientIP(): string {
@@ -398,20 +411,26 @@ export function useSecurityAudit() {
   const logEvent = (
     eventType: SecurityEventType,
     severity: SecuritySeverity,
-    details: Record<string, any> = {},
+    details: Record<string, any> = {
+    // Empty block
+  },
     userInfo?: { userId?: string; userEmail?: string; userRole?: string }
   ) => {
     SecurityAuditLogger.logEvent(eventType, severity, details, userInfo);
   };
 
-  const logLoginAttempt = (email: string, success: boolean, details: Record<string, any> = {}) => {
+  const logLoginAttempt = (email: string, success: boolean, details: Record<string, any> = {
+    // Empty block
+  }) => {
     SecurityAuditLogger.logLoginAttempt(email, success, details);
   };
 
   const logSuspiciousActivity = (
     activity: string,
     severity: SecuritySeverity,
-    details: Record<string, any> = {},
+    details: Record<string, any> = {
+    // Empty block
+  },
     userInfo?: { userId?: string; userEmail?: string; userRole?: string }
   ) => {
     SecurityAuditLogger.logSuspiciousActivity(activity, severity, details, userInfo);

@@ -56,7 +56,6 @@ export async function verifyPassword(password: string, _hash: string): Promise<b
     const expectedPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'Admin123';
     return password === expectedPassword;
   } catch (error) {
-    console.error('Error verifying password:', error);
     return false;
   }
 }
@@ -214,7 +213,6 @@ export async function authenticateAdmin(email: string, password: string): Promis
     };
 
   } catch (error) {
-    console.error('Authentication error:', error);
     return {
       success: false,
       error: 'Authentication failed. Please try again.'
@@ -242,7 +240,6 @@ export function validateAdminSession(): AdminSession | null {
 
     return session;
   } catch (error) {
-    console.error('Session validation error:', error);
     localStorage.removeItem('admin_session');
     return null;
   }
@@ -333,7 +330,6 @@ export function validateStaffSession(): StaffSession | null {
 
     return session;
   } catch (error) {
-    console.error('Staff session validation error:', error);
     localStorage.removeItem('staff_session');
     return null;
   }
@@ -365,11 +361,12 @@ export async function getStaffByEmail(email: string): Promise<StaffCredentials |
       password: (data as any).password,
       name: (data as any).name,
       role: (data as any).role,
-      permissions: (data as any).permissions || {},
+      permissions: (data as any).permissions || {
+    // Empty block
+  },
       isActive: (data as any).is_active
     };
   } catch (error) {
-    console.error('Error fetching staff:', error);
     return null;
   }
 }
@@ -383,7 +380,6 @@ export async function verifyStaffPassword(password: string, storedPassword: stri
     // In production, this should use proper bcrypt verification
     return password === storedPassword;
   } catch (error) {
-    console.error('Error verifying staff password:', error);
     return false;
   }
 }
@@ -441,7 +437,6 @@ export async function authenticateStaff(email: string, password: string): Promis
     };
 
   } catch (error) {
-    console.error('Staff authentication error:', error);
     return {
       success: false,
       error: 'Authentication failed. Please try again.'
@@ -455,7 +450,5 @@ export async function authenticateStaff(email: string, password: string): Promis
  */
 export async function generatePasswordHash(password: string): Promise<string> {
   const hash = await hashPassword(password);
-  console.log('Generated password hash for environment variable:');
-  console.log(`VITE_ADMIN_PASSWORD_HASH=${hash}`);
   return hash;
 }

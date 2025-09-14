@@ -115,14 +115,11 @@ const StaffDashboard: React.FC = () => {
               table: 'consultations'
             },
             (payload) => {
-              console.log('🔄 Staff real-time update received:', payload);
-              
               // Handle different types of changes
               if (payload.eventType === 'INSERT') {
                 // Add new consultation to the list
                 const newConsultation = payload.new as Consultation;
                 setConsultations(prev => [newConsultation, ...prev]);
-                console.log('✅ New consultation added:', newConsultation.name);
               } else if (payload.eventType === 'UPDATE') {
                 // Update existing consultation
                 const updatedConsultation = payload.new as Consultation;
@@ -131,21 +128,19 @@ const StaffDashboard: React.FC = () => {
                     consultation.id === updatedConsultation.id ? updatedConsultation : consultation
                   )
                 );
-                console.log('🔄 Consultation updated:', updatedConsultation.name);
               } else if (payload.eventType === 'DELETE') {
                 // Remove deleted consultation
                 const deletedId = payload.old.id;
                 setConsultations(prev => prev.filter(consultation => consultation.id !== deletedId));
-                console.log('🗑️ Consultation deleted:', deletedId);
               }
             }
           )
           .subscribe((status) => {
-            console.log('📡 Staff real-time status:', status);
-          });
+    // Empty block
+  });
       } catch (error) {
-        console.error('❌ Failed to setup staff real-time:', error);
-      }
+    // Empty block
+  }
     };
 
     // Delay real-time setup to avoid immediate client creation
@@ -173,8 +168,8 @@ const StaffDashboard: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (consultationsError) {
-        console.error('Error loading consultations:', consultationsError);
-      } else {
+    // Empty block
+  } else {
         setConsultations(consultationsData || []);
       }
 
@@ -185,13 +180,13 @@ const StaffDashboard: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (patientsError) {
-        console.error('Error loading patients:', patientsError);
-      } else {
+    // Empty block
+  } else {
         setPatients(patientsData || []);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
+    // Empty block
+  } finally {
       setLoading(false);
     }
   };
@@ -221,12 +216,12 @@ const StaffDashboard: React.FC = () => {
         .eq('id', id);
 
       if (error) {
-        console.error('Error updating status:', error);
-      }
+    // Empty block
+  }
       // No alert, no reload - real-time will handle the update
     } catch (error) {
-      console.error('Error updating status:', error);
-    }
+    // Empty block
+  }
   };
 
   // Removed generatePatientCredentials function as it's no longer used
@@ -292,12 +287,12 @@ const StaffDashboard: React.FC = () => {
         .eq('id', consultationId);
 
       if (error) {
-        console.error('Error marking as lead:', error);
-      }
+    // Empty block
+  }
       // No alert, no reload - real-time will handle the update
     } catch (error) {
-      console.error('Error marking as lead:', error);
-    }
+    // Empty block
+  }
   };
 
   // Filter consultations based on selected tab

@@ -73,7 +73,9 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bookingId, setBookingId] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({
+    // Empty block
+  });
 
   // Debug logging
   useEffect(() => {
@@ -107,7 +109,9 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
     setCurrentStep('booking');
     setError(null);
     setBookingId(null);
-    setValidationErrors({});
+    setValidationErrors({
+    // Empty block
+  });
     setBookingData({
       name: '',
       email: '',
@@ -140,20 +144,15 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
         consultation_type: bookingData.consultationType,
         treatment_type: bookingData.treatmentType
       };
-
-      console.log('🔍 VALIDATION DATA:', dataToValidate);
-
       // Validate using Zod schema
       const validatedData = consultationBookingSchema.parse(dataToValidate);
-      console.log('✅ VALIDATION SUCCESS:', validatedData);
-      
-      setValidationErrors({});
+      setValidationErrors({
+    // Empty block
+  });
       return true;
     } catch (error: any) {
-      console.error('❌ VALIDATION ERROR:', error);
       if (error.errors) {
         const formattedErrors = formatValidationErrors(error);
-        console.log('🔍 FORMATTED ERRORS:', formattedErrors);
         setValidationErrors(formattedErrors);
       }
       return false;
@@ -162,10 +161,6 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
 
   // Handle input change with sanitization
   const handleInputChange = (field: keyof BookingData, value: string) => {
-    console.log(`�� INPUT RECEIVED: ${field} = "${value}"`);
-    console.log(`🔍 INPUT TYPE: ${typeof value}`);
-    console.log(`🔍 INPUT LENGTH: ${value.length}`);
-    
     // For time and date fields, don't sanitize - preserve the exact value
     let processedValue = value;
     if (field === 'preferredTime' || field === 'preferredDate') {
@@ -180,10 +175,6 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
     } else {
       processedValue = sanitizeInput(value);
     }
-    
-    console.log(`🔍 FINAL VALUE SET: ${field} = "${processedValue}"`);
-    console.log(`🔍 PROCESSED LENGTH: ${processedValue.length}`);
-    
     setBookingData(prev => ({ ...prev, [field]: processedValue }));
     
     // Clear validation error for this field when user starts typing
@@ -209,11 +200,6 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
     if (isLoading) {
       return;
     }
-
-    console.log('🎯 FORM SUBMIT TRIGGERED');
-    console.log('📊 CURRENT FORM STATE:', bookingData);
-    console.log('🔍 CURRENT VALIDATION ERRORS:', validationErrors);
-
     // Check if form has basic required data before even attempting validation
     const hasBasicData = bookingData.name.trim() && 
                         bookingData.phone.trim() && 
@@ -221,7 +207,6 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                         bookingData.preferredTime;
     
     if (!hasBasicData) {
-      console.log('❌ BASIC DATA MISSING - showing user what to fill');
       setError('Please fill in all required fields: Name, Phone, Date, and Time');
       
       // Run validation to show specific field errors
@@ -232,13 +217,9 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
     // Run immediate validation to show errors right away
     const isValid = validateBookingData();
     if (!isValid) {
-      console.log('❌ IMMEDIATE VALIDATION FAILED');
       setError('Please fix the validation errors below');
       return;
     }
-
-    console.log('✅ IMMEDIATE VALIDATION PASSED - proceeding with direct submission');
-
     // Submit directly instead of using debounced submission
     try {
       setIsLoading(true);
@@ -258,13 +239,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
         treatment_type: bookingData.treatmentType.trim(),
         status: 'pending'
       };
-
-      console.log('📤 SUBMITTING TO DATABASE:', consultationData);
-
       const result = await addConsultation(consultationData);
-
-      console.log('📥 DATABASE RESPONSE:', result);
-
       if (result.success) {
         setBookingId(result.data?.id || 'success');
         setCurrentStep('confirmation');
@@ -272,7 +247,6 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
         setError(result.error || 'Failed to book consultation');
       }
     } catch (err: any) {
-      console.error('💥 SUBMISSION ERROR:', err);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

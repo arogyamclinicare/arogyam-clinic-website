@@ -107,11 +107,9 @@ class Logger {
       // Example: Sentry, LogRocket, or custom logging API
       if (entry.level === 'security' || entry.level === 'error') {
         // Always send security and error logs
-        console.log('🔒 REMOTE LOG:', entry);
       }
     } catch (error) {
       // Don't let logging errors break the app
-      console.error('Failed to send log to remote service:', error);
     }
   }
 

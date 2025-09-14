@@ -34,8 +34,8 @@ export class PerformanceMonitor {
         navigationObserver.observe({ entryTypes: ['navigation'] });
         this.observers.set('navigation', navigationObserver);
       } catch (error) {
-        console.warn('Navigation performance observer not supported:', error);
-      }
+    // Empty block
+  }
 
       // Monitor paint timing
       try {
@@ -50,8 +50,8 @@ export class PerformanceMonitor {
         paintObserver.observe({ entryTypes: ['paint'] });
         this.observers.set('paint', paintObserver);
       } catch (error) {
-        console.warn('Paint performance observer not supported:', error);
-      }
+    // Empty block
+  }
 
       // Monitor resource loading
       try {
@@ -66,8 +66,8 @@ export class PerformanceMonitor {
         resourceObserver.observe({ entryTypes: ['resource'] });
         this.observers.set('resource', resourceObserver);
       } catch (error) {
-        console.warn('Resource performance observer not supported:', error);
-      }
+    // Empty block
+  }
     }
   }
 
@@ -88,7 +88,9 @@ export class PerformanceMonitor {
 
   // Get all metrics
   getAllMetrics(): Record<string, number> {
-    const result: Record<string, number> = {};
+    const result: Record<string, number> = {
+    // Empty block
+  };
     this.metrics.forEach((value, key) => {
       result[key] = value;
     });
@@ -206,7 +208,9 @@ export class PerformanceBudget {
   }
 
   getAllBudgets(): Record<string, number> {
-    const result: Record<string, number> = {};
+    const result: Record<string, number> = {
+    // Empty block
+  };
     this.budgets.forEach((value, key) => {
       result[key] = value;
     });

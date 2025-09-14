@@ -23,8 +23,8 @@ describe('Form Validation Fix - Real User Data', () => {
     const result = consultationBookingSchema.safeParse(userData);
     
     if (!result.success) {
-      console.log('Validation failed with errors:', result.error.issues);
-    }
+    // Empty block
+  }
     
     expect(result.success).toBe(true);
   });

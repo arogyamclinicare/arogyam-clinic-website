@@ -19,7 +19,7 @@ const phoneSchema = z.string()
 const emailSchema = z.string()
   .optional()
   .refine(
-    (val) => !val || /\S+@\S+\.\S+/.test(val),
+    (val) => !val || /\S+@\S+.\S+/.test(val),
     'Please enter a valid email address'
   );
 
@@ -55,7 +55,7 @@ export const consultationBookingSchema = z.object({
     .min(2, 'Name must be at least 2 characters')
     .max(100, 'Name is too long')
     .refine(
-      (val) => /^[a-zA-Z\s\-'\.]+$/.test(val),
+      (val) => /^[a-zA-Z\s\-'.]+$/.test(val),
       'Name can only contain letters, spaces, hyphens, apostrophes, and periods'
     ),
   
@@ -109,7 +109,9 @@ export function validateConsultationBooking(data: unknown): {
     return { success: true, data: result };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errors: Record<string, string> = {};
+      const errors: Record<string, string> = {
+    // Empty block
+  };
       
       error.errors.forEach((err) => {
         const path = err.path.join('.');

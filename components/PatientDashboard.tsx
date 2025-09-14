@@ -53,7 +53,7 @@ const formatTimeToIndianFormat = (timeString: string): string => {
     
     return `${displayHours}:${displayMinutes} ${period}`;
   } catch (error) {
-    console.error('Error formatting time:', error);
+
     return timeString; // Return original if any error occurs
   }
 };
@@ -84,7 +84,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
           .eq('patient_id', user.patient_id);
         
         if (patientError) {
-          console.error('❌ Error checking patients table:', patientError);
+
           setLoading(false);
           return;
         }
@@ -122,8 +122,8 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
                     .eq('id', consultation.id);
                   
                   if (linkError) {
-                    console.error('❌ Failed to link consultation:', linkError);
-                  } else {
+    // Empty block
+  } else {
                     // Successfully linked consultation
                   }
                 }
@@ -156,7 +156,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
         // Final consultations result
 
         if (error) {
-          console.error('❌ Error fetching consultations:', error);
+
           // Don't show sensitive error details to patients
           setConsultations([]);
         } else {
@@ -172,19 +172,18 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
             .order('drug_name', { ascending: true });
 
           if (templateError) {
-            console.error('❌ Error fetching drug templates:', templateError);
-          } else {
+    // Empty block
+  } else {
             setDrugTemplates(templates || []);
           }
         } catch (templateError) {
-          console.error('❌ Failed to fetch drug templates:', templateError);
-        }
+    // Empty block
+  }
 
         // Fetch prescription drugs from the new prescription_drugs table
         try {
           const consultationIds = (data || []).map((c: any) => c.id);
-          console.log('🔍 PatientDashboard: Consultation IDs for prescription fetch:', consultationIds);
-          
+
           if (consultationIds.length > 0) {
             const { data: prescriptionData, error: prescriptionError } = await (getSupabaseAdmin() as any)
               .from('prescription_drugs')
@@ -193,18 +192,18 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
               .order('created_at', { ascending: true });
 
             if (prescriptionError) {
-              console.error('❌ Error fetching prescription drugs:', prescriptionError);
-            } else {
+    // Empty block
+  } else {
               setPrescriptionDrugs(prescriptionData || []);
-              console.log('✅ PatientDashboard: Fetched prescription drugs:', prescriptionData);
-              console.log('📊 PatientDashboard: Total prescription drugs found:', prescriptionData?.length || 0);
+
+
             }
           } else {
-            console.log('⚠️ PatientDashboard: No consultation IDs found for prescription fetch');
-          }
+    // Empty block
+  }
         } catch (prescriptionError) {
-          console.error('❌ Failed to fetch prescription drugs:', prescriptionError);
-        }
+    // Empty block
+  }
         
         // If still no data, try to show consultations by email as a last resort
         if ((!data || data.length === 0) && patientCheck && patientCheck[0]?.email) {
@@ -221,7 +220,7 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
           }
         }
       } catch (error) {
-        console.error('💥 Error:', error);
+
         setConsultations([]);
       } finally {
         setLoading(false);
@@ -236,7 +235,9 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
   };
 
   const goHome = () => {
-    window.history.pushState({}, '', '/');
+    window.history.pushState({
+    // Empty block
+  }, '', '/');
     window.location.reload();
   };
 
@@ -247,6 +248,8 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
   const handleDownloadPrescriptionPDF = async (consultation: Consultation) => {
     setIsGeneratingPDF(true);
     try {
+      console.log('Starting PDF generation for consultation:', consultation.id);
+      console.log('Consultation data:', consultation);
       const pdfBlob = await pdfGenerator.generatePatientPrescriptionPDF(consultation);
       
       // Create download link
@@ -258,9 +261,15 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      console.log('PDF generated and downloaded successfully');
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      console.error('PDF Generation Error in Patient Portal:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        consultation: consultation
+      });
+      alert(`Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -287,11 +296,9 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
     
     return hasPrescriptionDrugs || hasOldPrescription;
   });
-  
-  console.log('📊 PatientDashboard: Active prescriptions count:', activePrescriptions.length);
-  console.log('📊 PatientDashboard: Total consultations:', consultations.length);
-  console.log('📊 PatientDashboard: Total prescription drugs:', prescriptionDrugs.length);
-  
+
+
+
   // Also show next appointment date from any consultation that has it
   const nextAppointmentDate = consultations.find(c => 
     c.next_appointment_date && c.next_appointment_date.trim() !== ''

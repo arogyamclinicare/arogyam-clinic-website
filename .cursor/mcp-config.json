@@ -1,0 +1,52 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-supabase"],
+      "env": {
+        "SUPABASE_URL": "your_supabase_url_here",
+        "SUPABASE_ANON_KEY": "your_supabase_anon_key_here",
+        "SUPABASE_SERVICE_ROLE_KEY": "your_supabase_service_role_key_here"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem", "/path/to/your/project"]
+    },
+    "terminal": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-terminal"]
+    },
+    "web-search": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-web-search"],
+      "env": {
+        "SEARCH_API_KEY": "your_search_api_key_here"
+      }
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-memory"]
+    },
+    "tasks": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-tasks"]
+    },
+    "database": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-database"]
+    },
+    "api": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-api"]
+    }
+  }
+}
+

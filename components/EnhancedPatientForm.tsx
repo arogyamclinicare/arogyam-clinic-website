@@ -43,7 +43,9 @@ export function SimplePatientForm({
   
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<number>(0);
-  const [validationErrors, setValidationErrors] = useState<Partial<FormData>>({});
+  const [validationErrors, setValidationErrors] = useState<Partial<FormData>>({
+    // Empty block
+  });
   
   // Refs for form fields
   const emailRef = useRef<HTMLInputElement>(null);
@@ -83,12 +85,14 @@ export function SimplePatientForm({
 
   // Simple, practical form validation for basic clinic website
   const validateForm = (): boolean => {
-    const errors: Partial<FormData> = {};
+    const errors: Partial<FormData> = {
+    // Empty block
+  };
     
     // Email validation - basic check
     if (!formData.email) {
       errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/\S+@\S+.\S+/.test(formData.email)) {
       errors.email = 'Please enter a valid email address';
     }
     
@@ -145,7 +149,6 @@ export function SimplePatientForm({
       await onSubmit(formData);
       
     } catch (err) {
-      console.error('Form submission error:', err);
       // Error handling is done by parent component
     }
   };

@@ -6,11 +6,11 @@
 const logger = {
   info: (msg, ...args) => {
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`[SW] ${msg}`, ...args);
-    }
+    // Empty block
+  }
   },
   error: (msg, ...args) => {
-    console.error(`[SW] ${msg}`, ...args);
+    // Empty block
   }
 };
 

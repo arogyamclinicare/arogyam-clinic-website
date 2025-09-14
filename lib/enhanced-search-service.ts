@@ -22,8 +22,6 @@ export class EnhancedSearchService {
    */
   static async searchConsultations(query: string, filters: SearchFilters): Promise<SearchResult[]> {
     try {
-      console.log('🔍 EnhancedSearchService: Searching with query:', query, 'filters:', filters);
-      
       // Sanitize query to prevent SQL injection
       const sanitizedQuery = query.trim().replace(/[%_\\]/g, '\\$&');
 
@@ -100,7 +98,6 @@ export class EnhancedSearchService {
       const { data, error } = await supabaseQuery;
 
       if (error) {
-        console.error('❌ Error searching consultations:', error);
         // Return empty results instead of throwing to prevent app crashes
         return [];
       }
@@ -113,16 +110,11 @@ export class EnhancedSearchService {
           ...(consultation.drug_name ? [consultation.drug_name] : [])
         ].filter(Boolean)
       }));
-
-      console.log('✅ EnhancedSearchService: Found', processedResults.length, 'results');
       return processedResults;
 
     } catch (error) {
-      console.error('❌ Failed to search consultations:', error);
-      
       // Fallback to simple search if complex query fails
       try {
-        console.log('🔄 Attempting fallback search...');
         const { data: fallbackData, error: fallbackError } = await (getSupabaseAdmin() as any)
           .from('consultations')
           .select('*')
@@ -131,17 +123,13 @@ export class EnhancedSearchService {
           .limit(50);
 
         if (fallbackError) {
-          console.error('❌ Fallback search also failed:', fallbackError);
           return [];
         }
-
-        console.log('✅ Fallback search successful:', fallbackData?.length || 0, 'results');
         return (fallbackData || []).map((consultation: any) => ({
           ...consultation,
           drug_names: [consultation.drug_name].filter(Boolean)
         }));
       } catch (fallbackError) {
-        console.error('❌ Fallback search failed:', fallbackError);
         return [];
       }
     }
@@ -152,8 +140,6 @@ export class EnhancedSearchService {
    */
   static async searchPatients(query: string): Promise<any[]> {
     try {
-      console.log('🔍 EnhancedSearchService: Searching patients with query:', query);
-
       const { data, error } = await (getSupabaseAdmin() as any)
         .from('patients')
         .select('*')
@@ -161,15 +147,11 @@ export class EnhancedSearchService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error searching patients:', error);
         throw error;
       }
-
-      console.log('✅ EnhancedSearchService: Found', data?.length || 0, 'patients');
       return data || [];
 
     } catch (error) {
-      console.error('❌ Failed to search patients:', error);
       throw error;
     }
   }
@@ -179,8 +161,6 @@ export class EnhancedSearchService {
    */
   static async searchPrescriptionDrugs(query: string): Promise<any[]> {
     try {
-      console.log('🔍 EnhancedSearchService: Searching prescription drugs with query:', query);
-
       const { data, error } = await (getSupabaseAdmin() as any)
         .from('prescription_drugs')
         .select(`
@@ -199,15 +179,11 @@ export class EnhancedSearchService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error searching prescription drugs:', error);
         throw error;
       }
-
-      console.log('✅ EnhancedSearchService: Found', data?.length || 0, 'prescription drugs');
       return data || [];
 
     } catch (error) {
-      console.error('❌ Failed to search prescription drugs:', error);
       throw error;
     }
   }
@@ -261,7 +237,6 @@ export class EnhancedSearchService {
       };
 
     } catch (error) {
-      console.error('❌ Failed to get search suggestions:', error);
       return { patients: [], drugs: [], treatments: [] };
     }
   }
@@ -294,7 +269,6 @@ export class EnhancedSearchService {
       };
 
     } catch (error) {
-      console.error('❌ Failed to get search stats:', error);
       return {
         totalConsultations: 0,
         totalPatients: 0,

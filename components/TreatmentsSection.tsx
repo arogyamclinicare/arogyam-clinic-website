@@ -483,8 +483,8 @@ export function TreatmentsSection() {
           openBooking('General Consultation');
           // Booking opened successfully
         } catch (error) {
-                  console.error('❌ TreatmentsSection: Error opening consultation booking:', error);
-                }
+    // Empty block
+  }
               }}
             >
               <span className="flex items-center relative z-10">
@@ -636,8 +636,8 @@ export function TreatmentsSection() {
                        }, 300);
                        // Booking opened successfully
                      } catch (error) {
-                       console.error('❌ TreatmentsSection: Error opening consultation booking:', error);
-                     }
+    // Empty block
+  }
                    }}
                  >
                    <span className="flex items-center justify-center relative z-10">

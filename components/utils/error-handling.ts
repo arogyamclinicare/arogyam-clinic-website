@@ -47,8 +47,6 @@ export async function safeAsync<T>(
     const data = await operation();
     return { success: true, data };
   } catch (error) {
-    console.error('Async operation failed:', error);
-    
     const apiError = createApiError(
       error instanceof Error ? error.message : 'Unknown error occurred',
       'ASYNC_ERROR'
@@ -68,8 +66,6 @@ export function safeSyncOperation<T>(
     const data = operation();
     return { success: true, data };
   } catch (error) {
-    console.error('Sync operation failed:', error);
-    
     const apiError = createApiError(
       error instanceof Error ? error.message : 'Unknown error occurred',
       'SYNC_ERROR'

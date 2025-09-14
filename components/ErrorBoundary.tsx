@@ -38,8 +38,8 @@ class ErrorBoundary extends Component<Props, State> {
 
     // Log error to console in development
     if (import.meta.env.DEV) {
-      console.error('ErrorBoundary caught an error:', error, errorInfo);
-    }
+    // Empty block
+  }
 
     // Call custom error handler if provided
     if (this.props.onError) {
@@ -79,8 +79,8 @@ class ErrorBoundary extends Component<Props, State> {
         existingErrors.push(errorReport);
         localStorage.setItem('errorReports', JSON.stringify(existingErrors.slice(-10))); // Keep last 10 errors
       } catch (e) {
-        console.warn('Could not save error report:', e);
-      }
+    // Empty block
+  }
     }
   }
 

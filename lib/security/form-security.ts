@@ -23,7 +23,6 @@ export class FormSecurity {
       // Validate token
       return CSRFProtection.validateToken(token, storedToken);
     } catch (error) {
-      console.error('CSRF validation error:', error);
       return false;
     }
   }
@@ -32,7 +31,9 @@ export class FormSecurity {
    * Sanitize form data based on field type
    */
   static sanitizeFormData(data: Record<string, any>): Record<string, any> {
-    const sanitized: Record<string, any> = {};
+    const sanitized: Record<string, any> = {
+    // Empty block
+  };
 
     for (const [key, value] of Object.entries(data)) {
       if (typeof value === 'string') {
@@ -82,7 +83,9 @@ export class FormSecurity {
     isValid: boolean;
     errors: Record<string, string>;
   } {
-    const errors: Record<string, string> = {};
+    const errors: Record<string, string> = {
+    // Empty block
+  };
 
     for (const [key, value] of Object.entries(data)) {
       if (typeof value === 'string') {
@@ -235,7 +238,9 @@ export class FormSecurity {
     }
 
     // Validate specific field formats
-    const formatErrors: Record<string, string> = {};
+    const formatErrors: Record<string, string> = {
+    // Empty block
+  };
 
     if (sanitizedData.email && !this.validateEmail(sanitizedData.email)) {
       formatErrors.email = 'Please enter a valid email address.';
@@ -271,7 +276,9 @@ export class FormSecurity {
 
     return {
       isValid: true,
-      errors: {},
+      errors: {
+    // Empty block
+  },
       sanitizedData
     };
   }

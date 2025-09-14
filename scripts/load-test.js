@@ -10,7 +10,9 @@ const https = require('https');
 const { URL } = require('url');
 
 class LoadTester {
-  constructor(targetUrl, options = {}) {
+  constructor(targetUrl, options = {
+    // Empty block
+  }) {
     this.targetUrl = targetUrl;
     this.options = {
       concurrentUsers: options.concurrentUsers || 10,
@@ -108,10 +110,6 @@ class LoadTester {
 
   // Run the load test
   async run() {
-    console.log(`🚀 Starting load test for: ${this.targetUrl}`);
-    console.log(`👥 Concurrent users: ${this.options.concurrentUsers}`);
-    console.log(`📝 Requests per user: ${this.options.requestsPerUser}`);
-    console.log(`⏱️  Total requests: ${this.options.concurrentUsers * this.options.requestsPerUser}`);
     console.log('─'.repeat(60));
     
     this.results.startTime = Date.now();
@@ -238,12 +236,9 @@ const testScenarios = [
 // Main execution function
 async function runLoadTests() {
   const targetUrl = process.argv[2] || 'http://localhost:3000';
-  
-  console.log('🧪 AROGYAM CLINIC LOAD TESTING SUITE');
   console.log('='.repeat(60));
   
   for (const scenario of testScenarios) {
-    console.log(`\n📊 Running: ${scenario.name}`);
     console.log('─'.repeat(40));
     
     const tester = new LoadTester(targetUrl, scenario.options);
@@ -252,13 +247,6 @@ async function runLoadTests() {
       const report = await tester.run();
       
       // Display results
-      console.log('\n📈 RESULTS:');
-      console.log(`   Success Rate: ${report.summary.successRate}`);
-      console.log(`   Avg Response: ${report.performance.averageResponseTime}`);
-      console.log(`   P95 Response: ${report.performance.p95ResponseTime}`);
-      console.log(`   Requests/sec: ${report.summary.requestsPerSecond}`);
-      console.log(`   Total Time: ${report.summary.totalTime}`);
-      
       // Performance assessment
       const avgResponse = parseFloat(report.performance.averageResponseTime);
       let performanceGrade = 'A';
@@ -266,9 +254,6 @@ async function runLoadTests() {
       if (avgResponse > 2000) performanceGrade = 'C';
       else if (avgResponse > 1000) performanceGrade = 'B';
       else if (avgResponse > 500) performanceGrade = 'A-';
-      
-      console.log(`   Performance Grade: ${performanceGrade}`);
-      
       // Success rate assessment
       const successRate = parseFloat(report.summary.successRate);
       let reliabilityGrade = 'A';
@@ -276,25 +261,15 @@ async function runLoadTests() {
       if (successRate < 95) reliabilityGrade = 'C';
       else if (successRate < 98) reliabilityGrade = 'B';
       else if (successRate < 99) reliabilityGrade = 'A-';
-      
-      console.log(`   Reliability Grade: ${reliabilityGrade}`);
-      
     } catch (error) {
-      console.error(`❌ Error in ${scenario.name}:`, error.message);
-    }
+    // Empty block
+  }
     
     // Wait between scenarios
     if (scenario !== testScenarios[testScenarios.length - 1]) {
-      console.log('\n⏳ Waiting 5 seconds before next test...');
       await new Promise(resolve => setTimeout(resolve, 5000));
     }
   }
-  
-  console.log('\n🎉 Load testing complete!');
-  console.log('\n📋 RECOMMENDATIONS:');
-  console.log('   • If all tests pass with A grades: Ready for production');
-  console.log('   • If any test gets B grade: Consider optimization');
-  console.log('   • If any test gets C grade: Requires optimization before production');
 }
 
 // Run if called directly

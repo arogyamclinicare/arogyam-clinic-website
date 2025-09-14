@@ -169,7 +169,6 @@ export function withImageOptimization<P extends object>(
           const module = await import('./OptimizedImage');
           setComponent(() => module.OptimizedImage as React.ComponentType<P>);
         } catch (error) {
-          console.error('Failed to load OptimizedImage:', error);
           setComponent(() => WrappedComponent);
         }
       };

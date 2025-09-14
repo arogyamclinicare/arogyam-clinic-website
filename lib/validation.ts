@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Common validation patterns
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailRegex = /^[^\s@]+@[^\s@]+.[^\s@]+$/;
 const nameRegex = /^[a-zA-Z\s\u00C0-\u017F\u0027\u002D]{2,50}$/; // Letters, spaces, accented characters, apostrophes, and hyphens, 2-50 chars
 
 // Base consultation schema
@@ -20,7 +20,7 @@ export const consultationBaseSchema = z.object({
   phone: z.string()
     .min(10, 'Phone number must be at least 10 digits')
     .max(15, 'Phone number too long')
-    .regex(/^[\+]?[0-9\s\-\(\)\.]+$/, 'Please enter a valid phone number')
+    .regex(/^[+]?[0-9\s\-().]+$/, 'Please enter a valid phone number')
     .transform(val => val.replace(/\s/g, '')),
   
   age: z.string()
@@ -145,7 +145,7 @@ export const consultationUpdateSchema = z.object({
   phone: z.string()
     .min(10, 'Phone number must be at least 10 digits')
     .max(15, 'Phone number too long')
-    .regex(/^[\+]?[0-9\s\-\(\)]+$/, 'Please enter a valid phone number')
+    .regex(/^[+]?[0-9\s\-()]+$/, 'Please enter a valid phone number')
     .optional()
     .transform(val => val?.replace(/\s/g, '')),
   
@@ -351,7 +351,9 @@ export const sanitizeInput = (input: string): string => {
 
 // Validation error formatter
 export const formatValidationErrors = (errors: z.ZodError): Record<string, string> => {
-  const formattedErrors: Record<string, string> = {};
+  const formattedErrors: Record<string, string> = {
+    // Empty block
+  };
   
   errors.errors.forEach(error => {
     const field = error.path.join('.');

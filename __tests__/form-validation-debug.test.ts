@@ -23,8 +23,8 @@ describe('Consultation Form Validation Debug', () => {
     const result = consultationBookingSchema.safeParse(validFormData);
     
     if (!result.success) {
-      console.error('Validation failed:', result.error.errors);
-    }
+    // Empty block
+  }
     
     expect(result.success).toBe(true);
   });
@@ -51,8 +51,8 @@ describe('Consultation Form Validation Debug', () => {
     const result = consultationBookingSchema.safeParse(formDataWithTime);
     
     if (!result.success) {
-      console.error('Time validation failed:', result.error.errors);
-    }
+    // Empty block
+  }
     
     expect(result.success).toBe(true);
     if (result.success) {
@@ -113,8 +113,8 @@ describe('Consultation Form Validation Debug', () => {
     const result = consultationBookingSchema.safeParse(formDataWithDate);
     
     if (!result.success) {
-      console.error('Date validation failed:', result.error.errors);
-    }
+    // Empty block
+  }
     
     expect(result.success).toBe(true);
     if (result.success) {

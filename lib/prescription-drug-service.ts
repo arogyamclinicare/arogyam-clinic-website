@@ -10,7 +10,7 @@ export class PrescriptionDrugService {
    */
   static async getPrescriptionDrugs(consultationId: string): Promise<any[]> {
     try {
-      console.log('🔍 PrescriptionDrugService: Fetching prescription data for consultation:', consultationId);
+      console.log('Fetching prescription drugs for consultation:', consultationId);
       
       // First try to get from prescription_drugs table (new approach)
       const { data: prescriptionData, error: prescriptionError } = await getSupabaseAdmin()
@@ -19,21 +19,20 @@ export class PrescriptionDrugService {
         .eq('consultation_id', consultationId)
         .order('created_at', { ascending: true });
 
+      console.log('Prescription drugs query result:', { prescriptionData, prescriptionError });
+
       if (!prescriptionError && prescriptionData && prescriptionData.length > 0) {
-        console.log('📋 PrescriptionDrugService: Fetched prescription data from prescription_drugs table:', prescriptionData);
         return prescriptionData;
       }
 
       // Fallback: try to get from consultations table (legacy approach)
-      console.log('🔄 PrescriptionDrugService: No data in prescription_drugs table, trying consultations table...');
       const { data: consultationData, error: consultationError } = await getSupabaseAdmin()
         .from('consultations')
-        .select('drug_name, potency, dosage, repetition_frequency, repetition_interval, repetition_unit, quantity, period, prescription_remarks')
+        .select('drug_name, potency, period, prescription_remarks')
         .eq('id', consultationId)
         .single();
 
       if (consultationError) {
-        console.error('❌ Error fetching prescription data:', consultationError);
         throw consultationError;
       }
 
@@ -45,22 +44,14 @@ export class PrescriptionDrugService {
           consultation_id: consultationId,
           drug_name: (consultationData as any).drug_name,
           potency: (consultationData as any).potency,
-          dosage: (consultationData as any).dosage,
-          repetition_frequency: (consultationData as any).repetition_frequency,
-          repetition_interval: (consultationData as any).repetition_interval,
-          repetition_unit: (consultationData as any).repetition_unit,
-          quantity: (consultationData as any).quantity,
           period: (consultationData as any).period,
           remarks: (consultationData as any).prescription_remarks,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });
       }
-
-      console.log('📋 PrescriptionDrugService: Fetched legacy prescription data:', legacyPrescriptionData);
       return legacyPrescriptionData;
     } catch (error) {
-      console.error('❌ Failed to fetch prescription data:', error);
       throw error;
     }
   }
@@ -70,8 +61,6 @@ export class PrescriptionDrugService {
    */
   static async addPrescriptionDrug(drug: PrescriptionDrugInsert): Promise<PrescriptionDrug> {
     try {
-      console.log('🔍 PrescriptionDrugService: Adding drug with data:', drug);
-      
       const { data, error } = await (getSupabaseAdmin() as any)
         .from('prescription_drugs')
         .insert(drug)
@@ -79,14 +68,10 @@ export class PrescriptionDrugService {
         .single();
 
       if (error) {
-        console.error('❌ Error adding prescription drug:', error);
         throw error;
       }
-
-      console.log('✅ PrescriptionDrugService: Successfully added drug:', data);
       return data;
     } catch (error) {
-      console.error('❌ Failed to add prescription drug:', error);
       throw error;
     }
   }
@@ -104,13 +89,11 @@ export class PrescriptionDrugService {
         .single();
 
       if (error) {
-        console.error('Error updating prescription drug:', error);
         throw error;
       }
 
       return data;
     } catch (error) {
-      console.error('Failed to update prescription drug:', error);
       throw error;
     }
   }
@@ -126,11 +109,9 @@ export class PrescriptionDrugService {
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting prescription drug:', error);
         throw error;
       }
     } catch (error) {
-      console.error('Failed to delete prescription drug:', error);
       throw error;
     }
   }
@@ -146,13 +127,11 @@ export class PrescriptionDrugService {
         .order('drug_name', { ascending: true });
 
       if (error) {
-        console.error('Error fetching drug templates:', error);
         throw error;
       }
 
       return data || [];
     } catch (error) {
-      console.error('Failed to fetch drug templates:', error);
       throw error;
     }
   }
@@ -170,13 +149,11 @@ export class PrescriptionDrugService {
         .limit(10);
 
       if (error) {
-        console.error('Error searching drug templates:', error);
         throw error;
       }
 
       return data || [];
     } catch (error) {
-      console.error('Failed to search drug templates:', error);
       throw error;
     }
   }
@@ -193,13 +170,11 @@ export class PrescriptionDrugService {
         .single();
 
       if (error) {
-        console.error('Error fetching common potencies:', error);
         return [];
       }
 
       return (data as any)?.common_potencies || [];
     } catch (error) {
-      console.error('Failed to fetch common potencies:', error);
       return [];
     }
   }
@@ -216,13 +191,11 @@ export class PrescriptionDrugService {
         .single();
 
       if (error) {
-        console.error('Error fetching common dosages:', error);
         return [];
       }
 
       return (data as any)?.common_dosages || [];
     } catch (error) {
-      console.error('Failed to fetch common dosages:', error);
       return [];
     }
   }

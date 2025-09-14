@@ -28,8 +28,8 @@ export function FloatingCTA() {
       openBooking('Quick Consultation');
               // Booking opened successfully
     } catch (error) {
-      console.error('❌ FloatingCTA: Error opening consultation booking:', error);
-    }
+    // Empty block
+  }
   };
 
   const handleDismiss = () => {

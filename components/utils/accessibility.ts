@@ -243,7 +243,6 @@ export function manageFocus(heading: string, announce = true): void {
  */
 export function addAriaLabel(element: HTMLElement, label: string): void {
   if (!label.trim()) {
-    console.warn('Empty aria-label provided');
     return;
   }
   
@@ -405,7 +404,6 @@ export const ScreenReader = {
    */
   describe(element: HTMLElement, description: string): void {
     if (!description.trim()) {
-      console.warn('Empty description provided');
       return;
     }
 
@@ -503,6 +501,4 @@ export function initializeAccessibility(): void {
   
   // Announce page load
   announceToScreenReader('Page loaded successfully', 'polite');
-  
-  console.log('♿ Accessibility features initialized');
 }

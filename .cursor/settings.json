@@ -1,0 +1,68 @@
+{
+  "cursor.ai.enabled": true,
+  "cursor.ai.model": "gpt-4",
+  "cursor.ai.maxTokens": 8000,
+  "cursor.ai.temperature": 0.1,
+  "cursor.ai.systemPrompt": "You are an expert full-stack developer specializing in React, TypeScript, and healthcare applications. You have access to Supabase MCP tools and should use them for database operations. Always follow the project's established patterns and maintain high code quality standards.",
+  
+  "cursor.composer.enabled": true,
+  "cursor.composer.autoApply": false,
+  "cursor.composer.maxChanges": 50,
+  
+  "cursor.chat.enabled": true,
+  "cursor.chat.contextLength": 32000,
+  "cursor.chat.includeCodebase": true,
+  "cursor.chat.includeGitHistory": true,
+  
+  "cursor.autocomplete.enabled": true,
+  "cursor.autocomplete.delay": 100,
+  "cursor.autocomplete.maxSuggestions": 5,
+  
+  "cursor.terminal.enabled": true,
+  "cursor.terminal.autoRun": false,
+  
+  "cursor.debugging.enabled": true,
+  "cursor.debugging.autoAttach": true,
+  
+  "cursor.testing.enabled": true,
+  "cursor.testing.autoRun": false,
+  "cursor.testing.coverage": true,
+  
+  "cursor.refactoring.enabled": true,
+  "cursor.refactoring.safetyChecks": true,
+  
+  "cursor.documentation.enabled": true,
+  "cursor.documentation.autoGenerate": true,
+  
+  "cursor.security.enabled": true,
+  "cursor.security.scanOnSave": true,
+  
+  "cursor.performance.enabled": true,
+  "cursor.performance.monitor": true,
+  
+  "cursor.git.enabled": true,
+  "cursor.git.autoCommit": false,
+  "cursor.git.autoPush": false,
+  
+  "cursor.deployment.enabled": true,
+  "cursor.deployment.autoDeploy": false,
+  
+  "cursor.mcp.enabled": true,
+  "cursor.mcp.tools": [
+    "supabase",
+    "filesystem",
+    "terminal",
+    "web-search",
+    "memory",
+    "tasks"
+  ],
+  
+  "cursor.workflow.enabled": true,
+  "cursor.workflow.autoSave": true,
+  "cursor.workflow.backup": true,
+  
+  "cursor.analytics.enabled": true,
+  "cursor.analytics.trackUsage": true,
+  "cursor.analytics.performance": true
+}
+

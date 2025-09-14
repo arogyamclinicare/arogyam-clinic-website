@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (error: any) {
-        console.error('Error checking existing session:', error);
+
         SessionManager.clearSession();
         
         // Log session error
@@ -264,8 +264,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
     } catch (error: any) {
-      console.error('Login error:', error);
-      
+
       // Log login error
       SecurityAuditLogger.logEvent(
         SecurityEventType.LOGIN_FAILURE,
@@ -320,8 +319,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         { action: 'CSRF_TOKEN_REFRESHED' }
       );
     } catch (error: any) {
-      console.error('Logout error:', error);
-      
+
       // Log logout error
       SecurityAuditLogger.logEvent(
         SecurityEventType.LOGOUT,
@@ -357,8 +355,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return true;
     } catch (error: any) {
-      console.error('Session refresh error:', error);
-      
+
       // Log session refresh error
       SecurityAuditLogger.logEvent(
         SecurityEventType.SESSION_EXPIRED,
@@ -399,8 +396,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             refreshSession();
           }
         } catch (error: any) {
-          console.error('Error checking session expiry:', error);
-          
+
           // Log session check error
           SecurityAuditLogger.logEvent(
             SecurityEventType.SESSION_EXPIRED,

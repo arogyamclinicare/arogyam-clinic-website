@@ -170,7 +170,7 @@ const getSubSegmentsForSegment = (_serviceType: string, segment: string) => {
 
 const resetDependentFields = (formData: any, field: string) => {
   const updates: any = {};
-  if (field === 'service_type') {
+  if (field === 'treatment_type') {
     updates.segment = '';
     updates.sub_segment = '';
   } else if (field === 'segment') {
@@ -201,19 +201,23 @@ export function ConsultationEditModal({
   onDelete,
   isReadOnly = false
 }: ConsultationEditModalProps) {
-  const [formData, setFormData] = useState<Partial<ConsultationUpdate>>({});
+  const [formData, setFormData] = useState<Partial<ConsultationUpdate>>({
+    // Empty block
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'details' | 'prescription' | 'notes' | 'services' | 'drugs'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'prescription' | 'notes' | 'services' | 'drugs' | 'investigations'>('details');
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [prescriptionData, setPrescriptionData] = useState<Partial<ConsultationUpdate>>({});
+  const [prescriptionData, setPrescriptionData] = useState<Partial<ConsultationUpdate>>({
+    // Empty block
+  });
   const [multiplePrescriptions, setMultiplePrescriptions] = useState<PrescriptionDrug[]>([]);
   const [loadingPrescriptions, setLoadingPrescriptions] = useState(false);
 
 
   // Memoized callback for multiple prescription updates
   const handleMultiplePrescriptionsUpdate = useCallback((prescriptions: PrescriptionDrug[]) => {
-    console.log('🔍 ConsultationEditModal: Multiple prescriptions updated:', prescriptions);
+
     setMultiplePrescriptions(prescriptions);
   }, []);
 
@@ -229,9 +233,9 @@ export function ConsultationEditModal({
       try {
         const prescriptions = await MultiplePrescriptionService.getPrescriptionDrugs(consultation.id);
         setMultiplePrescriptions(prescriptions);
-        console.log('✅ Loaded prescriptions:', prescriptions);
+
       } catch (error) {
-        console.error('❌ Failed to load prescriptions:', error);
+
         setError('Failed to load prescription data');
       } finally {
         setLoadingPrescriptions(false);
@@ -244,7 +248,7 @@ export function ConsultationEditModal({
   // Initialize form data when consultation changes
   useEffect(() => {
     if (consultation) {
-      console.log('🔍 ConsultationEditModal: Initializing with consultation data:', consultation);
+
       setFormData({
         status: consultation.status,
         prescription: consultation.prescription || '',
@@ -261,13 +265,17 @@ export function ConsultationEditModal({
         patient_concerns: consultation.patient_concerns || '',
         doctor_observations: consultation.doctor_observations || '',
         service_type: consultation.service_type || '',
+        unit_doctor: consultation.unit_doctor || '',
         segment: consultation.segment || '',
         sub_segment: consultation.sub_segment || '',
         sub_sub_segment_text: consultation.sub_sub_segment_text || '',
         case_type: consultation.case_type || '',
         remarks: consultation.remarks || '',
         manual_case_type: consultation.manual_case_type || '',
-        associated_segments: consultation.associated_segments || []
+        associated_segments: consultation.associated_segments || [],
+        pathological_investigations: consultation.pathological_investigations || [],
+        radio_diagnosis: consultation.radio_diagnosis || [],
+        recommendations: consultation.recommendations || ''
       });
       
       // Initialize prescription data
@@ -282,7 +290,7 @@ export function ConsultationEditModal({
         period: consultation.period || null,
         prescription_remarks: consultation.prescription_remarks || null
       };
-      console.log('🔍 ConsultationEditModal: Setting prescription data:', prescriptionData);
+
       setPrescriptionData(prescriptionData);
     }
   }, [consultation]);
@@ -309,6 +317,17 @@ export function ConsultationEditModal({
     });
   };
 
+  const handleInvestigationChange = (field: 'pathological_investigations' | 'radio_diagnosis', investigation: string, isSelected: boolean) => {
+    setFormData(prev => {
+      const currentInvestigations = prev[field] || [];
+      if (isSelected) {
+        return { ...prev, [field]: [...currentInvestigations, investigation] };
+      } else {
+        return { ...prev, [field]: currentInvestigations.filter(i => i !== investigation) };
+      }
+    });
+  };
+
   const handleSave = async () => {
     if (!consultation) return;
     
@@ -331,7 +350,7 @@ export function ConsultationEditModal({
         }));
         
         await MultiplePrescriptionService.savePrescriptionDrugs(consultation.id, prescriptionInserts);
-        console.log('✅ Multiple prescriptions saved successfully');
+
       }
 
       // Merge form data with prescription data
@@ -402,8 +421,7 @@ export function ConsultationEditModal({
       if (!cleanedFormData.associated_segments || cleanedFormData.associated_segments.length === 0) {
         cleanedFormData.associated_segments = null;
       }
-      
-      console.log('🔍 ConsultationEditModal: Saving with merged data:', cleanedFormData);
+
       if (onSave) {
         const result = await onSave(cleanedFormData);
         
@@ -466,8 +484,8 @@ export function ConsultationEditModal({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      console.error('PDF Generation Error:', error);
+      alert(`Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -490,8 +508,8 @@ export function ConsultationEditModal({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      console.error('PDF Generation Error:', error);
+      alert(`Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -533,7 +551,8 @@ export function ConsultationEditModal({
               { id: 'prescription', name: 'Prescription', icon: Pill },
               { id: 'notes', name: 'Notes', icon: Stethoscope },
               { id: 'services', name: 'Services', icon: Settings },
-              { id: 'drugs', name: 'Prescription Drugs', icon: Plus }
+              { id: 'drugs', name: 'Prescription Drugs', icon: Plus },
+              { id: 'investigations', name: 'Investigations', icon: Settings }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -703,12 +722,12 @@ export function ConsultationEditModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Follow-up Notes</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Recommendations</label>
                 <textarea
                   rows={3}
-                  value={formData.follow_up_notes || ''}
-                  onChange={(e) => handleInputChange('follow_up_notes', e.target.value)}
-                  placeholder="Enter follow-up instructions..."
+                  value={formData.recommendations || ''}
+                  onChange={(e) => handleInputChange('recommendations', e.target.value)}
+                  placeholder="Enter recommendations and follow-up instructions..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -768,16 +787,30 @@ export function ConsultationEditModal({
                 </select>
               </div>
 
-              {/* Segment Selection */}
+              {/* Unit Doctor Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Unit Doctor *</label>
+                <select
+                  value={formData.unit_doctor || ''}
+                  onChange={(e) => handleInputChange('unit_doctor', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select Doctor</option>
+                  <option value="Dr. Kajal Kumari">Dr. Kajal Kumari</option>
+                  <option value="Dr. Sidharth Gavrav">Dr. Sidharth Gavrav</option>
+                </select>
+              </div>
+
+              {/* Clinical Finding Selection */}
               {formData.service_type && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Segment *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Clinical Finding *</label>
                   <select
                     value={formData.segment || ''}
                     onChange={(e) => handleInputChange('segment', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="">Select Segment</option>
+                    <option value="">Select Clinical Finding</option>
                     {getSegmentsForService(formData.service_type).map((segment) => (
                       <option key={segment.value} value={segment.value}>
                         {segment.label}
@@ -787,16 +820,16 @@ export function ConsultationEditModal({
                 </div>
               )}
 
-              {/* Sub-Segment Selection */}
+              {/* Sub-Finding Selection */}
               {formData.segment && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Sub-Segment</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sub-Finding</label>
                   <select
                     value={formData.sub_segment || ''}
                     onChange={(e) => handleInputChange('sub_segment', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="">Select Sub-Segment</option>
+                    <option value="">Select Sub-Finding</option>
                     {getSubSegmentsForSegment(formData.service_type!, formData.segment).map((subSegment) => (
                       <option key={subSegment.value} value={subSegment.value}>
                         {subSegment.label}
@@ -927,6 +960,68 @@ export function ConsultationEditModal({
                   onPrescriptionsUpdate={handleMultiplePrescriptionsUpdate}
                 />
               )}
+            </div>
+          )}
+
+          {activeTab === 'investigations' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Investigations</h3>
+              
+              {/* Pathological Investigations */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">1). Pathological Investigation</label>
+                <div className="border border-gray-300 rounded-lg p-4 max-h-80 overflow-y-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {[
+                      "CBC", "ESR", "LFT", "KFT", "Lipid Profile", "Thyroid Profile", "FSH", "LH", "Prolactin", "AMH",
+                      "Estradiol", "Progesterone", "Androgens", "Widal Test", "Malarial Antigen", "Free Testosterone",
+                      "Rh Factor", "Diabetic Profile", "Phosphorus", "ELISA", "Hba1c", "Sugar(Glucose) Fasting",
+                      "Sugar(Glucose)PP", "Sugar(Glucose)Random", "Urine Sugar (Random)", "Urine Sugar (Fasting)",
+                      "Urine Sugar(PP)", "Urine Complete", "Urine Pregnancy Test", "Vitamin D3", "Vitamin B12",
+                      "Urine C/S", "Total IGE", "Uric Acid", "Iron Studies", "Cardiac Risk Marker", "Pancreatic Profile",
+                      "Ferritin", "Jai Bihar Silver", "Jai Bihar Gold", "Jai Bihar Platinum"
+                    ].map((investigation) => {
+                      const isSelected = formData.pathological_investigations?.includes(investigation) || false;
+                      return (
+                        <label key={investigation} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded border border-transparent hover:border-gray-200 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => handleInvestigationChange('pathological_investigations', investigation, e.target.checked)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                          />
+                          <span className="text-xs text-gray-700 font-medium leading-tight">{investigation}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Radio Diagnosis */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">2). Radio Diagnosis</label>
+                <div className="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {[
+                      "USG of Whole Abdomen", "USG of Lower Abdominal Region", "MRI", "CT Scan", "X-Ray", "ECG"
+                    ].map((investigation) => {
+                      const isSelected = formData.radio_diagnosis?.includes(investigation) || false;
+                      return (
+                        <label key={investigation} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded border border-transparent hover:border-gray-200 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => handleInvestigationChange('radio_diagnosis', investigation, e.target.checked)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                          />
+                          <span className="text-xs text-gray-700 font-medium leading-tight">{investigation}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

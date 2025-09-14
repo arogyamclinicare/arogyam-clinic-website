@@ -3,12 +3,7 @@ import { Plus, Trash2, Search, RotateCcw } from 'lucide-react';
 import { DrugTemplate, PrescriptionDrug } from '../../lib/supabase';
 import { getSupabaseAdmin } from '../../lib/supabase-admin';
 import { 
-  COMMON_POTENCIES, 
-  COMMON_DOSAGES, 
-  REPETITION_FREQUENCY_OPTIONS,
-  REPETITION_INTERVAL_OPTIONS,
-  REPETITION_UNITS,
-  QUANTITY_OPTIONS
+  COMMON_POTENCIES
 } from '../../lib/prescription-drug-service';
 
 interface MultiplePrescriptionDrugFormProps {
@@ -21,11 +16,6 @@ interface PrescriptionDrugFormData {
   id?: string;
   drug_name: string;
   potency: string;
-  dosage: string;
-  repetition_frequency: number | null;
-  repetition_interval: number | null;
-  repetition_unit: string;
-  quantity: number | null;
   period: number | null;
   remarks: string;
 }
@@ -36,8 +26,12 @@ export function MultiplePrescriptionDrugForm({
 }: MultiplePrescriptionDrugFormProps) {
   const [drugTemplates, setDrugTemplates] = useState<DrugTemplate[]>([]);
   const [prescriptions, setPrescriptions] = useState<PrescriptionDrugFormData[]>([]);
-  const [searchQueries, setSearchQueries] = useState<{ [key: number]: string }>({});
-  const [isInputFocused, setIsInputFocused] = useState<{ [key: number]: boolean }>({});
+  const [searchQueries, setSearchQueries] = useState<{ [key: number]: string }>({
+    // Empty block
+  });
+  const [isInputFocused, setIsInputFocused] = useState<{ [key: number]: boolean }>({
+    // Empty block
+  });
   const [error, setError] = useState<string | null>(null);
 
   // Initialize prescriptions from props
@@ -47,11 +41,6 @@ export function MultiplePrescriptionDrugForm({
         id: p.id,
         drug_name: p.drug_name,
         potency: p.potency || '',
-        dosage: p.dosage || '',
-        repetition_frequency: p.repetition_frequency,
-        repetition_interval: p.repetition_interval,
-        repetition_unit: p.repetition_unit || 'Days',
-        quantity: p.quantity,
         period: p.period,
         remarks: p.remarks || ''
       }));
@@ -75,13 +64,11 @@ export function MultiplePrescriptionDrugForm({
         .order('drug_name', { ascending: true });
 
       if (error) {
-        console.error('❌ Error fetching drug templates:', error);
         setError('Failed to load drug templates');
       } else {
         setDrugTemplates(data || []);
       }
     } catch (err) {
-      console.error('❌ Failed to fetch drug templates:', err);
       setError('Failed to load drug templates');
     }
   };
@@ -90,11 +77,6 @@ export function MultiplePrescriptionDrugForm({
     const newPrescription: PrescriptionDrugFormData = {
       drug_name: '',
       potency: '',
-      dosage: '',
-      repetition_frequency: null,
-      repetition_interval: null,
-      repetition_unit: 'Days',
-      quantity: 1,
       period: 0,
       remarks: ''
     };
@@ -170,21 +152,11 @@ export function MultiplePrescriptionDrugForm({
     const resetPrescription: PrescriptionDrugFormData = {
       drug_name: '',
       potency: '',
-      dosage: '',
-      repetition_frequency: null,
-      repetition_interval: null,
-      repetition_unit: 'Days',
-      quantity: 1,
       period: 0,
       remarks: ''
     };
     updatePrescription(index, 'drug_name', resetPrescription.drug_name);
     updatePrescription(index, 'potency', resetPrescription.potency);
-    updatePrescription(index, 'dosage', resetPrescription.dosage);
-    updatePrescription(index, 'repetition_frequency', resetPrescription.repetition_frequency);
-    updatePrescription(index, 'repetition_interval', resetPrescription.repetition_interval);
-    updatePrescription(index, 'repetition_unit', resetPrescription.repetition_unit);
-    updatePrescription(index, 'quantity', resetPrescription.quantity);
     updatePrescription(index, 'period', resetPrescription.period);
     updatePrescription(index, 'remarks', resetPrescription.remarks);
     setSearchQueries(prev => ({ ...prev, [index]: '' }));
@@ -302,89 +274,7 @@ export function MultiplePrescriptionDrugForm({
                 </select>
               </div>
 
-              {/* Dosage */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Dosage
-                </label>
-                <select
-                  value={prescription.dosage}
-                  onChange={(e) => handleInputChange(index, 'dosage', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select dosage</option>
-                  {COMMON_DOSAGES.map(dosage => (
-                    <option key={dosage} value={dosage}>{dosage}</option>
-                  ))}
-                </select>
-              </div>
 
-              {/* Repetition Frequency */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Repetition Frequency
-                </label>
-                <select
-                  value={prescription.repetition_frequency || ''}
-                  onChange={(e) => handleInputChange(index, 'repetition_frequency', e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select frequency</option>
-                  {REPETITION_FREQUENCY_OPTIONS.map(freq => (
-                    <option key={freq} value={freq}>{freq}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Repetition Interval */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Repetition Interval
-                </label>
-                <select
-                  value={prescription.repetition_interval || ''}
-                  onChange={(e) => handleInputChange(index, 'repetition_interval', e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select interval</option>
-                  {REPETITION_INTERVAL_OPTIONS.map(interval => (
-                    <option key={interval} value={interval}>{interval}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Repetition Unit */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Repetition Unit
-                </label>
-                <select
-                  value={prescription.repetition_unit}
-                  onChange={(e) => handleInputChange(index, 'repetition_unit', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {REPETITION_UNITS.map(unit => (
-                    <option key={unit} value={unit}>{unit}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Quantity */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Quantity
-                </label>
-                <select
-                  value={prescription.quantity || ''}
-                  onChange={(e) => handleInputChange(index, 'quantity', e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select quantity</option>
-                  {QUANTITY_OPTIONS.map(qty => (
-                    <option key={qty} value={qty}>{qty}</option>
-                  ))}
-                </select>
-              </div>
 
               {/* Period */}
               <div>

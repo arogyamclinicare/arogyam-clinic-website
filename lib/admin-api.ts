@@ -31,8 +31,7 @@ class AdminApiClient {
    */
   private async makeRequest<T>(
     endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
+    _options: any = {}): Promise<ApiResponse<T>> {
     try {
       // Get admin session for authentication
       const sessionData = localStorage.getItem('admin_session');
@@ -43,16 +42,18 @@ class AdminApiClient {
       const session = JSON.parse(sessionData);
       
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        ...options,
+        ..._options,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.sessionId}`,
-          ...options.headers,
+          ..._options.headers,
         },
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({
+    // Empty block
+  }));
         return { 
           success: false, 
           error: errorData.message || `HTTP ${response.status}` 
@@ -62,7 +63,6 @@ class AdminApiClient {
       const data = await response.json();
       return { success: true, data };
     } catch (error) {
-      console.error('API request failed:', error);
       return { 
         success: false, 
         error: 'Network error or server unavailable' 
@@ -149,10 +149,10 @@ class AdminApiClient {
   /**
    * Search consultations
    */
-  async searchConsultations(query: string, filters: any = {}): Promise<ApiResponse<any[]>> {
+  async searchConsultations(query: string, _filters: any = {}): Promise<ApiResponse<any[]>> {
     const params = new URLSearchParams({
       q: query,
-      ...filters,
+      ..._filters,
     });
     
     return this.makeRequest(`/consultations/search?${params}`);
@@ -199,6 +199,5 @@ export const adminApi = new AdminApiClient();
 export const isDevelopment = import.meta.env.DEV;
 
 if (isDevelopment) {
-  console.warn('⚠️ Running in development mode with direct Supabase access');
-  console.warn('⚠️ In production, use the secure API endpoints instead');
-}
+    // Empty block
+  }

@@ -44,13 +44,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('🚨 ErrorBoundary caught an error:', error, errorInfo);
-    
     // Log error to console for debugging
     console.group(`🚨 Error Report - ${this.state.errorId}`);
-    console.error('Error:', error);
-    console.error('Error Info:', errorInfo);
-    console.error('Component Stack:', errorInfo.componentStack);
     console.groupEnd();
 
     this.setState({
@@ -165,8 +160,6 @@ export class ErrorBoundary extends Component<Props, State> {
 // Hook for functional components to handle errors
 export function useErrorHandler() {
   return (error: Error) => {
-    console.error('Error caught by useErrorHandler:', error);
-    
     // In production, send to error reporting service
     if (import.meta.env.PROD) {
       // Example: Sentry.captureException(error, { extra: { errorInfo } });

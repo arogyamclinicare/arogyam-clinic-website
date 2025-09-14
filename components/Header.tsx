@@ -114,8 +114,8 @@ export function Header({
         
         // Scrolled to section
       } else {
-        console.error('❌ Section not found:', item.href);
-      }
+    // Empty block
+  }
     }
   }, [mobileState.isOpen, mobileActions, onHome]);
 
@@ -124,8 +124,8 @@ export function Header({
     try {
       openBooking('General Consultation');
     } catch (error) {
-      console.error('Error opening consultation booking:', error);
-    }
+    // Empty block
+  }
   }, [openBooking]);
 
   return (

@@ -56,6 +56,10 @@ export interface Database {
           remarks: string | null
           manual_case_type: string | null
           associated_segments: string[] | null
+          unit_doctor: string | null
+          pathological_investigations: string[] | null
+          radio_diagnosis: string[] | null
+          recommendations: string | null
           drug_name: string | null
           potency: string | null
           dosage: string | null
@@ -115,6 +119,10 @@ export interface Database {
           remarks?: string | null
           manual_case_type?: string | null
           associated_segments?: string[] | null
+          unit_doctor?: string | null
+          pathological_investigations?: string[] | null
+          radio_diagnosis?: string[] | null
+          recommendations?: string | null
           drug_name?: string | null
           potency?: string | null
           dosage?: string | null
@@ -174,6 +182,10 @@ export interface Database {
           remarks?: string | null
           manual_case_type?: string | null
           associated_segments?: string[] | null
+          unit_doctor?: string | null
+          pathological_investigations?: string[] | null
+          radio_diagnosis?: string[] | null
+          recommendations?: string | null
           drug_name?: string | null
           potency?: string | null
           dosage?: string | null
@@ -353,7 +365,7 @@ let _supabaseClient: ReturnType<typeof createClient<Database>> | null = null;
 
 export const getSupabaseClient = (): ReturnType<typeof createClient<Database>> => {
   if (!_supabaseClient) {
-    console.log('🔧 Creating regular Supabase client...');
+
     _supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
@@ -375,7 +387,7 @@ export const getSupabaseClient = (): ReturnType<typeof createClient<Database>> =
         }
       }
     });
-    console.log('✅ Regular Supabase client created');
+
   }
   return _supabaseClient;
 };

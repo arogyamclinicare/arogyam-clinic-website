@@ -1,14 +1,15 @@
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Consultation } from './supabase';
-import { PrescriptionDrugService } from './prescription-drug-service';
+import { errorHandler, ErrorCategory } from './error-handling/production-error-handler';
+import { newPDFGenerator } from './pdf-generator-new';
 
-// Professional Medical PDF Report Generator - OPTIMIZED WITH PROPER SPACING
+// Professional Medical PDF Report Generator - CLEAN AUTO-SCALING LAYOUT
 export class PDFGenerator {
   private static instance: PDFGenerator;
-  private jsPDF: any;
-  private readonly sectionGap = 14;
 
   private constructor() {
-    this.loadJSPDF();
+    // Empty block
   }
 
   public static getInstance(): PDFGenerator {
@@ -18,697 +19,439 @@ export class PDFGenerator {
     return PDFGenerator.instance;
   }
 
-  private async loadJSPDF() {
-    try {
-      const { jsPDF } = await import('jspdf');
-      this.jsPDF = jsPDF;
-    } catch (error) {
-      console.error('Failed to load jsPDF:', error);
-    }
-  }
-
   /**
-   * Generate patient prescription PDF (optimized with proper spacing)
+   * Generate patient prescription PDF with new handwritten form layout
    */
   public async generatePatientPrescriptionPDF(consultation: Consultation): Promise<Blob> {
-    if (!this.jsPDF) {
-      await this.loadJSPDF();
-    }
-
-    const doc = new this.jsPDF({
-      compress: true,
-      precision: 2,
-      userUnit: 1.0
-    });
-    
-    const pageWidth = doc.internal.pageSize.getWidth(); // 210mm = 595 points
-    const pageHeight = doc.internal.pageSize.getHeight(); // 297mm = 842 points
-    const margin = 20; // 0.75 inch margins
-    let yPosition = margin;
-
-    // Add professional header
-    yPosition = this.addProfessionalHeader(doc, yPosition, pageWidth, margin);
-    
-    // Add patient info with proper spacing
-    yPosition = this.addPatientInfoBox(doc, consultation, yPosition, pageWidth, margin);
-    
-    // Add appointment info with proper spacing
-    yPosition = this.addAppointmentInfoBox(doc, consultation, yPosition, pageWidth, margin);
-    
-    // Patient Portal PDF: Intentionally omit Prescription History (kept only for admin)
-    
-    // Add medical details with proper spacing
-    yPosition = this.addMedicalDetailsBox(doc, consultation, yPosition, pageWidth, margin, pageHeight);
-    
-    // Add treatment info with proper spacing
-    yPosition = this.addTreatmentInfoBox(doc, consultation, yPosition, pageWidth, margin, pageHeight);
-    
-    // Add service classification with proper spacing
-    yPosition = this.addServiceInfoBox(doc, consultation, yPosition, pageWidth, margin, pageHeight);
-    
-    // Add professional footer
-    this.addProfessionalFooter(doc, pageWidth, pageHeight);
-
-    return doc.output('blob', {
-      filename: 'prescription-report.pdf',
-      compression: 'FAST'
-    });
+    return newPDFGenerator.generatePatientPrescriptionPDF(consultation);
   }
 
   /**
-   * Generate admin prescription PDF (optimized with proper spacing)
+   * Generate admin prescription PDF (uses same new layout)
    */
   public async generateAdminPrescriptionPDF(consultation: Consultation): Promise<Blob> {
-    if (!this.jsPDF) {
-      await this.loadJSPDF();
-    }
-
-    const doc = new this.jsPDF({
-      compress: true,
-      precision: 2,
-      userUnit: 1.0
-    });
-    
-    const pageWidth = doc.internal.pageSize.getWidth(); // 210mm = 595 points
-    const pageHeight = doc.internal.pageSize.getHeight(); // 297mm = 842 points
-    const margin = 20; // 0.75 inch margins
-    let yPosition = margin;
-
-    // Add professional header
-    yPosition = this.addProfessionalHeader(doc, yPosition, pageWidth, margin);
-    
-    // Add patient info with proper spacing
-    yPosition = this.addPatientInfoBox(doc, consultation, yPosition, pageWidth, margin);
-    
-    // Add appointment info with proper spacing
-    yPosition = this.addAppointmentInfoBox(doc, consultation, yPosition, pageWidth, margin);
-    
-    // Add prescription table with proper spacing
-    yPosition = await this.addPrescriptionTable(doc, consultation, yPosition, pageWidth, margin, pageHeight);
-    
-    // Add medical details with proper spacing
-    yPosition = this.addMedicalDetailsBox(doc, consultation, yPosition, pageWidth, margin, pageHeight);
-    
-    // Add treatment info with proper spacing
-    yPosition = this.addTreatmentInfoBox(doc, consultation, yPosition, pageWidth, margin, pageHeight);
-    
-    // Add service classification with proper spacing
-    yPosition = this.addServiceInfoBox(doc, consultation, yPosition, pageWidth, margin, pageHeight);
-    
-    // Add additional notes (admin only) with proper spacing
-    yPosition = this.addAdditionalNotesBox(doc, consultation, yPosition, pageWidth, margin, pageHeight);
-    
-    // Add professional footer
-    this.addProfessionalFooter(doc, pageWidth, pageHeight);
-
-    return doc.output('blob', {
-      filename: 'complete-medical-report.pdf',
-      compression: 'FAST'
-    });
+    return newPDFGenerator.generateAdminPrescriptionPDF(consultation);
   }
 
   /**
-   * Add professional header with proper spacing
+   * Core PDF generation for PATIENT portal (excludes sensitive info)
    */
-  private addProfessionalHeader(doc: any, yPosition: number, pageWidth: number, margin: number): number {
-    const centerX = pageWidth / 2;
-    
-    // Add small logo (top-left)
+  private async generatePatientPDF(consultation: Consultation): Promise<Blob> {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const margin = 40;
+    let y = margin;
+
+    // ========== HEADER ==========
+    // Add Arogyam logo
     try {
-      doc.addImage('/images/branding/arogyam-logo.png', 'PNG', margin, yPosition, 20, 20, undefined, 'FAST');
+      // Load the actual Arogyam logo from public folder - make it much larger and more prominent
+      const logoPath = './images/branding/arogyam-logo.png';
+      doc.addImage(logoPath, 'PNG', margin, y, 60, 60, undefined, 'FAST');
     } catch (error) {
-      console.log('Logo not available');
+      // Fallback to placeholder logo if image fails to load - make it much larger
+      errorHandler.handleError(error, ErrorCategory.SYSTEM, 'pdf_generation', 'logo_loading');
+      doc.setFillColor(59, 130, 246); // Blue color to match website
+      doc.circle(margin + 30, y + 30, 30, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont("helvetica", "bold");
+      doc.text('A', margin + 24, y + 38);
+      doc.setTextColor(0, 0, 0);
     }
 
-    // Clinic name - professional styling (centered)
-    doc.setFontSize(19);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Dr Arogyam Homoeopathy', centerX, yPosition + 14, { align: 'center' });
+    // Clinic name with logo spacing - updated name and blue color
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.setTextColor(59, 130, 246); // Blue color to match website
+    doc.text("Arogyam Clinic", doc.internal.pageSize.getWidth() / 2, y + 35, { align: "center" });
 
-    // Report title - professional styling (centered)
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Complete Medical Report', centerX, yPosition + 26, { align: 'center' });
-
-    // Generated date - centered under title
+    // Add contact information below clinic name
     doc.setFontSize(9);
-    doc.setFont('helvetica', 'italic');
-    const currentDate = new Date().toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-    doc.text(`Generated: ${currentDate}`, centerX, yPosition + 36, { align: 'center' });
-
-    return yPosition + 46; // compact but clear
-  }
-
-  /**
-   * Add section title with shaded background and proper spacing
-   */
-  private addSectionTitle(doc: any, title: string, yPosition: number, pageWidth: number, margin: number): number {
-    // Horizontal line above
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPosition, pageWidth - margin, yPosition);
-    
-    // Shaded title bar
-    const titleHeight = 12;
-    doc.setFillColor(240, 240, 240);
-    doc.rect(margin, yPosition + 2, pageWidth - (margin * 2), titleHeight, 'F');
-    
-    // Title text
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(title, margin + 8, yPosition + 10);
-    
-    // Horizontal line below
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPosition + titleHeight + 2, pageWidth - margin, yPosition + titleHeight + 2);
-    
-    return yPosition + titleHeight + 6; // slightly tighter spacing
-  }
-
-  /**
-   * Add patient information in 2-column box with proper spacing
-   */
-  private addPatientInfoBox(doc: any, consultation: Consultation, yPosition: number, pageWidth: number, margin: number): number {
-    // Section title
-    yPosition = this.addSectionTitle(doc, 'Patient Information', yPosition, pageWidth, margin);
-    
-    // Draw main box (auto height based on rows)
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    
-    // 2-column layout with proper spacing
-    const colWidth = (pageWidth - (margin * 2)) / 2;
-    const rowHeight = 12; // Increased row height
-    const cellPadding = 6; // 6px padding inside cells
-    
-    const patientData = [
-      ['Name', consultation.name],
-      ['Age/Gender', `${consultation.age} years / ${consultation.gender}`],
-      ['Phone', consultation.phone],
-      ['Email', consultation.email || 'Not provided']
-    ];
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    
-    const boxHeight = cellPadding * 2 + patientData.length * rowHeight;
-    doc.rect(margin, yPosition, pageWidth - (margin * 2), boxHeight);
-
-    for (let i = 0; i < patientData.length; i++) {
-      const rowY = yPosition + cellPadding + (i * rowHeight);
-      
-      // Vertical line between columns
-      if (i === 0) {
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.3);
-        doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + boxHeight);
-      }
-      
-      // Horizontal line between rows
-      if (i > 0) {
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.3);
-        doc.line(margin, rowY - cellPadding, margin + (pageWidth - margin * 2), rowY - cellPadding);
-      }
-      
-      // Left column (field name) - bold, vertically centered
-      doc.setFont('helvetica', 'bold');
-      doc.text(patientData[i][0], margin + cellPadding, rowY + rowHeight / 2, { baseline: 'middle' } as any);
-      
-      // Right column (value) - normal, vertically centered
-      doc.setFont('helvetica', 'normal');
-      doc.text(patientData[i][1], margin + colWidth + cellPadding, rowY + rowHeight / 2, { baseline: 'middle' } as any);
-    }
-    
-    return yPosition + boxHeight + this.sectionGap; // consistent section spacing
-  }
-
-  /**
-   * Add appointment info in 2-column box with proper spacing
-   */
-  private addAppointmentInfoBox(doc: any, consultation: Consultation, yPosition: number, pageWidth: number, margin: number): number {
-    // Section title
-    yPosition = this.addSectionTitle(doc, 'Appointment & Prescription Info', yPosition, pageWidth, margin);
-    
-    // Draw main box (auto height based on rows)
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    
-    // 2-column layout with proper spacing
-    const colWidth = (pageWidth - (margin * 2)) / 2;
-    const rowHeight = 12; // Increased row height
-    const cellPadding = 6; // 6px padding inside cells
-    
-    const infoData = [
-      ['Prescription Date', this.formatDate(consultation.created_at)],
-      ['Appointment Date', this.formatDate(consultation.preferred_date)],
-      ['Enquiry ID', consultation.id.substring(0, 12) + '...']
-    ];
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    
-    const boxHeight = cellPadding * 2 + infoData.length * rowHeight;
-    doc.rect(margin, yPosition, pageWidth - (margin * 2), boxHeight);
-
-    for (let i = 0; i < infoData.length; i++) {
-      const rowY = yPosition + cellPadding + (i * rowHeight);
-      
-      // Vertical line between columns
-      if (i === 0) {
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.3);
-        doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + boxHeight);
-      }
-      
-      // Horizontal line between rows
-      if (i > 0) {
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.3);
-        doc.line(margin, rowY - cellPadding, margin + (pageWidth - margin * 2), rowY - cellPadding);
-      }
-      
-      // Left column (field name) - bold, vertically centered
-      doc.setFont('helvetica', 'bold');
-      doc.text(infoData[i][0], margin + cellPadding, rowY + rowHeight / 2, { baseline: 'middle' } as any);
-      
-      // Right column (value) - normal, vertically centered
-      doc.setFont('helvetica', 'normal');
-      doc.text(infoData[i][1], margin + colWidth + cellPadding, rowY + rowHeight / 2, { baseline: 'middle' } as any);
-    }
-    
-    return yPosition + boxHeight + this.sectionGap; // consistent section spacing
-  }
-
-  /**
-   * Add prescription table with proper spacing and alignment
-   */
-  private async addPrescriptionTable(doc: any, consultation: Consultation, yPosition: number, pageWidth: number, margin: number, pageHeight: number): Promise<number> {
-    // Section title
-    yPosition = this.addSectionTitle(doc, 'Prescription History', yPosition, pageWidth, margin);
-    
-    try {
-      // Fetch prescription drugs
-      const prescriptionDrugs = await PrescriptionDrugService.getPrescriptionDrugs(consultation.id);
-      
-      if (prescriptionDrugs.length === 0) {
-        // No prescriptions message
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text('No prescriptions available.', margin, yPosition);
-        return yPosition + 20;
-      }
-
-      // Check if we need a new page
-      const requiredSpace = 30 + (prescriptionDrugs.length * 18); // Increased row height
-      if (yPosition + requiredSpace > pageHeight - 50) {
-        doc.addPage();
-        yPosition = 20;
-        yPosition = this.addSectionTitle(doc, 'Prescription History', yPosition, pageWidth, margin);
-      }
-
-      // Table dimensions with proper spacing
-      const tableWidth = pageWidth - (margin * 2);
-      const colWidths = [
-        tableWidth * 0.25, // Drug
-        tableWidth * 0.12, // Potency
-        tableWidth * 0.10, // Dosage
-        tableWidth * 0.15, // Repetition
-        tableWidth * 0.10, // Quantity
-        tableWidth * 0.10, // Period
-        tableWidth * 0.18  // Remarks
-      ];
-
-      // Table header with proper spacing
-      const headerY = yPosition;
-      const headerHeight = 18; // Increased header height
-      doc.setFillColor(240, 240, 240);
-      doc.rect(margin, headerY, tableWidth, headerHeight, 'F');
-      
-      // Header border
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.5);
-      doc.rect(margin, headerY, tableWidth, headerHeight);
-
-      // Header text with proper spacing
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      const headers = ['Drug', 'Potency', 'Dosage', 'Repetition', 'Quantity', 'Period', 'Remarks'];
-      let xPos = margin + 6; // 6px padding
-      
-      for (let i = 0; i < headers.length; i++) {
-        doc.text(headers[i], xPos, headerY + 12); // Centered vertically
-        xPos += colWidths[i];
-      }
-
-      yPosition = headerY + headerHeight;
-
-      // Table rows with proper spacing
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      
-      for (let i = 0; i < prescriptionDrugs.length; i++) {
-        const drug = prescriptionDrugs[i];
-        
-        // Get common name for the drug
-        const drugTemplates = await PrescriptionDrugService.getDrugTemplates();
-        const template = drugTemplates.find(t => t.drug_name === drug.drug_name);
-        const drugDisplayName = template?.common_name || drug.drug_name;
-        
-        // Row border
-        doc.setDrawColor(0, 0, 0);
-        doc.setLineWidth(0.3);
-        doc.rect(margin, yPosition, tableWidth, 18); // Increased row height
-        
-        // Row data with proper alignment
-        const rowData = [
-          drugDisplayName,
-          drug.potency || '-',
-          drug.dosage || '-',
-          drug.repetition_frequency && drug.repetition_interval && drug.repetition_unit 
-            ? `${drug.repetition_frequency}/${drug.repetition_interval} ${drug.repetition_unit}`
-            : '-',
-          drug.quantity ? drug.quantity.toString() : '-',
-          drug.period ? drug.period.toString() : '-',
-          drug.remarks || '-'
-        ];
-        
-        xPos = margin + 6; // 6px padding
-        for (let j = 0; j < rowData.length; j++) {
-          // Center align numeric columns (Dosage, Quantity, Period)
-          const align = (j === 2 || j === 4 || j === 5) ? 'center' : 'left';
-          doc.text(rowData[j], xPos + (align === 'center' ? colWidths[j] / 2 : 0), yPosition + 12, { align });
-          xPos += colWidths[j];
-        }
-        
-        yPosition += 18; // Increased row height
-      }
-
-      return yPosition + 12; // 12px space after section
-    } catch (error) {
-      console.error('Error adding prescription table:', error);
-      return yPosition + 20;
-    }
-  }
-
-  /**
-   * Add medical details in 2-column box with proper spacing
-   */
-  private addMedicalDetailsBox(doc: any, consultation: Consultation, yPosition: number, pageWidth: number, margin: number, pageHeight: number): number {
-    // Check if we need a new page
-    if (yPosition + 60 > pageHeight - 50) {
-      doc.addPage();
-      yPosition = 20;
-    }
-
-    // Section title
-    yPosition = this.addSectionTitle(doc, 'Medical Details', yPosition, pageWidth, margin);
-    
-    // Draw main box (auto height based on rows)
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    
-    // 2-column layout with proper spacing
-    const colWidth = (pageWidth - (margin * 2)) / 2;
-    const rowHeight = 12; // Increased row height
-    const cellPadding = 6; // 6px padding inside cells
-    
-    const medicalData = [
-      ['Diagnosis', consultation.diagnosis || 'Not specified'],
-      ['Symptoms', consultation.symptoms || 'Not specified'],
-      ['Condition', consultation.condition || 'Not specified']
-    ];
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    
-    const boxHeight = cellPadding * 2 + medicalData.length * rowHeight;
-    doc.rect(margin, yPosition, pageWidth - (margin * 2), boxHeight);
-
-    for (let i = 0; i < medicalData.length; i++) {
-      const rowY = yPosition + cellPadding + (i * rowHeight);
-      
-      // Vertical line between columns
-      if (i === 0) {
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.3);
-        doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + boxHeight);
-      }
-      
-      // Horizontal line between rows
-      if (i > 0) {
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.3);
-        doc.line(margin, rowY - cellPadding, margin + (pageWidth - margin * 2), rowY - cellPadding);
-      }
-      
-      // Left column (field name) - bold, vertically centered
-      doc.setFont('helvetica', 'bold');
-      doc.text(medicalData[i][0], margin + cellPadding, rowY + rowHeight / 2, { baseline: 'middle' } as any);
-      
-      // Right column (value) - normal, vertically centered
-      doc.setFont('helvetica', 'normal');
-      doc.text(medicalData[i][1], margin + colWidth + cellPadding, rowY + rowHeight / 2, { baseline: 'middle' } as any);
-    }
-    
-    return yPosition + boxHeight + this.sectionGap; // consistent section spacing
-  }
-
-  /**
-   * Add treatment info in 2-column box with proper spacing
-   */
-  private addTreatmentInfoBox(doc: any, consultation: Consultation, yPosition: number, pageWidth: number, margin: number, pageHeight: number): number {
-    // Check if we need a new page
-    if (yPosition + 60 > pageHeight - 50) {
-      doc.addPage();
-      yPosition = 20;
-    }
-
-    // Section title
-    yPosition = this.addSectionTitle(doc, 'Treatment & Instructions', yPosition, pageWidth, margin);
-    
-    // Draw main box (auto height; estimate based on lines to avoid overflow)
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    
-    // 2-column layout with proper spacing
-    const colWidth = (pageWidth - (margin * 2)) / 2;
-    const rowHeight = 12; // Increased row height
-    const cellPadding = 6; // 6px padding inside cells
-    
-    const treatmentData = [
-      ['Treatment Plan', consultation.treatment_plan || 'Not specified'],
-      ['Instructions', consultation.dosage_instructions || 'Not specified'],
-      ['Medicines', consultation.medicines_prescribed || 'Not specified']
-    ];
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    
-    // Prepare wrapped/structured content for each field
-    const rightColWidth = (pageWidth - (margin * 2)) / 2 - cellPadding * 2;
-    // Helper to sanitize list items (remove stray symbols like '-', '!', '*', '•' from start)
-    const sanitizeItem = (text: string) => text.replace(/^[-!*•]+\s*/, '').trim();
-    const valueLinesPerRow: string[][] = treatmentData.map(([label, value]) => {
-      const safe = (value || '').trim();
-      if (label === 'Instructions') {
-        const parts = safe
-          .split(/\r?\n|,|;|\u2022/g)
-          .map(sanitizeItem)
-          .filter(Boolean);
-        const numbered = parts.length > 0 ? parts.map((p, idx) => `${idx + 1}. ${p}`) : ['Not specified'];
-        return numbered
-          .map(line => doc.splitTextToSize(line, rightColWidth) as string[])
-          .flat();
-      }
-      if (label === 'Medicines') {
-        const parts = safe
-          .split(/\r?\n|,|;|\u2022/g)
-          .map(sanitizeItem)
-          .filter(Boolean);
-        const bulleted = parts.length > 0 ? parts.map(p => `•   ${p}`) : ['Not specified'];
-        return bulleted
-          .map(line => doc.splitTextToSize(line, rightColWidth) as string[])
-          .flat();
-      }
-      return doc.splitTextToSize(safe, rightColWidth) as string[];
-    });
-
-    const estimatedRows = valueLinesPerRow.map(lines => Math.max(1, lines.length));
-    const boxHeight = cellPadding * 2 + estimatedRows.reduce((sum, n) => sum + n * rowHeight, 0);
-    doc.rect(margin, yPosition, pageWidth - (margin * 2), boxHeight);
-
-    let consumedRows = 0;
-    for (let i = 0; i < treatmentData.length; i++) {
-      const rowY = yPosition + cellPadding + (consumedRows * rowHeight);
-      
-      // Vertical line between columns
-      if (i === 0) {
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.3);
-        doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + boxHeight);
-      }
-      
-      // Horizontal line between rows
-      if (i > 0) {
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.3);
-        doc.line(margin, rowY - cellPadding, margin + (pageWidth - margin * 2), rowY - cellPadding);
-      }
-      
-      // Left column (field name) - bold, vertically centered for first line block
-      doc.setFont('helvetica', 'bold');
-      doc.text(treatmentData[i][0], margin + cellPadding, rowY + rowHeight / 2, { baseline: 'middle' } as any);
-      
-      // Right column (value) - normal (support wrapping, lists)
-      doc.setFont('helvetica', 'normal');
-      const valueLines = valueLinesPerRow[i];
-      // Render line-by-line with consistent spacing and indentation preserved
-      const startY = rowY + rowHeight / 2; // slight top padding
-      const lineGap = rowHeight; // consistent vertical spacing
-      valueLines.forEach((line, idx) => {
-        doc.text(line, margin + colWidth + cellPadding, startY + idx * lineGap, { baseline: 'middle' } as any);
-      });
-      consumedRows += estimatedRows[i];
-    }
-    
-    return yPosition + boxHeight + this.sectionGap; // consistent section spacing
-  }
-
-  /**
-   * Add service info in 2-column box with proper spacing
-   */
-  private addServiceInfoBox(doc: any, consultation: Consultation, yPosition: number, pageWidth: number, margin: number, pageHeight: number): number {
-    // Check if we need a new page
-    if (yPosition + 50 > pageHeight - 50) {
-      doc.addPage();
-      yPosition = 20;
-    }
-
-    // Section title
-    yPosition = this.addSectionTitle(doc, 'Service Classification', yPosition, pageWidth, margin);
-    
-    // Draw main box (auto height based on rows)
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    
-    // 2-column layout with proper spacing
-    const colWidth = (pageWidth - (margin * 2)) / 2;
-    const rowHeight = 12; // Increased row height
-    const cellPadding = 6; // 6px padding inside cells
-    
-    const serviceData = [
-      ['Service', consultation.service_type || 'Not specified'],
-      ['Segment', consultation.segment || 'Not specified'],
-      ['Case Type', consultation.case_type || 'Not specified']
-    ];
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    
-    const boxHeight = cellPadding * 2 + serviceData.length * rowHeight;
-    doc.rect(margin, yPosition, pageWidth - (margin * 2), boxHeight);
-
-    for (let i = 0; i < serviceData.length; i++) {
-      const rowY = yPosition + cellPadding + (i * rowHeight);
-      
-      // Vertical line between columns
-      if (i === 0) {
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.3);
-        doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + boxHeight);
-      }
-      
-      // Horizontal line between rows
-      if (i > 0) {
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.3);
-        doc.line(margin, rowY - cellPadding, margin + (pageWidth - margin * 2), rowY - cellPadding);
-      }
-      
-      // Left column (field name) - bold, vertically centered
-      doc.setFont('helvetica', 'bold');
-      doc.text(serviceData[i][0], margin + cellPadding, rowY + rowHeight / 2, { baseline: 'middle' } as any);
-      
-      // Right column (value) - normal, vertically centered
-      doc.setFont('helvetica', 'normal');
-      doc.text(serviceData[i][1], margin + colWidth + cellPadding, rowY + rowHeight / 2, { baseline: 'middle' } as any);
-    }
-    
-    return yPosition + boxHeight + this.sectionGap; // consistent section spacing
-  }
-
-  /**
-   * Add additional notes in bordered box with proper spacing (admin only)
-   */
-  private addAdditionalNotesBox(doc: any, consultation: Consultation, yPosition: number, pageWidth: number, margin: number, pageHeight: number): number {
-    // Check if we need a new page
-    if (yPosition + 50 > pageHeight - 50) {
-      doc.addPage();
-      yPosition = 20;
-    }
-
-    // Section title
-    yPosition = this.addSectionTitle(doc, 'Additional Notes', yPosition, pageWidth, margin);
-    
-    // Draw main box
-    const boxHeight = 40; // Increased height for proper spacing
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.rect(margin, yPosition, pageWidth - (margin * 2), boxHeight);
-    
-    // Additional notes content with proper padding
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    
-    let notesText = '';
-    if (consultation.notes) notesText += `Notes: ${consultation.notes}\n`;
-    if (consultation.remarks) notesText += `Remarks: ${consultation.remarks}\n`;
-    if (consultation.associated_segments && consultation.associated_segments.length > 0) {
-      notesText += `Associated Segments: ${consultation.associated_segments.join(', ')}`;
-    }
-    
-    if (notesText) {
-      // Split text into lines for proper wrapping with padding
-      const lines = doc.splitTextToSize(notesText, pageWidth - (margin * 2) - 12); // 6px padding on each side
-      doc.text(lines, margin + 6, yPosition + 12); // 6px padding
-    } else {
-      doc.text('No additional notes available.', margin + 6, yPosition + 12);
-    }
-    
-    return yPosition + boxHeight + 12; // 12px space after section
-  }
-
-  /**
-   * Add professional footer with proper spacing
-   */
-  private addProfessionalFooter(doc: any, pageWidth: number, pageHeight: number): void {
-    const footerY = pageHeight - 34; // Extra spacing above footer
-    
-    // Footer content with proper spacing
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'italic');
+    doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 100, 100);
-    doc.text('Arogyam Homoeopathy - Professional Healthcare Services', pageWidth / 2, footerY, { align: 'center' });
+    doc.text("Email: arogyamclinicare@gmail.com | Web: https://www.arogyamhomeo.com/", doc.internal.pageSize.getWidth() / 2, y + 50, { align: "center" });
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0, 0, 0);
+    y += 75; // Increased spacing to accommodate contact info
+    doc.text("Prescription Report", doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
+
+    y += 15;
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`, doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
     
+    // Add security/compliance notice
+    y += 12;
+    doc.setFontSize(7);
+    doc.setTextColor(150, 150, 150);
+    doc.text("[CONFIDENTIAL] MEDICAL DOCUMENT - For Patient Use Only", doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
+    y += 20;
+
+    // ========= HELPER FOR TABLES =========
+    const addTable = (title: string, data: [string, string][]) => {
+      // Section header
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0, 0, 0);
+      doc.text(title, margin, y);
+      y += 8;
+
+      // Auto-scaling table with single-column layout
+      autoTable(doc, {
+        startY: y,
+        head: [],
+        body: data,
+        theme: "grid",
+        styles: { 
+          fontSize: 10, 
+          cellPadding: 8,
+          halign: 'left',
+          valign: 'middle'
+        },
+        columnStyles: {
+          0: { fontStyle: 'bold', fillColor: [248, 249, 250], cellWidth: 120 },
+          1: { cellWidth: 'auto' }
+        },
+        headStyles: { fillColor: [240, 240, 240] },
+        margin: { left: margin, right: margin },
+        tableWidth: 'auto',
+        didDrawPage: () => {
+    // Empty block
+  }
+      });
+
+      // Update y position after table
+      y = (doc as any).lastAutoTable.finalY + 20;
+    };
+
+    // ========= PATIENT INFO =========
+    addTable("Patient Information", [
+      ["Name", consultation.name],
+      ["Age/Gender", `${consultation.age} years / ${consultation.gender}`],
+      ["Phone", consultation.phone],
+      ["Email", consultation.email || "Not provided"]
+    ]);
+
+    // ========= APPOINTMENT INFO =========
+    addTable("Appointment & Prescription Info", [
+      ["Prescription Date", this.formatDate(consultation.created_at)],
+      ["Appointment Date", this.formatDate(consultation.preferred_date)],
+      ["Enquiry ID", consultation.id.substring(0, 12) + "..."]
+    ]);
+
+    // ========= PRESCRIPTION DRUGS INFO =========
+    try {
+      const prescriptionData = await this.getPrescriptionDrugs(consultation.id);
+      if (prescriptionData.length > 0) {
+        const drugInfo: [string, string][] = prescriptionData.map(drug => [
+          drug.drug_name || "Medicine",
+          `Potency: ${drug.potency || 'Not specified'} | Dosage: ${drug.dosage || 'As prescribed'} | Quantity: ${drug.quantity || 'As needed'}`
+        ]);
+        addTable("Prescription Drugs Information", drugInfo);
+      }
+    } catch (error) {
+      errorHandler.handlePDFError(error, undefined, consultation.id);
+    }
+
+    // ========= MEDICAL DETAILS =========
+    addTable("Medical Details", [
+      ["Diagnosis", consultation.diagnosis || "Under evaluation"],
+      ["Symptoms", consultation.symptoms || "To be documented"],
+      ["Condition", consultation.condition || "Not specified"]
+    ]);
+
+    // ========= TREATMENT =========
+    addTable("Treatment & Instructions", [
+      ["Treatment Plan", consultation.treatment_plan || "Not specified"],
+      ["Instructions", consultation.dosage_instructions || "Not specified"],
+      ["Medicines", consultation.medicines_prescribed || "Not specified"]
+    ]);
+
+    // ========= SERVICE INFO (WITHOUT CASE TYPE) =========
+    addTable("Service Classification", [
+      ["Service", consultation.service_type || "Homoeopathy"],
+      ["Segment", consultation.segment || "General"]
+      // Case Type removed for patient privacy
+    ]);
+
+    // ========= ADDITIONAL NOTES & INSTRUCTIONS =========
+    addTable("Important Instructions", [
+      ["Follow-up", "Please schedule follow-up appointment as advised"],
+      ["Emergency", "Contact clinic immediately if symptoms worsen"],
+      ["Medication", "Take medicines as prescribed, do not self-medicate"]
+    ]);
+
+    // ========= SIGNATURE AREA =========
+    // Add some space before signature
+    y += 20;
+    
+    // Doctor signature area
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text("Doctor's Signature:", doc.internal.pageSize.getWidth() - 200, y);
+    
+    // Signature line
+    doc.setDrawColor(0, 0, 0);
+    doc.line(doc.internal.pageSize.getWidth() - 200, y + 30, doc.internal.pageSize.getWidth() - 40, y + 30);
+    
+    // Date and time
     doc.setFontSize(8);
-    doc.text('This document is generated electronically and is valid without signature', pageWidth / 2, footerY + 10, { align: 'center' });
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Date: ${new Date().toLocaleDateString("en-IN")} | Time: ${new Date().toLocaleTimeString("en-IN", { hour12: true })}`, doc.internal.pageSize.getWidth() - 200, y + 45);
+
+    this.addWatermark(doc);
+    this.addFooter(doc);
+    return doc.output("blob");
+  }
+
+  /**
+   * Core PDF generation for ADMIN portal (includes all info)
+   */
+  private generateAdminPDF(consultation: Consultation): Blob {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const margin = 40;
+    let y = margin;
+
+    // ========== HEADER ==========
+    // Add Arogyam logo
+    try {
+      // Load the actual Arogyam logo from public folder - make it much larger and more prominent
+      const logoPath = './images/branding/arogyam-logo.png';
+      doc.addImage(logoPath, 'PNG', margin, y, 60, 60, undefined, 'FAST');
+    } catch (error) {
+      // Fallback to placeholder logo if image fails to load - make it much larger
+      errorHandler.handleError(error, ErrorCategory.SYSTEM, 'pdf_generation', 'logo_loading');
+      doc.setFillColor(59, 130, 246); // Blue color to match website
+      doc.circle(margin + 30, y + 30, 30, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont("helvetica", "bold");
+      doc.text('A', margin + 24, y + 38);
+      doc.setTextColor(0, 0, 0);
+    }
+
+    // Clinic name with logo spacing - updated name and blue color
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.setTextColor(59, 130, 246); // Blue color to match website
+    doc.text("Arogyam Clinic", doc.internal.pageSize.getWidth() / 2, y + 35, { align: "center" });
+
+    // Add contact information below clinic name
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text("Email: arogyamclinicare@gmail.com | Web: https://www.arogyamhomeo.com/", doc.internal.pageSize.getWidth() / 2, y + 50, { align: "center" });
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0, 0, 0);
+    y += 75; // Increased spacing to accommodate contact info
+    doc.text("Complete Medical Report", doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
+
+    y += 15;
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`, doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
+    
+    // Add security/compliance notice
+    y += 12;
+    doc.setFontSize(7);
+    doc.setTextColor(150, 150, 150);
+    doc.text("[CONFIDENTIAL] MEDICAL DOCUMENT - For Administrative Use Only", doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
+    y += 20;
+
+    // ========= HELPER FOR TABLES =========
+    const addTable = (title: string, data: [string, string][]) => {
+      // Section header
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0, 0, 0);
+      doc.text(title, margin, y);
+      y += 8;
+
+      // Auto-scaling table with single-column layout
+      autoTable(doc, {
+        startY: y,
+        head: [],
+        body: data,
+        theme: "grid",
+        styles: { 
+          fontSize: 10, 
+          cellPadding: 8,
+          halign: 'left',
+          valign: 'middle'
+        },
+        columnStyles: {
+          0: { fontStyle: 'bold', fillColor: [248, 249, 250], cellWidth: 120 },
+          1: { cellWidth: 'auto' }
+        },
+        headStyles: { fillColor: [240, 240, 240] },
+        margin: { left: margin, right: margin },
+        tableWidth: 'auto',
+        didDrawPage: () => {
+    // Empty block
+  }
+      });
+
+      // Update y position after table
+      y = (doc as any).lastAutoTable.finalY + 20;
+    };
+
+    // ========= PATIENT INFO =========
+    addTable("Patient Information", [
+      ["Name", consultation.name],
+      ["Age/Gender", `${consultation.age} years / ${consultation.gender}`],
+      ["Phone", consultation.phone],
+      ["Email", consultation.email || "Not provided"]
+    ]);
+
+    // ========= APPOINTMENT INFO =========
+    addTable("Appointment & Prescription Info", [
+      ["Prescription Date", this.formatDate(consultation.created_at)],
+      ["Appointment Date", this.formatDate(consultation.preferred_date)],
+      ["Enquiry ID", consultation.id.substring(0, 12) + "..."]
+    ]);
+
+    // ========= MEDICAL DETAILS =========
+    addTable("Medical Details", [
+      ["Diagnosis", consultation.diagnosis || "Under evaluation"],
+      ["Symptoms", consultation.symptoms || "To be documented"],
+      ["Condition", consultation.condition || "Not specified"]
+    ]);
+
+    // ========= TREATMENT =========
+    addTable("Treatment & Instructions", [
+      ["Treatment Plan", consultation.treatment_plan || "Not specified"],
+      ["Instructions", consultation.dosage_instructions || "Not specified"],
+      ["Medicines", consultation.medicines_prescribed || "Not specified"]
+    ]);
+
+    // ========= SERVICE INFO (INCLUDES CASE TYPE FOR ADMIN) =========
+    addTable("Service Classification", [
+      ["Service", consultation.service_type || "Homoeopathy"],
+      ["Segment", consultation.segment || "General"],
+      ["Case Type", consultation.case_type || "Normal"]
+    ]);
+
+    // ========= ADDITIONAL NOTES & INSTRUCTIONS =========
+    addTable("Important Instructions", [
+      ["Follow-up", "Please schedule follow-up appointment as advised"],
+      ["Emergency", "Contact clinic immediately if symptoms worsen"],
+      ["Medication", "Take medicines as prescribed, do not self-medicate"]
+    ]);
+
+    // ========= SIGNATURE AREA =========
+    // Add some space before signature
+    y += 20;
+    
+    // Doctor signature area
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text("Doctor's Signature:", doc.internal.pageSize.getWidth() - 200, y);
+    
+    // Signature line
+    doc.setDrawColor(0, 0, 0);
+    doc.line(doc.internal.pageSize.getWidth() - 200, y + 30, doc.internal.pageSize.getWidth() - 40, y + 30);
+    
+    // Date and time
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Date: ${new Date().toLocaleDateString("en-IN")} | Time: ${new Date().toLocaleTimeString("en-IN", { hour12: true })}`, doc.internal.pageSize.getWidth() - 200, y + 45);
+
+    this.addWatermark(doc);
+    this.addFooter(doc);
+    return doc.output("blob");
+  }
+
+  /**
+   * Get prescription drugs for a consultation
+   */
+  private async getPrescriptionDrugs(consultationId: string): Promise<any[]> {
+    try {
+      // Import dynamically to avoid circular dependencies
+      const { PrescriptionDrugService } = await import('./prescription-drug-service');
+      return await PrescriptionDrugService.getPrescriptionDrugs(consultationId);
+    } catch (error) {
+      return [];
+    }
+  }
+
+  /**
+   * Add professional watermark to PDF
+   */
+  private addWatermark(doc: any): void {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    
+    // Save current state
+    doc.saveGraphicsState();
+    
+    // Set watermark properties
+    doc.setGState(new doc.GState({ opacity: 0.1 }));
+    doc.setTextColor(59, 130, 246);
+    doc.setFontSize(50);
+    doc.setFont("helvetica", "bold");
+    
+    // Rotate and position watermark
+    doc.text("AROGYAM CLINIC", pageWidth / 2, pageHeight / 2, {
+      align: "center",
+      angle: 45
+    });
+    
+    // Restore state
+    doc.restoreGraphicsState();
+  }
+
+  /**
+   * Add footer to PDF
+   */
+  private addFooter(doc: any): void {
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 40;
+    
+    // Professional divider line
+    doc.setDrawColor(59, 130, 246); // Blue color to match website
+    doc.setLineWidth(2);
+    doc.line(margin, pageHeight - 55, pageWidth - margin, pageHeight - 55);
+
+    // Clinic name
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(59, 130, 246); // Blue color to match website
+    doc.text("Arogyam Clinic", pageWidth / 2, pageHeight - 42, { align: "center" });
+
+    // Tagline
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Professional Healthcare Services | Excellence in Homoeopathy", pageWidth / 2, pageHeight - 32, { align: "center" });
+    
+    // Disclaimer
+    doc.setFontSize(7);
+    doc.setTextColor(120, 120, 120);
+    doc.text("This is a computer-generated prescription. Please verify details and contact clinic for any clarifications.", pageWidth / 2, pageHeight - 20, { align: "center" });
+    
+    // Document ID for tracking
+    doc.setFontSize(6);
+    doc.text(`Doc ID: AC-${Date.now().toString().slice(-8)}`, pageWidth / 2, pageHeight - 10, { align: "center" });
   }
 
   /**
    * Format date for display
    */
   private formatDate(dateString: string | null): string {
-    if (!dateString) return 'Not specified';
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+    if (!dateString) return "Not specified";
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
     });
   }
 }

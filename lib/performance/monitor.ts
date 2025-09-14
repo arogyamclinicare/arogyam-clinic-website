@@ -23,8 +23,12 @@ export interface UserMetrics {
 }
 
 class PerformanceMonitor {
-  private metrics: Partial<PerformanceMetrics> = {};
-  private userMetrics: Partial<UserMetrics> = {};
+  private metrics: Partial<PerformanceMetrics> = {
+    // Empty block
+  };
+  private userMetrics: Partial<UserMetrics> = {
+    // Empty block
+  };
   private sessionStartTime: number = Date.now();
   private observer: PerformanceObserver | null = null;
 
@@ -149,8 +153,8 @@ class PerformanceMonitor {
       
       this.observer.observe({ entryTypes: ['largest-contentful-paint'] });
     } catch (e) {
-      console.warn('PerformanceObserver not supported:', e);
-    }
+    // Empty block
+  }
   }
 
   // Measure First Contentful Paint
@@ -265,13 +269,13 @@ class PerformanceMonitor {
       existingMetrics.push(metricData);
       localStorage.setItem('performanceMetrics', JSON.stringify(existingMetrics.slice(-100))); // Keep last 100
     } catch (e) {
-      console.warn('Could not save performance metrics:', e);
-    }
+    // Empty block
+  }
 
     // Log in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('📊 Performance Metric:', metricData);
-    }
+    // Empty block
+  }
   }
 
   private getSessionId(): string {

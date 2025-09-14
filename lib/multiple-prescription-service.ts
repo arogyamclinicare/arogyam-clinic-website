@@ -14,13 +14,11 @@ export class MultiplePrescriptionService {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('❌ Error fetching prescription drugs:', error);
         throw error;
       }
 
       return data || [];
     } catch (error) {
-      console.error('❌ Failed to fetch prescription drugs:', error);
       throw error;
     }
   }
@@ -52,14 +50,10 @@ export class MultiplePrescriptionService {
         .select();
 
       if (error) {
-        console.error('❌ Error saving prescription drugs:', error);
         throw error;
       }
-
-      console.log('✅ Prescription drugs saved successfully:', data);
       return data || [];
     } catch (error) {
-      console.error('❌ Failed to save prescription drugs:', error);
       throw error;
     }
   }
@@ -75,13 +69,9 @@ export class MultiplePrescriptionService {
         .eq('consultation_id', consultationId);
 
       if (error) {
-        console.error('❌ Error deleting prescription drugs:', error);
         throw error;
       }
-
-      console.log('✅ Prescription drugs deleted successfully');
     } catch (error) {
-      console.error('❌ Failed to delete prescription drugs:', error);
       throw error;
     }
   }
@@ -102,14 +92,10 @@ export class MultiplePrescriptionService {
         .single();
 
       if (error) {
-        console.error('❌ Error updating prescription drug:', error);
         throw error;
       }
-
-      console.log('✅ Prescription drug updated successfully:', data);
       return data;
     } catch (error) {
-      console.error('❌ Failed to update prescription drug:', error);
       throw error;
     }
   }
@@ -136,13 +122,11 @@ export class MultiplePrescriptionService {
         .order('consultations.created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error fetching patient prescription history:', error);
         throw error;
       }
 
       return data || [];
     } catch (error) {
-      console.error('❌ Failed to fetch patient prescription history:', error);
       throw error;
     }
   }
@@ -169,13 +153,11 @@ export class MultiplePrescriptionService {
         .order('consultations.created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error fetching prescription history by email:', error);
         throw error;
       }
 
       return data || [];
     } catch (error) {
-      console.error('❌ Failed to fetch prescription history by email:', error);
       throw error;
     }
   }
@@ -202,13 +184,11 @@ export class MultiplePrescriptionService {
         .order('consultations.created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error fetching all prescription drugs:', error);
         throw error;
       }
 
       return data || [];
     } catch (error) {
-      console.error('❌ Failed to fetch all prescription drugs:', error);
       throw error;
     }
   }

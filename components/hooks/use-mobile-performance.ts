@@ -125,8 +125,8 @@ export function useMobilePerformance() {
       }
 
     } catch (error) {
-      console.warn('Error detecting device capabilities:', error);
-    }
+    // Empty block
+  }
 
     return capabilities;
   }, []);

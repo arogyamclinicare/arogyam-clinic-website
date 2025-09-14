@@ -33,7 +33,9 @@ export function useFormValidation<T extends Record<string, any>>({
 }: UseFormValidationProps<T>) {
   const [state, setState] = useState<FormValidationState<T>>({
     values: initialValues,
-    errors: {},
+    errors: {
+    // Empty block
+  },
     isValid: true,
     hasBeenModified: false,
   });
@@ -57,7 +59,9 @@ export function useFormValidation<T extends Record<string, any>>({
   // Validate all fields
   const validateAllFields = useCallback(
     (values: T): Partial<Record<keyof T, string>> => {
-      const errors: Partial<Record<keyof T, string>> = {};
+      const errors: Partial<Record<keyof T, string>> = {
+    // Empty block
+  };
 
       Object.keys(validationRules).forEach((fieldKey) => {
         const field = fieldKey as keyof T;
@@ -127,7 +131,9 @@ export function useFormValidation<T extends Record<string, any>>({
   const resetForm = useCallback(() => {
     setState({
       values: initialValues,
-      errors: {},
+      errors: {
+    // Empty block
+  },
       isValid: true,
       hasBeenModified: false,
     });

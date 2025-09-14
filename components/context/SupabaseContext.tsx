@@ -296,7 +296,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         logger.error('Error setting up real-time subscription', error)
         setRealtimeStatus('error')
         handleReconnection()
-        return () => {} // Return empty cleanup function
+        return () => {
+    // Empty block
+  } // Return empty cleanup function
       }
     }
     
@@ -399,19 +401,19 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     refreshConsultations,
     reconnectRealtime,
     checkRealtimeHealth
-  }
+  };
 
   return (
     <SupabaseContext.Provider value={value}>
       {children}
     </SupabaseContext.Provider>
-  )
+  );
 }
 
 export function useSupabase() {
-  const context = useContext(SupabaseContext)
+  const context = useContext(SupabaseContext);
   if (context === undefined) {
-    throw new Error('useSupabase must be used within a SupabaseProvider')
+    throw new Error('useSupabase must be used within a SupabaseProvider');
   }
-  return context
+  return context;
 }

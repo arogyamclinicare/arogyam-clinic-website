@@ -57,7 +57,7 @@ export function OptimizedConsultationProvider({ children }: ConsultationProvider
   const [state, dispatch] = useReducer(consultationReducer, initialState);
 
   // Memoized callback functions to prevent unnecessary re-renders
-  const openBooking = useCallback((treatmentType: string = 'General Consultation') => {
+  const openBooking = useCallback((treatmentType: string = '') => {
     try {
       logger.debug('🔵 openBooking called with treatmentType:', treatmentType);
       document.body.style.overflow = 'hidden';

@@ -29,7 +29,9 @@ function AppContent() {
 
   // Navigation functions
   const openContact = useCallback(() => {
-    window.history.pushState({}, '', '/contact');
+    window.history.pushState({
+    // Empty block
+  }, '', '/contact');
     // Force a re-render by dispatching a custom event
     window.dispatchEvent(new PopStateEvent('popstate'));
     // Scroll to top after route change
@@ -37,7 +39,9 @@ function AppContent() {
   }, []);
 
   const openPatientPortal = useCallback(() => {
-    window.history.pushState({}, '', '/patient-portal');
+    window.history.pushState({
+    // Empty block
+  }, '', '/patient-portal');
     // Force a re-render by dispatching a custom event
     window.dispatchEvent(new PopStateEvent('popstate'));
     // Scroll to top after route change
@@ -45,7 +49,9 @@ function AppContent() {
   }, []);
 
   const goHome = useCallback(() => {
-    window.history.pushState({}, '', '/');
+    window.history.pushState({
+    // Empty block
+  }, '', '/');
     // Force a re-render by dispatching a custom event
     window.dispatchEvent(new PopStateEvent('popstate'));
     // Scroll to top after route change

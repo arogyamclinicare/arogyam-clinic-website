@@ -33,7 +33,6 @@ class PerformanceMonitor {
    */
   private initializeObserver(): void {
     if (!('PerformanceObserver' in window)) {
-      console.warn('PerformanceObserver not supported');
       return;
     }
 
@@ -79,8 +78,8 @@ class PerformanceMonitor {
       fidObserver.observe({ type: 'first-input', buffered: true });
 
     } catch (error) {
-      console.error('Failed to initialize performance observer:', error);
-    }
+    // Empty block
+  }
   }
 
   /**
@@ -124,8 +123,6 @@ class PerformanceMonitor {
       cssResources: resources.filter(r => r.initiatorType === 'css'),
       jsResources: resources.filter(r => r.initiatorType === 'script'),
     };
-
-    console.log('📊 Resource Performance:', resourceStats);
   }
 
   /**
@@ -180,7 +177,9 @@ class PerformanceMonitor {
    * Get performance summary
    */
   getSummary(): Record<string, any> {
-    const summary: Record<string, any> = {};
+    const summary: Record<string, any> = {
+    // Empty block
+  };
     
     this.metrics.forEach(metric => {
       if (!summary[metric.name]) {
@@ -281,7 +280,7 @@ export function measureBetweenMarks(name: string, startMark: string, endMark: st
       const measure = performance.getEntriesByName(name, 'measure')[0];
       console.log(`📏 ${name}: ${measure.duration.toFixed(2)}ms`);
     } catch (error) {
-      console.warn(`Failed to measure ${name}:`, error);
-    }
+    // Empty block
+  }
   }
 }

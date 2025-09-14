@@ -1,0 +1,78 @@
+# Cursor AI Rules for Maximum Productivity
+# This file configures how Cursor AI should behave in this project
+
+## Project Context
+This is a healthcare clinic management system (Arogyam Clinic) built with:
+- React 18 + TypeScript + Vite
+- Supabase backend
+- Tailwind CSS + Radix UI
+- Comprehensive testing (Jest + Playwright)
+- Production-ready with 98/100 score
+
+## AI Behavior Rules
+
+### Code Generation
+- Always use TypeScript with strict typing
+- Follow existing architectural patterns
+- Use established component patterns from /components
+- Implement proper error handling and validation
+- Add comprehensive JSDoc comments
+- Follow security best practices (HIPAA compliance)
+
+### File Organization
+- Place components in appropriate directories (/components, /lib, /api)
+- Use barrel exports (index.ts files)
+- Follow the established folder structure
+- Create proper type definitions in /types
+
+### Testing
+- Write tests for all new functionality
+- Use existing test patterns from /__tests__
+- Maintain 95%+ test coverage
+- Include unit, integration, and e2e tests
+
+### Performance
+- Optimize for Core Web Vitals
+- Use lazy loading and code splitting
+- Implement proper caching strategies
+- Monitor bundle size
+
+### Security
+- Never expose sensitive data
+- Use proper authentication patterns
+- Implement rate limiting
+- Follow HIPAA compliance guidelines
+
+### Documentation
+- Update relevant documentation files
+- Add inline comments for complex logic
+- Update README if adding new features
+- Maintain architecture documentation
+
+## Development Workflow
+1. Always run tests before committing
+2. Use proper git commit messages
+3. Follow the established CI/CD pipeline
+4. Update version numbers appropriately
+5. Run security scans before deployment
+
+## Code Style
+- Use Prettier formatting
+- Follow ESLint rules
+- Use meaningful variable names
+- Implement proper error boundaries
+- Use React best practices (hooks, context, etc.)
+
+## Supabase Integration
+- Use the configured MCP tools for database operations
+- Follow established patterns for auth and data access
+- Implement proper RLS policies
+- Use TypeScript types from Supabase
+
+## When Making Changes
+- Always consider backward compatibility
+- Update related documentation
+- Test in both development and production modes
+- Consider mobile responsiveness
+- Ensure accessibility compliance
+

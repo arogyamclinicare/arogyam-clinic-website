@@ -17,9 +17,15 @@ const renderHeader = () => {
   return render(
     <OptimizedConsultationProvider>
       <Header 
-        onContact={() => {}}
-        onPatientPortal={() => {}}
-        onHome={() => {}}
+        onContact={() => {
+    // Empty block
+  }}
+        onPatientPortal={() => {
+    // Empty block
+  }}
+        onHome={() => {
+    // Empty block
+  }}
       />
     </OptimizedConsultationProvider>
   );

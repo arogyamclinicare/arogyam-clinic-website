@@ -42,7 +42,7 @@ export function SecurityDashboard() {
     try {
       const data = exportSecurityEvents(format);
       const blob = new Blob([data], { 
-        type: format === 'json' ? 'application/json' : 'text/csv' 
+        type: format === 'json' ? 'application/json' : 'text/csv'
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -53,8 +53,8 @@ export function SecurityDashboard() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Export failed:', error);
-    } finally {
+    // Empty block
+  } finally {
       setIsExporting(false);
     }
   };

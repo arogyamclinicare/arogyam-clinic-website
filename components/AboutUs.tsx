@@ -214,8 +214,8 @@ export function AboutUs() {
                     openBooking('General Consultation');
                                           // Booking opened successfully
                   } catch (error) {
-                    console.error('❌ AboutUs: Error opening consultation booking:', error);
-                  }
+    // Empty block
+  }
                 }}
               >
                 <span className="flex items-center relative z-10">

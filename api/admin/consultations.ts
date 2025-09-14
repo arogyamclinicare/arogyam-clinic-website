@@ -50,7 +50,6 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching consultations:', error);
       return new Response(JSON.stringify({ error: 'Failed to fetch consultations' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
@@ -62,7 +61,6 @@ export async function GET(request: Request) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('Unexpected error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -101,7 +99,6 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('Error updating consultation:', error);
       return new Response(JSON.stringify({ error: 'Failed to update consultation' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
@@ -113,7 +110,6 @@ export async function PATCH(
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('Unexpected error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -145,7 +141,6 @@ export async function DELETE(
       .eq('id', params.id);
 
     if (error) {
-      console.error('Error deleting consultation:', error);
       return new Response(JSON.stringify({ error: 'Failed to delete consultation' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
@@ -157,7 +152,6 @@ export async function DELETE(
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('Unexpected error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -190,7 +184,6 @@ async function verifyAdminAuth(request: Request): Promise<{ success: boolean; er
     
     return { success: true };
   } catch (error) {
-    console.error('Auth verification error:', error);
     return { success: false, error: 'Authentication verification failed' };
   }
 }

@@ -90,7 +90,7 @@ export function AdminDashboard() {
       // Redirect to home page
       window.location.href = '/';
     } catch (error) {
-      console.error('Logout error:', error);
+
       // Force redirect even if logout fails
       clearAdminSession();
       window.location.href = '/';
@@ -145,25 +145,22 @@ export function AdminDashboard() {
 
   const updateConsultation = async (id: string, updates: Partial<ConsultationUpdate>) => {
     try {
-      console.log('🔍 AdminDashboard: Updating consultation with data:', { id, updates });
-      
+
       const { error } = await (getSupabaseAdmin() as any)
         .from('consultations')
         .update(updates)
         .eq('id', id);
       
       if (error) {
-        console.error('❌ AdminDashboard: Error updating consultation:', error);
+
         return { success: false, error: error.message };
       }
-      
-      console.log('✅ AdminDashboard: Successfully updated consultation');
-      
+
       // Refresh consultations
       await fetchConsultations();
       return { success: true };
     } catch (err) {
-      console.error('❌ AdminDashboard: Unexpected error updating consultation:', err);
+
       return { success: false, error: 'Failed to update consultation' };
     }
   };
@@ -219,14 +216,13 @@ export function AdminDashboard() {
               table: 'consultations'
             },
             (payload) => {
-              console.log('🔄 Real-time update received:', payload);
-              
+
               // Handle different types of changes
               if (payload.eventType === 'INSERT') {
                 // Add new consultation to the list
                 const newConsultation = payload.new as Consultation;
                 setConsultations(prev => [newConsultation, ...prev]);
-                console.log('✅ New consultation added:', newConsultation.name);
+
               } else if (payload.eventType === 'UPDATE') {
                 // Update existing consultation
                 const updatedConsultation = payload.new as Consultation;
@@ -235,17 +231,17 @@ export function AdminDashboard() {
                     consultation.id === updatedConsultation.id ? updatedConsultation : consultation
                   )
                 );
-                console.log('🔄 Consultation updated:', updatedConsultation.name);
+
               } else if (payload.eventType === 'DELETE') {
                 // Remove deleted consultation
                 const deletedId = payload.old.id;
                 setConsultations(prev => prev.filter(consultation => consultation.id !== deletedId));
-                console.log('🗑️ Consultation deleted:', deletedId);
+
               }
             }
           )
           .subscribe((status) => {
-            console.log('📡 Admin real-time status:', status);
+
             if (status === 'SUBSCRIBED') {
               setRealtimeStatus('connected');
             } else if (status === 'CHANNEL_ERROR') {
@@ -255,7 +251,7 @@ export function AdminDashboard() {
             }
           });
       } catch (error) {
-        console.error('❌ Failed to setup admin real-time:', error);
+
         setRealtimeStatus('error');
       }
     };
@@ -397,7 +393,6 @@ export function AdminDashboard() {
       return;
     }
 
-    console.log('Searching for:', `"${trimmedTerm}"`);
     setIsSearching(true);
     try {
       const supabase = getSupabaseAdmin();
@@ -437,13 +432,12 @@ export function AdminDashboard() {
       uniqueResults.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       setSearchResults(uniqueResults);
-      
-      console.log('Search results:', uniqueResults.length, 'patients found for:', trimmedTerm);
-      console.log('Name results:', nameResults.data?.length || 0);
-      console.log('Email results:', emailResults.data?.length || 0);
-      console.log('Treatment results:', treatmentResults.data?.length || 0);
+
+
+
+
     } catch (error) {
-      console.error('Search failed:', error);
+
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -481,7 +475,7 @@ export function AdminDashboard() {
       }
       return result;
     } catch (error) {
-      console.error('Error confirming patient:', error);
+
       return { success: false, error: 'Failed to confirm patient' };
     }
   };
@@ -505,7 +499,7 @@ export function AdminDashboard() {
       }
       return result;
     } catch (error) {
-      console.error('Error starting consultation:', error);
+
       return { success: false, error: 'Failed to start consultation' };
     }
   };
@@ -537,7 +531,7 @@ export function AdminDashboard() {
       }
       return result;
     } catch (error) {
-      console.error('Error restoring consultation:', error);
+
       return { success: false, error: 'Failed to restore consultation' };
     }
   };
@@ -584,7 +578,7 @@ export function AdminDashboard() {
             .maybeSingle();
           
           if (checkError) {
-            console.error('Error checking duplicate:', checkError);
+
             break; // Continue with this ID if check fails
           }
           
@@ -633,7 +627,7 @@ export function AdminDashboard() {
         .eq('id', consultation.id);
       
       if (linkError) {
-        console.error('Error linking consultation to patient:', linkError);
+
         throw new Error('Failed to link consultation to patient');
       }
       
@@ -680,7 +674,7 @@ Arogyam Clinic Team
       await refreshConsultations();
 
     } catch (error) {
-      console.error('Error generating credentials:', error);
+
       setNotificationMessage('Error generating credentials');
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);
@@ -739,7 +733,7 @@ Arogyam Clinic Team
 
       setShowCredentialsModal(true);
     } catch (error) {
-      console.error('Error fetching credentials:', error);
+
       setNotificationMessage('Error fetching credentials');
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);

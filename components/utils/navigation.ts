@@ -2,7 +2,7 @@ export function handleNavClick(href: string, isPage?: boolean) {
   if (isPage) {
     // Page routes are now handled by the App.tsx routing system
     // This function should not be called for page routes anymore
-    console.warn(`Page route ${href} should be handled by App.tsx routing, not this utility function`);
+
     return;
   }
 

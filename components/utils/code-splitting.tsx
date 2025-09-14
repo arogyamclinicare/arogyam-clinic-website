@@ -33,14 +33,13 @@ const DefaultErrorBoundary: React.FC<{ children: ReactNode }> = ({ children }) =
 // Enhanced lazy loading with retry logic
 export function createLazyComponent(
   importFunc: () => Promise<any>,
-  options: LazyComponentOptions = {}
-): ComponentType<any> {
+  _options: LazyComponentOptions = {}): ComponentType<any> {
   const {
     chunkName,
     priority = 'medium',
     retryCount = 3,
     retryDelay = 1000,
-  } = options;
+  } = _options;
 
   let retryAttempts = 0;
   let isPreloading = false;
@@ -68,8 +67,6 @@ export function createLazyComponent(
         
         return loadWithRetry();
       }
-      
-      console.error('Component failed to load after all retry attempts:', error);
       throw error;
     }
   };
@@ -161,7 +158,6 @@ export function createConditionalLazyComponent(
         importFunc()
           .then(module => setComponent(() => module.default || module))
           .catch(error => {
-            console.error('Failed to load conditional component:', error);
             if (fallbackComponent) {
               setComponent(() => fallbackComponent);
             }
@@ -183,7 +179,9 @@ export function createIntersectionLazyComponent(
   options: {
     threshold?: number;
     rootMargin?: string;
-  } = {}
+  } = {
+    // Empty block
+  }
 ): ComponentType<any> {
   const {
     threshold = 0.1,
@@ -207,7 +205,6 @@ export function createIntersectionLazyComponent(
                   setIsLoading(false);
                 })
                 .catch(error => {
-                  console.error('Failed to load intersection component:', error);
                   setIsLoading(false);
                 });
             }

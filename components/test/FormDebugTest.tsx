@@ -15,7 +15,9 @@ export function FormDebugTest() {
     treatmentType: 'General Consultation'
   });
 
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({
+    // Empty block
+  });
   const [validationResult, setValidationResult] = useState<string>('');
 
   const handleInputChange = (field: string, value: string) => {
@@ -42,20 +44,18 @@ export function FormDebugTest() {
         consultation_type: formData.consultationType,
         treatment_type: formData.treatmentType
       };
-
-      console.log('🔍 VALIDATION DATA:', dataToValidate);
-
       // Validate using Zod schema
       const validatedData = consultationBookingSchema.parse(dataToValidate);
-      console.log('✅ VALIDATION SUCCESS:', validatedData);
-      
-      setValidationErrors({});
+      setValidationErrors({
+    // Empty block
+  });
       setValidationResult('✅ Validation passed!');
       return true;
     } catch (error: any) {
-      console.error('❌ VALIDATION ERROR:', error);
       if (error.errors) {
-        const formattedErrors: Record<string, string> = {};
+        const formattedErrors: Record<string, string> = {
+    // Empty block
+  };
         error.errors.forEach((err: any) => {
           const field = err.path.join('.');
           formattedErrors[field] = err.message;

@@ -66,8 +66,7 @@ export function useEventHandler<T extends Event>(
  * Useful for performance optimization of images and components
  */
 export function useIntersectionObserver(
-  options: IntersectionObserverInit = {}
-): [React.RefObject<HTMLElement>, boolean] {
+  _options: IntersectionObserverInit = {}): [React.RefObject<HTMLElement>, boolean] {
   const [isIntersecting, setIsIntersecting] = useState(false);
   const ref = useRef<HTMLElement>(null);
   
@@ -81,7 +80,7 @@ export function useIntersectionObserver(
       },
       {
         threshold: 0.1,
-        ...options,
+        ..._options,
       }
     );
     
@@ -90,7 +89,7 @@ export function useIntersectionObserver(
     return () => {
       observer.unobserve(element);
     };
-  }, [options]);
+  }, [_options]);
   
   return [ref, isIntersecting];
 }

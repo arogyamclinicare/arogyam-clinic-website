@@ -20,7 +20,8 @@ export const AccessibleInput = forwardRef<HTMLInputElement, AccessibleInputProps
     className = '',
     ...props 
   }, ref) => {
-    const inputId = id || useId();
+    const generatedId = useId();
+    const inputId = id || generatedId;
     const errorId = `${inputId}-error`;
     const helperId = `${inputId}-helper`;
     const describedBy = [helperText && helperId, error && errorId].filter(Boolean).join(' ');
@@ -109,7 +110,8 @@ export const AccessibleTextarea = forwardRef<HTMLTextAreaElement, AccessibleText
     className = '',
     ...props 
   }, ref) => {
-    const textareaId = id || useId();
+    const generatedId = useId();
+    const textareaId = id || generatedId;
     const errorId = `${textareaId}-error`;
     const helperId = `${textareaId}-helper`;
     const describedBy = [helperText && helperId, error && errorId].filter(Boolean).join(' ');
@@ -203,7 +205,8 @@ export const AccessibleSelect = forwardRef<HTMLSelectElement, AccessibleSelectPr
     className = '',
     ...props 
   }, ref) => {
-    const selectId = id || useId();
+    const generatedId = useId();
+    const selectId = id || generatedId;
     const errorId = `${selectId}-error`;
     const helperId = `${selectId}-helper`;
     const describedBy = [helperText && helperId, error && errorId].filter(Boolean).join(' ');

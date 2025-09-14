@@ -23,7 +23,9 @@ export class JWTUtils {
   /**
    * Generate JWT token (simplified for browser)
    */
-  static generateToken(payload: any, secret: string, options: { expiresIn?: string } = {}): string {
+  static generateToken(payload: any, secret: string, options: { expiresIn?: string } = {
+    // Empty block
+  }): string {
     const header = {
       alg: 'HS256',
       typ: 'JWT'
