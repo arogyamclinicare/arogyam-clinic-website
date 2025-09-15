@@ -88,3 +88,23 @@ export function isValidStatusTransition(from: ConsultationStatus, to: Consultati
 export function getNextPossibleStatuses(currentStatus: ConsultationStatus): ConsultationStatus[] {
   return VALID_STATUS_TRANSITIONS[currentStatus] || [];
 }
+
+// =============================================================================
+// SIMPLE APPOINTMENT WORKFLOW (Today's & Tomorrow's Schedule)
+// =============================================================================
+
+// Simple appointment status options for Today's & Tomorrow's Schedule
+export const APPOINTMENT_OPTIONS = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  CANCELLED: 'cancelled'
+} as const;
+
+export type AppointmentOption = typeof APPOINTMENT_OPTIONS[keyof typeof APPOINTMENT_OPTIONS];
+
+// Simple appointment option labels
+export const APPOINTMENT_OPTION_LABELS: Record<AppointmentOption, string> = {
+  [APPOINTMENT_OPTIONS.PENDING]: 'Pending',
+  [APPOINTMENT_OPTIONS.CONFIRMED]: 'Confirmed',
+  [APPOINTMENT_OPTIONS.CANCELLED]: 'Cancelled'
+};

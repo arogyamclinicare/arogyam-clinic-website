@@ -36,6 +36,8 @@ import {
   STATUS_LABELS, 
   STATUS_COLORS, 
   STATUS_ICONS,
+  APPOINTMENT_OPTIONS,
+  APPOINTMENT_OPTION_LABELS,
   isValidStatusTransition
 } from '../lib/constants';
 
@@ -71,6 +73,11 @@ const formatTimeToIndian = (timeString: string) => {
   } catch (error) {
     return timeString; // Return original if parsing fails
   }
+};
+
+// Helper function for simple appointment status display
+const getAppointmentStatusLabel = (status: string): string => {
+  return APPOINTMENT_OPTION_LABELS[status as keyof typeof APPOINTMENT_OPTION_LABELS] || status;
 };
 
 export function AdminDashboard() {
@@ -1452,9 +1459,11 @@ Keep these credentials safe!
                           return true; // searchResults are already filtered
                         }
                         
-                        // If not searching, show confirmed and reachinglead entries in Interacting section
+                        // If not searching, show confirmed, reachinglead, in_progress, and follow_up entries in Interacting section
                         return (consultation.status === 'confirmed' || 
-                                consultation.status === 'reachinglead');
+                                consultation.status === 'reachinglead' ||
+                                consultation.status === 'in_progress' ||
+                                consultation.status === 'follow_up');
                       })
                       .map((consultation) => (
                       <tr 
@@ -1522,9 +1531,19 @@ Keep these credentials safe!
                             </button>
                             <select
                               value={consultation.status}
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 e.stopPropagation();
-                                updateConsultationStatus(consultation.id, e.target.value);
+                                const newStatus = e.target.value;
+                                const result = await updateConsultationStatus(consultation.id, newStatus);
+                                if (result.success) {
+                                  setNotificationMessage(`Status updated to ${STATUS_LABELS[newStatus as keyof typeof STATUS_LABELS] || newStatus} for ${consultation.name}`);
+                                  setShowNotification(true);
+                                  setTimeout(() => setShowNotification(false), 3000);
+                                } else {
+                                  setNotificationMessage(`Failed to update status: ${result.error}`);
+                                  setShowNotification(true);
+                                  setTimeout(() => setShowNotification(false), 3000);
+                                }
                               }}
                               onClick={(e) => e.stopPropagation()}
                               className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1796,13 +1815,14 @@ Keep these credentials safe!
                   <p className="text-emerald-700 text-sm">Appointments scheduled for today & tomorrow</p>
                 </div>
                 <div className="text-sm text-emerald-600 font-medium">
-                  {consultations.filter(c => {
-                    if (!c.next_appointment_date) return false;
-                    if (c.status === 'completed') return false; // Exclude completed appointments
-                    const today = new Date().toISOString().split('T')[0];
-                    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                    return c.next_appointment_date === today || c.next_appointment_date === tomorrow;
-                  }).length} appointments today & tomorrow
+                {consultations.filter(c => {
+                  if (!c.next_appointment_date) return false;
+                  // Show appointments based on Next Appointment Date, regardless of consultation status
+                  const today = new Date().toISOString().split('T')[0];
+                  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                  
+                  return c.next_appointment_date === today || c.next_appointment_date === tomorrow;
+                }).length} appointments today & tomorrow
                 </div>
               </div>
             </div>
@@ -1829,10 +1849,14 @@ Keep these credentials safe!
                     {consultations
                       .filter(consultation => {
                         if (!consultation.next_appointment_date) return false;
-                        if (consultation.status === 'completed') return false; // Exclude completed appointments
+                        // Exclude appointments that are confirmed (moved to Completed Appointments)
+                        if (consultation.status === APPOINTMENT_OPTIONS.CONFIRMED) return false;
+                        // Show appointments based on Next Appointment Date (today or tomorrow)
                         const today = new Date().toISOString().split('T')[0];
                         const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                        return consultation.next_appointment_date === today || consultation.next_appointment_date === tomorrow;
+                        
+                        const isTodayOrTomorrow = consultation.next_appointment_date === today || consultation.next_appointment_date === tomorrow;
+                        return isTodayOrTomorrow;
                       })
                       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
                       .map((consultation) => (
@@ -1868,7 +1892,7 @@ Keep these credentials safe!
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(consultation.status)}`}>
                               {getStatusIcon(consultation.status)}
-                              <span className="ml-1">{consultation.status}</span>
+                              <span className="ml-1">{getAppointmentStatusLabel(consultation.status)}</span>
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
@@ -1893,7 +1917,7 @@ Keep these credentials safe!
                               onChange={async (e) => {
                                 const newStatus = e.target.value;
 
-                                if (newStatus === 'cancelled') {
+                                if (newStatus === APPOINTMENT_OPTIONS.CANCELLED) {
                                   // Move to recycle bin
                                   const result = await handleDeleteConsultationById(consultation.id);
                                   if (result.success) {
@@ -1901,19 +1925,19 @@ Keep these credentials safe!
                                   } else {
                                     setNotificationMessage(`Failed to cancel appointment: ${result.error}`);
                                   }
-                                } else if (newStatus === 'completed') {
+                                } else if (newStatus === APPOINTMENT_OPTIONS.CONFIRMED) {
                                   // Move to Completed Appointments
                                   const result = await handleUpdateConsultationStatus(consultation.id, newStatus);
                                   if (result.success) {
-                                    setNotificationMessage(`Patient ${consultation.name} appointment completed and moved to Completed Appointments!`);
+                                    setNotificationMessage(`Patient ${consultation.name} appointment confirmed and moved to Completed Appointments!`);
                                   } else {
                                     setNotificationMessage(`Failed to update status: ${result.error}`);
                                   }
                                 } else {
-                                  // Stay in Today's Appointments (Follow-up Required, Rescheduled, No Show)
+                                  // Stay in Today's Appointments (Pending)
                                   const result = await handleUpdateConsultationStatus(consultation.id, newStatus);
                                   if (result.success) {
-                                    setNotificationMessage(`Patient ${consultation.name} status updated to ${newStatus}!`);
+                                    setNotificationMessage(`Patient ${consultation.name} status updated to ${getAppointmentStatusLabel(newStatus)}!`);
                                   } else {
                                     setNotificationMessage(`Failed to update status: ${result.error}`);
                                   }
@@ -1923,12 +1947,9 @@ Keep these credentials safe!
                               }}
                               className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                             >
-                              <option value="pending">Pending</option>
-                              <option value="confirmed">Confirmed</option>
-                              <option value="follow_up">Follow-up Required</option>
-                              <option value="in_progress">In Progress</option>
-                              <option value="completed">Completed</option>
-                              <option value="cancelled">Cancelled</option>
+                              <option value={APPOINTMENT_OPTIONS.PENDING}>{APPOINTMENT_OPTION_LABELS[APPOINTMENT_OPTIONS.PENDING]}</option>
+                              <option value={APPOINTMENT_OPTIONS.CONFIRMED}>{APPOINTMENT_OPTION_LABELS[APPOINTMENT_OPTIONS.CONFIRMED]}</option>
+                              <option value={APPOINTMENT_OPTIONS.CANCELLED}>{APPOINTMENT_OPTION_LABELS[APPOINTMENT_OPTIONS.CANCELLED]}</option>
                             </select>
                           </td>
                         </tr>
@@ -1965,12 +1986,13 @@ Keep these credentials safe!
                 </div>
                 <div className="text-sm text-red-600 font-medium">
                   {consultations.filter(c => {
-                    // Show completed appointments OR overdue appointments
+                    // Show confirmed appointments OR overdue appointments
                     if (c.status === 'completed') return true;
+                    if (c.status === APPOINTMENT_OPTIONS.CONFIRMED) return true;
                     if (!c.next_appointment_date) return false;
                     const today = new Date().toISOString().split('T')[0];
                     return c.next_appointment_date < today;
-                  }).length} completed & overdue appointments
+                  }).length} confirmed & overdue appointments
                 </div>
               </div>
             </div>
@@ -1997,8 +2019,9 @@ Keep these credentials safe!
                   <tbody className="bg-white divide-y divide-gray-200">
                     {consultations
                       .filter(consultation => {
-                        // Show completed appointments OR overdue appointments
+                        // Show confirmed appointments OR overdue appointments
                         if (consultation.status === 'completed') return true;
+                        if (consultation.status === APPOINTMENT_OPTIONS.CONFIRMED) return true;
                         if (!consultation.next_appointment_date) return false;
                         const today = new Date().toISOString().split('T')[0];
                         return consultation.next_appointment_date < today;
@@ -2033,14 +2056,14 @@ Keep these credentials safe!
                             <td className="px-4 py-3 whitespace-nowrap">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(consultation.status)}`}>
                                 {getStatusIcon(consultation.status)}
-                                <span className="ml-1">{consultation.status}</span>
+                                <span className="ml-1">{getAppointmentStatusLabel(consultation.status)}</span>
                               </span>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                               {consultation.next_appointment_date ? new Date(consultation.next_appointment_date).toLocaleDateString() : 'Not scheduled'}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              {consultation.status === 'completed' ? (
+                              {(consultation.status === 'completed' || consultation.status === APPOINTMENT_OPTIONS.CONFIRMED) ? (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                   ✅ Completed
                                 </span>
