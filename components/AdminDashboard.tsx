@@ -38,6 +38,7 @@ import {
   STATUS_ICONS,
   APPOINTMENT_OPTIONS,
   APPOINTMENT_OPTION_LABELS,
+  type AppointmentOption,
   isValidStatusTransition
 } from '../lib/constants';
 
@@ -107,7 +108,7 @@ export function AdminDashboard() {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'connected' | 'error' | 'disconnected' | 'failed'>('disconnected');
+  const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'connected' | 'error' | 'disconnected' | 'failed' | 'manual'>('disconnected');
   
   // Consultation management functions using admin client
   const fetchConsultations = async () => {
@@ -131,6 +132,7 @@ export function AdminDashboard() {
     }
   };
 
+
   const updateConsultationStatus = async (id: string, status: string) => {
     try {
       const { error } = await (getSupabaseAdmin() as any)
@@ -152,22 +154,19 @@ export function AdminDashboard() {
 
   const updateConsultation = async (id: string, updates: Partial<ConsultationUpdate>) => {
     try {
-
       const { error } = await (getSupabaseAdmin() as any)
         .from('consultations')
         .update(updates)
         .eq('id', id);
       
       if (error) {
-
         return { success: false, error: error.message };
       }
 
-      // Refresh consultations
-      await fetchConsultations();
+      // DON'T refresh consultations automatically - let manual updates handle the UI
+      // This prevents cross-contamination between workflows
       return { success: true };
     } catch (err) {
-
       return { success: false, error: 'Failed to update consultation' };
     }
   };
@@ -205,75 +204,12 @@ export function AdminDashboard() {
     }
   }, [activeTab]);
 
-  // Set up real-time subscription for live updates - but only when needed
+  // DISABLED REAL-TIME SUBSCRIPTION TO PREVENT CROSS-CONTAMINATION
+  // Real-time updates were causing leads to move between sections incorrectly
+  // Manual updates will handle all state changes properly
   useEffect(() => {
-    let channel: any = null;
-    
-    const setupRealtime = async () => {
-      try {
-        // Only setup real-time when user is actually interacting with the admin panel
-        const client = getSupabaseAdmin();
-        channel = client
-          .channel('admin-consultations-changes')
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'consultations'
-            },
-            (payload) => {
-
-              // Handle different types of changes
-              if (payload.eventType === 'INSERT') {
-                // Add new consultation to the list
-                const newConsultation = payload.new as Consultation;
-                setConsultations(prev => [newConsultation, ...prev]);
-
-              } else if (payload.eventType === 'UPDATE') {
-                // Update existing consultation
-                const updatedConsultation = payload.new as Consultation;
-                setConsultations(prev => 
-                  prev.map(consultation => 
-                    consultation.id === updatedConsultation.id ? updatedConsultation : consultation
-                  )
-                );
-
-              } else if (payload.eventType === 'DELETE') {
-                // Remove deleted consultation
-                const deletedId = payload.old.id;
-                setConsultations(prev => prev.filter(consultation => consultation.id !== deletedId));
-
-              }
-            }
-          )
-          .subscribe((status) => {
-
-            if (status === 'SUBSCRIBED') {
-              setRealtimeStatus('connected');
-            } else if (status === 'CHANNEL_ERROR') {
-              setRealtimeStatus('error');
-            } else if (status === 'TIMED_OUT') {
-              setRealtimeStatus('failed');
-            }
-          });
-      } catch (error) {
-
-        setRealtimeStatus('error');
-      }
-    };
-
-    // Delay real-time setup to avoid immediate client creation
-    const timer = setTimeout(() => {
-      setupRealtime();
-    }, 500); // 500ms delay
-
-    return () => {
-      clearTimeout(timer);
-      if (channel) {
-        channel.unsubscribe();
-      }
-    };
+    // Set status to indicate manual mode
+    setRealtimeStatus('manual');
   }, []);
   const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -352,8 +288,18 @@ export function AdminDashboard() {
     if (status === 'reachinglead') {
       return 'text-orange-600 bg-orange-100';
     }
-    // Handle appointment statuses
+    // Handle appointment statuses (separate from lead management workflow)
     switch (status) {
+      case APPOINTMENT_OPTIONS.PENDING:
+        return 'text-yellow-600 bg-yellow-100';
+      case APPOINTMENT_OPTIONS.FOLLOWUP:
+        return 'text-blue-600 bg-blue-100';
+      case APPOINTMENT_OPTIONS.INPROGRESS:
+        return 'text-orange-600 bg-orange-100';
+      case APPOINTMENT_OPTIONS.NOT_INTERESTED:
+        return 'text-red-600 bg-red-100';
+      case APPOINTMENT_OPTIONS.SALE_MADE:
+        return 'text-green-600 bg-green-100';
       case 'follow_up':
         return 'text-yellow-600 bg-yellow-100';
       case 'in_progress':
@@ -369,8 +315,18 @@ export function AdminDashboard() {
     if (status === 'reachinglead') {
       return <Users className="w-4 h-4" />;
     }
-    // Handle appointment statuses
+    // Handle appointment statuses (separate from lead management workflow)
     switch (status) {
+      case APPOINTMENT_OPTIONS.PENDING:
+        return <Clock className="w-4 h-4" />;
+      case APPOINTMENT_OPTIONS.FOLLOWUP:
+        return <Bell className="w-4 h-4" />;
+      case APPOINTMENT_OPTIONS.INPROGRESS:
+        return <Users className="w-4 h-4" />;
+      case APPOINTMENT_OPTIONS.NOT_INTERESTED:
+        return <X className="w-4 h-4" />;
+      case APPOINTMENT_OPTIONS.SALE_MADE:
+        return <CheckCircle className="w-4 h-4" />;
       case 'follow_up':
         return <Bell className="w-4 h-4" />;
       case 'in_progress':
@@ -412,12 +368,13 @@ export function AdminDashboard() {
     return result;
   };
 
-  // New function specifically for updating consultation status from dropdown
+  // New function specifically for updating consultation status from dropdown (LEAD MANAGEMENT WORKFLOW)
   const handleUpdateConsultationStatus = async (consultationId: string, newStatus: string) => {
     try {
       const result = await updateConsultation(consultationId, { status: newStatus });
       if (result.success) {
-        // Update the consultations list with the new status
+        // Update the consultations list with the new status ONLY
+        // This ensures the 'appointment_status' field is NOT affected
         setConsultations(prev => 
           prev.map(consultation => 
             consultation.id === consultationId 
@@ -433,6 +390,91 @@ export function AdminDashboard() {
     } catch (error) {
 
       return { success: false, error: 'Failed to update status' };
+    }
+  };
+
+
+  // UPDATE APPOINTMENT STATUS - Updates consultation's appointment_status field only
+  const handleUpdateAppointmentStatus = async (consultationId: string, newStatus: string) => {
+    try {
+      const { error } = await (getSupabaseAdmin() as any)
+        .from('consultations')
+        .update({ appointment_status: newStatus })
+        .eq('id', consultationId);
+      
+      if (error) {
+        console.error('Error updating appointment status:', error);
+        return { success: false, error: error.message };
+      }
+
+      // Update consultations state - ONLY appointment_status field
+      setConsultations(prev => 
+        prev.map(consultation => 
+          consultation.id === consultationId 
+            ? { ...consultation, appointment_status: newStatus }
+            : consultation
+        )
+      );
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+      return { success: false, error: 'Failed to update appointment status' };
+    }
+  };
+
+  // APPOINTMENT FILTERING - Shows consultations with next_appointment_date (NOT copies)
+  const getTodaysAppointments = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    return consultations.filter(consultation => {
+      // Only show consultations with appointment dates for today/tomorrow
+      if (!consultation.next_appointment_date) return false;
+      if (consultation.appointment_status === 'appt_sale_made') return false; // Sale made - move to completed
+      
+      const isTodayOrTomorrow = consultation.next_appointment_date === today || 
+                               consultation.next_appointment_date === tomorrow;
+      return isTodayOrTomorrow;
+    });
+  };
+
+  // COMPLETED APPOINTMENTS - Shows consultations with confirmed or done appointment status
+  const getCompletedAppointments = () => {
+    return consultations.filter(consultation => {
+      return consultation.appointment_status === 'appt_sale_made';
+    });
+  };
+
+  // DELETE APPOINTMENT - Removes appointment date from consultation
+  const handleDeleteAppointment = async (consultationId: string) => {
+    try {
+      const { error } = await (getSupabaseAdmin() as any)
+        .from('consultations')
+        .update({ 
+          next_appointment_date: null,
+          appointment_status: null
+        })
+        .eq('id', consultationId);
+      
+      if (error) {
+        console.error('Error deleting appointment:', error);
+        return { success: false, error: error.message };
+      }
+
+      // Update consultations state - remove appointment data
+      setConsultations(prev => 
+        prev.map(consultation => 
+          consultation.id === consultationId 
+            ? { ...consultation, next_appointment_date: null, appointment_status: null }
+            : consultation
+        )
+      );
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      return { success: false, error: 'Failed to delete appointment' };
     }
   };
 
@@ -1184,7 +1226,7 @@ Keep these credentials safe!
                       <div className="ml-3">
                         <p className="text-xs font-medium text-gray-600">New Requests</p>
                         <p className="text-2xl font-bold text-blue-600">
-                          {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING).length}
+                          {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING && (!c.appointment_status || c.appointment_status === null)).length}
                         </p>
                       </div>
                     </div>
@@ -1214,7 +1256,7 @@ Keep these credentials safe!
                       <div className="ml-3">
                         <p className="text-xs font-medium text-gray-600">Ready to Confirm</p>
                         <p className="text-2xl font-bold text-green-600">
-                          {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING).length}
+                          {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING && (!c.appointment_status || c.appointment_status === null)).length}
                         </p>
                       </div>
                     </div>
@@ -1248,8 +1290,14 @@ Keep these credentials safe!
                             return true; // searchResults are already filtered
                           }
                           
-                          // If not searching, show only pending entries
-                          return c.status === CONSULTATION_STATUS.PENDING;
+                        // If not searching, show only pending entries
+                        // MAIN ADMIN WORKFLOW - completely separate from appointment workflow
+                        // EXCLUDE consultations with ANY appointment status to prevent cross-contamination
+                        if (c.appointment_status && c.appointment_status !== null) {
+                          return false; // Don't show in New Entries if consultation has ANY appointment status
+                        }
+                        
+                        return c.status === CONSULTATION_STATUS.PENDING;
                         })
                         .slice(0, 10)
                         .map((consultation) => (
@@ -1322,7 +1370,7 @@ Keep these credentials safe!
                           </td>
                         </tr>
                       ))}
-                      {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING).length === 0 && (
+                      {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING && (!c.appointment_status || c.appointment_status === null)).length === 0 && (
                         <tr>
                           <td colSpan={4} className="px-4 py-8 text-center">
                             <div className="text-gray-500">
@@ -1460,6 +1508,12 @@ Keep these credentials safe!
                         }
                         
                         // If not searching, show confirmed, reachinglead, in_progress, and follow_up entries in Interacting section
+                        // MAIN ADMIN WORKFLOW - completely separate from appointment workflow
+                        // EXCLUDE consultations with ANY appointment status to prevent cross-contamination
+                        if (consultation.appointment_status && consultation.appointment_status !== null) {
+                          return false; // Don't show in Interacting if consultation has ANY appointment status
+                        }
+                        
                         return (consultation.status === 'confirmed' || 
                                 consultation.status === 'reachinglead' ||
                                 consultation.status === 'in_progress' ||
@@ -1643,7 +1697,7 @@ Keep these credentials safe!
                   <div className="ml-3">
                     <p className="text-xs font-medium text-gray-600">Total Live Patients</p>
                                             <p className="text-2xl font-bold text-purple-600">
-                          {consultations.filter(c => c.status === CONSULTATION_STATUS.COMPLETED).length}
+                          {consultations.filter(c => c.status === CONSULTATION_STATUS.COMPLETED && (!c.appointment_status || c.appointment_status === null)).length}
                         </p>
                   </div>
                 </div>
@@ -1677,6 +1731,12 @@ Keep these credentials safe!
                         }
                         
                         // If not searching, show only completed entries (moved from Interacting after doctor consultation)
+                        // MAIN ADMIN WORKFLOW - completely separate from appointment workflow
+                        // EXCLUDE consultations with ANY appointment status to prevent cross-contamination
+                        if (c.appointment_status && c.appointment_status !== null) {
+                          return false; // Don't show in Live Patients if consultation has ANY appointment status
+                        }
+                        
                         return c.status === CONSULTATION_STATUS.COMPLETED;
                       })
                       .slice(0, 15)
@@ -1785,7 +1845,7 @@ Keep these credentials safe!
                         </td>
                       </tr>
                     ))}
-                    {consultations.filter(c => c.status === CONSULTATION_STATUS.COMPLETED).length === 0 && (
+                    {consultations.filter(c => c.status === CONSULTATION_STATUS.COMPLETED && (!c.appointment_status || c.appointment_status === null)).length === 0 && (
                       <tr>
                         <td colSpan={6} className="px-6 py-12 text-center">
                           <div className="text-gray-500">
@@ -1815,14 +1875,7 @@ Keep these credentials safe!
                   <p className="text-emerald-700 text-sm">Appointments scheduled for today & tomorrow</p>
                 </div>
                 <div className="text-sm text-emerald-600 font-medium">
-                {consultations.filter(c => {
-                  if (!c.next_appointment_date) return false;
-                  // Show appointments based on Next Appointment Date, regardless of consultation status
-                  const today = new Date().toISOString().split('T')[0];
-                  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                  
-                  return c.next_appointment_date === today || c.next_appointment_date === tomorrow;
-                }).length} appointments today & tomorrow
+                {getTodaysAppointments().length} appointments today & tomorrow
                 </div>
               </div>
             </div>
@@ -1846,18 +1899,7 @@ Keep these credentials safe!
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {consultations
-                      .filter(consultation => {
-                        if (!consultation.next_appointment_date) return false;
-                        // Exclude appointments that are confirmed (moved to Completed Appointments)
-                        if (consultation.status === APPOINTMENT_OPTIONS.CONFIRMED) return false;
-                        // Show appointments based on Next Appointment Date (today or tomorrow)
-                        const today = new Date().toISOString().split('T')[0];
-                        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                        
-                        const isTodayOrTomorrow = consultation.next_appointment_date === today || consultation.next_appointment_date === tomorrow;
-                        return isTodayOrTomorrow;
-                      })
+                    {getTodaysAppointments()
                       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
                       .map((consultation) => (
                         <tr key={consultation.id} className="hover:bg-gray-50">
@@ -1873,14 +1915,7 @@ Keep these credentials safe!
                               <div className="ml-3">
                                 <div className="text-sm font-medium text-gray-900">{consultation.name || 'Unknown'}</div>
                                 <div className="text-sm text-gray-500">
-                                  {consultation.age && consultation.gender 
-                                    ? `Age: ${consultation.age} | ${consultation.gender}`
-                                    : consultation.age 
-                                    ? `Age: ${consultation.age}`
-                                    : consultation.gender 
-                                    ? consultation.gender
-                                    : 'No details provided'
-                                  }
+                                  Lead Status: {consultation.status || 'Unknown'}
                                 </div>
                               </div>
                             </div>
@@ -1890,9 +1925,9 @@ Keep these credentials safe!
                             <div className="text-sm text-gray-500">{consultation.email || 'no email provided'}</div>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(consultation.status)}`}>
-                              {getStatusIcon(consultation.status)}
-                              <span className="ml-1">{getAppointmentStatusLabel(consultation.status)}</span>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(consultation.appointment_status || APPOINTMENT_OPTIONS.PENDING)}`}>
+                              {getStatusIcon(consultation.appointment_status || APPOINTMENT_OPTIONS.PENDING)}
+                              <span className="ml-1">{getAppointmentStatusLabel(consultation.appointment_status || APPOINTMENT_OPTIONS.PENDING)}</span>
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
@@ -1913,31 +1948,23 @@ Keep these credentials safe!
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                             <select
-                              value={consultation.status}
+                              value={consultation.appointment_status || APPOINTMENT_OPTIONS.PENDING}
                               onChange={async (e) => {
                                 const newStatus = e.target.value;
 
-                                if (newStatus === APPOINTMENT_OPTIONS.CANCELLED) {
-                                  // Move to recycle bin
-                                  const result = await handleDeleteConsultationById(consultation.id);
+                                if (newStatus === APPOINTMENT_OPTIONS.SALE_MADE) {
+                                  // Move to Completed Appointments when sale is made
+                                  const result = await handleUpdateAppointmentStatus(consultation.id, newStatus);
                                   if (result.success) {
-                                    setNotificationMessage(`Patient ${consultation.name} appointment cancelled and moved to recycle bin!`);
-                                  } else {
-                                    setNotificationMessage(`Failed to cancel appointment: ${result.error}`);
-                                  }
-                                } else if (newStatus === APPOINTMENT_OPTIONS.CONFIRMED) {
-                                  // Move to Completed Appointments
-                                  const result = await handleUpdateConsultationStatus(consultation.id, newStatus);
-                                  if (result.success) {
-                                    setNotificationMessage(`Patient ${consultation.name} appointment confirmed and moved to Completed Appointments!`);
+                                    setNotificationMessage(`Sale made for ${consultation.name} - moved to Completed Appointments!`);
                                   } else {
                                     setNotificationMessage(`Failed to update status: ${result.error}`);
                                   }
                                 } else {
-                                  // Stay in Today's Appointments (Pending)
-                                  const result = await handleUpdateConsultationStatus(consultation.id, newStatus);
+                                  // Stay in Today's Appointments (all other statuses)
+                                  const result = await handleUpdateAppointmentStatus(consultation.id, newStatus);
                                   if (result.success) {
-                                    setNotificationMessage(`Patient ${consultation.name} status updated to ${getAppointmentStatusLabel(newStatus)}!`);
+                                    setNotificationMessage(`Appointment status updated to ${APPOINTMENT_OPTION_LABELS[newStatus as AppointmentOption]}!`);
                                   } else {
                                     setNotificationMessage(`Failed to update status: ${result.error}`);
                                   }
@@ -1948,8 +1975,10 @@ Keep these credentials safe!
                               className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                             >
                               <option value={APPOINTMENT_OPTIONS.PENDING}>{APPOINTMENT_OPTION_LABELS[APPOINTMENT_OPTIONS.PENDING]}</option>
-                              <option value={APPOINTMENT_OPTIONS.CONFIRMED}>{APPOINTMENT_OPTION_LABELS[APPOINTMENT_OPTIONS.CONFIRMED]}</option>
-                              <option value={APPOINTMENT_OPTIONS.CANCELLED}>{APPOINTMENT_OPTION_LABELS[APPOINTMENT_OPTIONS.CANCELLED]}</option>
+                              <option value={APPOINTMENT_OPTIONS.FOLLOWUP}>{APPOINTMENT_OPTION_LABELS[APPOINTMENT_OPTIONS.FOLLOWUP]}</option>
+                              <option value={APPOINTMENT_OPTIONS.INPROGRESS}>{APPOINTMENT_OPTION_LABELS[APPOINTMENT_OPTIONS.INPROGRESS]}</option>
+                              <option value={APPOINTMENT_OPTIONS.NOT_INTERESTED}>{APPOINTMENT_OPTION_LABELS[APPOINTMENT_OPTIONS.NOT_INTERESTED]}</option>
+                              <option value={APPOINTMENT_OPTIONS.SALE_MADE}>{APPOINTMENT_OPTION_LABELS[APPOINTMENT_OPTIONS.SALE_MADE]}</option>
                             </select>
                           </td>
                         </tr>
@@ -1957,13 +1986,7 @@ Keep these credentials safe!
                   </tbody>
                 </table>
                 
-                {consultations.filter(c => {
-                  if (!c.next_appointment_date) return false;
-                  if (c.status === 'completed') return false; // Exclude completed appointments
-                  const today = new Date().toISOString().split('T')[0];
-                  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                  return c.next_appointment_date === today || c.next_appointment_date === tomorrow;
-                }).length === 0 && (
+                {getTodaysAppointments().length === 0 && (
                   <div className="text-center py-12">
                     <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-lg font-medium text-gray-900 mb-2">No Appointments Today or Tomorrow</p>
@@ -1982,17 +2005,10 @@ Keep these credentials safe!
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-lg font-bold text-red-900">✅ Completed Appointments</h2>
-                  <p className="text-red-700 text-sm">Past due appointments that need attention</p>
+                  <p className="text-red-700 text-sm">Sales that have been made</p>
                 </div>
                 <div className="text-sm text-red-600 font-medium">
-                  {consultations.filter(c => {
-                    // Show confirmed appointments OR overdue appointments
-                    if (c.status === 'completed') return true;
-                    if (c.status === APPOINTMENT_OPTIONS.CONFIRMED) return true;
-                    if (!c.next_appointment_date) return false;
-                    const today = new Date().toISOString().split('T')[0];
-                    return c.next_appointment_date < today;
-                  }).length} confirmed & overdue appointments
+                  {getCompletedAppointments().length} sales made
                 </div>
               </div>
             </div>
@@ -2000,8 +2016,8 @@ Keep these credentials safe!
             {/* Completed Appointments Table */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-red-50 to-red-100">
-                <h3 className="text-lg font-semibold text-red-900">Completed & Overdue Appointments</h3>
-                <p className="text-red-700 text-xs">Completed appointments and appointments past their scheduled date</p>
+                <h3 className="text-lg font-semibold text-red-900">Sales Made</h3>
+                <p className="text-red-700 text-xs">Appointments where sales have been completed</p>
               </div>
               
               <div className="overflow-x-auto">
@@ -2017,15 +2033,7 @@ Keep these credentials safe!
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {consultations
-                      .filter(consultation => {
-                        // Show confirmed appointments OR overdue appointments
-                        if (consultation.status === 'completed') return true;
-                        if (consultation.status === APPOINTMENT_OPTIONS.CONFIRMED) return true;
-                        if (!consultation.next_appointment_date) return false;
-                        const today = new Date().toISOString().split('T')[0];
-                        return consultation.next_appointment_date < today;
-                      })
+                    {getCompletedAppointments()
                       .sort((a, b) => new Date(a.next_appointment_date || '').getTime() - new Date(b.next_appointment_date || '').getTime())
                       .map((consultation) => {
                         const daysOverdue = consultation.next_appointment_date 
@@ -2054,18 +2062,18 @@ Keep these credentials safe!
                               <div className="text-sm text-gray-500">{consultation.email || 'N/A'}</div>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(consultation.status)}`}>
-                                {getStatusIcon(consultation.status)}
-                                <span className="ml-1">{getAppointmentStatusLabel(consultation.status)}</span>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(consultation.appointment_status || APPOINTMENT_OPTIONS.PENDING)}`}>
+                                {getStatusIcon(consultation.appointment_status || APPOINTMENT_OPTIONS.PENDING)}
+                                <span className="ml-1">{getAppointmentStatusLabel(consultation.appointment_status || APPOINTMENT_OPTIONS.PENDING)}</span>
                               </span>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                               {consultation.next_appointment_date ? new Date(consultation.next_appointment_date).toLocaleDateString() : 'Not scheduled'}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              {(consultation.status === 'completed' || consultation.status === APPOINTMENT_OPTIONS.CONFIRMED) ? (
+                              {consultation.appointment_status === APPOINTMENT_OPTIONS.SALE_MADE ? (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  ✅ Completed
+                                  ✅ Sale Made
                                 </span>
                               ) : (
                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -2094,14 +2102,11 @@ Keep these credentials safe!
                               </button>
                               <button
                                 onClick={() => {
-                                  // Mark as completed
-                                  handleSaveConsultation({
-                                    ...consultation,
-                                    status: 'completed'
-                                  });
+                                  // Delete from completed appointments - separate from main admin flow
+                                  handleDeleteAppointment(consultation.id);
                                 }}
-                                className="text-emerald-600 hover:text-emerald-900"
-                                title="Mark as Completed"
+                                className="text-red-600 hover:text-red-900"
+                                title="Remove from Completed Appointments"
                               >
                                 <CheckCircle className="w-4 h-4" />
                               </button>

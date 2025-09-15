@@ -297,14 +297,14 @@ const StaffDashboard: React.FC = () => {
 
   // Filter consultations based on selected tab
   const newEntries = consultations.filter(consultation => 
-    consultation.status === 'pending' &&
+    consultation.status === 'pending' && !consultation.status.startsWith('appt_') &&
     (consultation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
      consultation.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
      consultation.phone.includes(searchTerm))
   );
 
   const interactingConsultations = consultations.filter(consultation => 
-    (consultation.status === 'confirmed' || consultation.status === 'reachinglead') &&
+    (consultation.status === 'confirmed' || consultation.status === 'reachinglead') && !consultation.status.startsWith('appt_') &&
     (consultation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
      consultation.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
      consultation.phone.includes(searchTerm))

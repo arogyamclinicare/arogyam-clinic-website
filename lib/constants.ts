@@ -94,10 +94,13 @@ export function getNextPossibleStatuses(currentStatus: ConsultationStatus): Cons
 // =============================================================================
 
 // Simple appointment status options for Today's & Tomorrow's Schedule
+// These are SEPARATE from the main consultation workflow to avoid conflicts
 export const APPOINTMENT_OPTIONS = {
-  PENDING: 'pending',
-  CONFIRMED: 'confirmed',
-  CANCELLED: 'cancelled'
+  PENDING: 'appt_pending',
+  FOLLOWUP: 'appt_followup',
+  INPROGRESS: 'appt_inprogress',
+  NOT_INTERESTED: 'appt_not_interested',
+  SALE_MADE: 'appt_sale_made'
 } as const;
 
 export type AppointmentOption = typeof APPOINTMENT_OPTIONS[keyof typeof APPOINTMENT_OPTIONS];
@@ -105,6 +108,8 @@ export type AppointmentOption = typeof APPOINTMENT_OPTIONS[keyof typeof APPOINTM
 // Simple appointment option labels
 export const APPOINTMENT_OPTION_LABELS: Record<AppointmentOption, string> = {
   [APPOINTMENT_OPTIONS.PENDING]: 'Pending',
-  [APPOINTMENT_OPTIONS.CONFIRMED]: 'Confirmed',
-  [APPOINTMENT_OPTIONS.CANCELLED]: 'Cancelled'
+  [APPOINTMENT_OPTIONS.FOLLOWUP]: 'Follow-up',
+  [APPOINTMENT_OPTIONS.INPROGRESS]: 'In Progress',
+  [APPOINTMENT_OPTIONS.NOT_INTERESTED]: 'Not Interested',
+  [APPOINTMENT_OPTIONS.SALE_MADE]: 'Sale Made'
 };

@@ -22,6 +22,7 @@ export interface Database {
           consultation_type: 'phone' | 'video'
           treatment_type: string
           status: string
+          appointment_status: string | null
           created_at: string
           updated_at: string
           notes: string | null
@@ -85,6 +86,7 @@ export interface Database {
           consultation_type: 'phone' | 'video'
           treatment_type: string
           status?: string
+          appointment_status?: string | null
           created_at?: string
           updated_at?: string
           notes?: string | null
@@ -148,6 +150,7 @@ export interface Database {
           consultation_type?: 'phone' | 'video'
           treatment_type?: string
           status?: string
+          appointment_status?: string | null
           created_at?: string
           updated_at?: string
           notes?: string | null
