@@ -248,8 +248,8 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
   const handleDownloadPrescriptionPDF = async (consultation: Consultation) => {
     setIsGeneratingPDF(true);
     try {
-      console.log('Starting PDF generation for consultation:', consultation.id);
-      console.log('Consultation data:', consultation);
+
+
       const pdfBlob = await pdfGenerator.generatePatientPrescriptionPDF(consultation);
       
       // Create download link
@@ -261,14 +261,10 @@ export function PatientDashboard({ onBookAppointment }: PatientDashboardProps) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      console.log('PDF generated and downloaded successfully');
+
     } catch (error) {
-      console.error('PDF Generation Error in Patient Portal:', error);
-      console.error('Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        consultation: consultation
-      });
+
+
       alert(`Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     } finally {
       setIsGeneratingPDF(false);

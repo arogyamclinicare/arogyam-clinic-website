@@ -36,13 +36,11 @@ export class NewPDFGenerator {
    * Core PDF generation matching handwritten form layout
    */
   private async generatePatientPDF(consultation: Consultation): Promise<Blob> {
-    console.log('PDF Generator: Starting PDF generation for consultation:', consultation.id);
-    
+
     if (!consultation || !consultation.id) {
       throw new Error('Invalid consultation data provided');
     }
-    
-    console.log('PDF Generator: Creating PDF document');
+
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const margin = 50; // Increased margin for better spacing
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -50,38 +48,41 @@ export class NewPDFGenerator {
     let y = margin;
 
     // ========== HEADER SECTION ==========
-    const logoBoxSize = 50; // Perfect size for alignment with "AROGYAM HOMOEOPATHIC CLINIC" text
+    const iconSize = 60; // Icon size maintaining original proportions
     const headerY = y;
     
-    // Load actual Arogyam logo (left) with better error handling
-    let arogyamLogoLoaded = false;
+    // Load Arogyam icon (left) with better error handling
+    let arogyamIconLoaded = false;
     try {
-      console.log('Loading actual Arogyam logo image');
-      const arogyamLogoPath = '/images/branding/arogyam-logo.png';
-      console.log('Arogyam logo path:', arogyamLogoPath);
-      
-      const arogyamLogoBase64 = await this.getImageAsBase64(arogyamLogoPath, 150); // High quality for better appearance
-      console.log('Arogyam logo loaded successfully, base64 length:', arogyamLogoBase64.length);
-      
-      if (arogyamLogoBase64 && arogyamLogoBase64.length > 100) {
-        console.log('Adding Arogyam logo to PDF with dimensions:', logoBoxSize, 'x', logoBoxSize);
-        doc.addImage(arogyamLogoBase64, 'PNG', margin, headerY, logoBoxSize, logoBoxSize);
-        console.log('Arogyam logo added to PDF successfully');
-        arogyamLogoLoaded = true;
+
+      const arogyamIconPath = '/images/branding/ai-generated-8836694_1280.png';
+
+      const arogyamIconBase64 = await this.getImageAsBase64(arogyamIconPath, 120); // Higher quality for icon
+
+      if (arogyamIconBase64 && arogyamIconBase64.length > 100) {
+
+        // Position icon right before the clinic name text
+        const textStartX = margin + iconSize + 15; // Where clinic name starts
+        const iconX = textStartX - iconSize - 10; // Position icon right before text
+        doc.addImage(arogyamIconBase64, 'PNG', iconX, headerY, iconSize, iconSize);
+
+        arogyamIconLoaded = true;
       } else {
-        console.error('Arogyam logo data invalid - length:', arogyamLogoBase64?.length);
-        throw new Error('Logo data too small or invalid');
+
+        throw new Error('Icon data too small or invalid');
       }
     } catch (error) {
-      console.error('Arogyam logo failed to load, using fallback:', error);
-      arogyamLogoLoaded = false;
+
+      arogyamIconLoaded = false;
     }
     
-    if (!arogyamLogoLoaded) {
+    if (!arogyamIconLoaded) {
       // Fallback: Create a professional looking logo
-      console.log('Using Arogyam logo fallback');
+
+      const textStartX = margin + iconSize + 15; // Where clinic name starts
+      const iconX = textStartX - iconSize - 10; // Position icon right before text
       doc.setFillColor(34, 197, 94); // Green color
-      doc.rect(margin, headerY, logoBoxSize, logoBoxSize, 'F');
+      doc.rect(iconX, headerY, iconSize, iconSize, 'F');
       
       // Add "Arogyam" text in the logo
       doc.setTextColor(255, 255, 255);
@@ -93,69 +94,40 @@ export class NewPDFGenerator {
       doc.setTextColor(34, 197, 94);
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      doc.text('arogyam', margin + 8, headerY + logoBoxSize + 8);
+      doc.text('arogyam', iconX + 8, headerY + iconSize + 8);
     }
     
     doc.setTextColor(0, 0, 0);
 
-    // Load actual Caduceus symbol (right) with better error handling
-    const doctorLogoX = doc.internal.pageSize.getWidth() - margin - logoBoxSize;
-    let caduceusLogoLoaded = false;
-    try {
-      console.log('Loading actual Caduceus symbol image');
-      const caduceusLogoPath = '/images/branding/ai-generated-8836694_1280.png';
-      console.log('Caduceus logo path:', caduceusLogoPath);
-      
-      const caduceusLogoBase64 = await this.getImageAsBase64(caduceusLogoPath, 100); // Smaller size to match left logo
-      console.log('Caduceus logo loaded successfully, base64 length:', caduceusLogoBase64.length);
-      
-      if (caduceusLogoBase64 && caduceusLogoBase64.length > 100) {
-        console.log('Adding Caduceus symbol to PDF with dimensions:', logoBoxSize, 'x', logoBoxSize);
-        doc.addImage(caduceusLogoBase64, 'PNG', doctorLogoX, headerY, logoBoxSize, logoBoxSize);
-        console.log('Caduceus symbol added to PDF successfully');
-        caduceusLogoLoaded = true;
-      } else {
-        console.error('Caduceus logo data invalid - length:', caduceusLogoBase64?.length);
-        throw new Error('Logo data too small or invalid');
-      }
-    } catch (error) {
-      console.error('Caduceus symbol failed to load, using drawn fallback:', error);
-      caduceusLogoLoaded = false;
-    }
-    
-    if (!caduceusLogoLoaded) {
-      // Fallback: Draw a professional Caduceus symbol
-      console.log('Using Caduceus symbol fallback');
-      this.drawCaduceus(doc, doctorLogoX + logoBoxSize/2, headerY + logoBoxSize/2, 20);
-    }
+    // Removed Caduceus symbol for cleaner, more professional look
 
-    // Clinic name (centered, perfectly aligned with 50px logos)
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
+    // Clinic name (positioned right next to icon) - Elegant medical font
+    doc.setFont("times", "bold"); // Times font for more elegant, medical appearance
+    doc.setFontSize(16); // Smaller, more refined size
     doc.setTextColor(0, 0, 0);
-    doc.text("AROGYAM HOMOEOPATHIC CLINIC", doc.internal.pageSize.getWidth() / 2, headerY + 25, { align: "center" });
+    doc.text("AROGYAM HOMOEOPATHIC CLINIC", margin + iconSize + 15, headerY + 20);
 
-    // Tagline (centered)
+    // Tagline (aligned with clinic name)
     doc.setFont("helvetica", "italic");
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    doc.text("A Place of Natural Healing", doc.internal.pageSize.getWidth() / 2, headerY + 40, { align: "center" });
+    doc.text("A Place of Natural Healing", margin + iconSize + 15, headerY + 35);
 
-    // Contact info (centered below tagline)
+    // Contact info (aligned with clinic name)
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(0, 0, 0);
     doc.text("Phone: 9430030564 | Email: arogyamclinicare@gmail.com | Website: arogyamhomeo.com", 
-             doc.internal.pageSize.getWidth() / 2, headerY + 55, { align: "center" });
+             margin + iconSize + 15, headerY + 50);
 
     // Add a professional line separator
-    y = headerY + logoBoxSize + 30;
+    y = headerY + iconSize + 20; // Adjusted spacing for icon
     doc.setDrawColor(34, 197, 94); // Green color
     doc.setLineWidth(1);
     doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
     y += 20;
 
-    y += 40;
+    y += 30; // Adjusted spacing for proper layout with icon
 
     // ========== PATIENT INFORMATION SECTION ==========
     doc.setFont("helvetica", "bold");
@@ -202,10 +174,10 @@ export class NewPDFGenerator {
     // ========== APPOINTMENT DETAILS SECTION ==========
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.text("(Appointment Information Details)", margin, y);
+    doc.text("Appointment Details", margin, y);
     
     // Add underline for section header
-    const appointmentTextWidth = doc.getTextWidth("(Appointment Information Details)");
+    const appointmentTextWidth = doc.getTextWidth("Appointment Details");
     doc.setDrawColor(0, 0, 0);
     doc.line(margin, y + 3, margin + appointmentTextWidth, y + 3);
     
@@ -226,6 +198,9 @@ export class NewPDFGenerator {
     
     doc.text("Unit Doctor —", margin, y);
     doc.text(consultation.unit_doctor || "Dr. Kajal Kumari", margin + 80, y);
+    
+    doc.text("Next Appointment —", margin + 200, y);
+    doc.text(this.formatDate(consultation.next_appointment_date) || "Not scheduled", margin + 350, y);
 
     y += 40;
 
@@ -244,13 +219,15 @@ export class NewPDFGenerator {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     
-    doc.text("Clinical Finding —", margin, y);
-    doc.text(consultation.segment || "________________", margin + 100, y);
+    // Line 1: Sub-Finding — Clinical Finding (same line like Patient Information)
+    const subFindingX = margin;
+    const clinicalFindingX = margin + 200;
     
-    y += 20;
+    doc.text("Sub-Finding —", subFindingX, y);
+    doc.text(consultation.sub_segment || "________________", subFindingX + 100, y);
     
-    doc.text("Sub-Finding —", margin, y);
-    doc.text(consultation.sub_segment || "________________", margin + 100, y);
+    doc.text("Clinical Finding —", clinicalFindingX, y);
+    doc.text(consultation.segment || "________________", clinicalFindingX + 100, y);
 
     y += 40;
 
@@ -268,35 +245,41 @@ export class NewPDFGenerator {
 
     // Prescription table with only required columns
     try {
-      console.log('PDF Generator: Fetching prescription data for consultation:', consultation.id);
+
       const prescriptionData = await this.getPrescriptionDrugs(consultation.id);
-      console.log('PDF Generator: Prescription data received:', prescriptionData);
+
       if (prescriptionData && prescriptionData.length > 0) {
         const tableData = prescriptionData.map(drug => [
           drug.drug_name || "",
           drug.potency || "",
           drug.period || "", 
-          drug.remarks || ""
+          drug.remarks || "",
+          drug.repetition_frequency || "",
+          drug.repetition_interval || "",
+          drug.repetition_unit || ""
         ]);
 
         autoTable(doc, {
           startY: y,
-          head: [["Medicine (Drug Name)", "Potency", "Period", "Remarks"]],
+          head: [["Medicine", "Potency", "Period", "Remarks", "Repeat Start", "Repeat End", "Repeat Type"]],
           body: tableData,
           theme: "striped",
           styles: { 
-            fontSize: 8, 
-            cellPadding: 4,
+            fontSize: 7, 
+            cellPadding: 3,
             halign: 'left',
             valign: 'middle',
             lineColor: [200, 200, 200],
             lineWidth: 0.5
           },
           columnStyles: {
-            0: { cellWidth: availableWidth * 0.4 }, // 40% of available width
-            1: { cellWidth: availableWidth * 0.2 }, // 20% of available width
-            2: { cellWidth: availableWidth * 0.2 }, // 20% of available width
-            3: { cellWidth: availableWidth * 0.2 }  // 20% of available width
+            0: { cellWidth: availableWidth * 0.25 }, // Medicine - 25%
+            1: { cellWidth: availableWidth * 0.15 }, // Potency - 15%
+            2: { cellWidth: availableWidth * 0.12 }, // Period - 12%
+            3: { cellWidth: availableWidth * 0.18 }, // Remarks - 18%
+            4: { cellWidth: availableWidth * 0.10 }, // Repeat Start - 10%
+            5: { cellWidth: availableWidth * 0.10 }, // Repeat End - 10%
+            6: { cellWidth: availableWidth * 0.10 }  // Repeat Type - 10%
           },
           headStyles: { 
             fillColor: [34, 197, 94],
@@ -312,22 +295,25 @@ export class NewPDFGenerator {
         // Empty prescription table
         autoTable(doc, {
           startY: y,
-          head: [["Medicine (Drug Name)", "Potency", "Period", "Remarks"]],
-          body: [["", "", "", ""]],
+          head: [["Medicine", "Potency", "Period", "Remarks", "Repeat Start", "Repeat End", "Repeat Type"]],
+          body: [["", "", "", "", "", "", ""]],
           theme: "striped",
           styles: { 
-            fontSize: 8, 
-            cellPadding: 4,
+            fontSize: 7, 
+            cellPadding: 3,
             halign: 'left',
             valign: 'middle',
             lineColor: [200, 200, 200],
             lineWidth: 0.5
           },
           columnStyles: {
-            0: { cellWidth: availableWidth * 0.4 }, // 40% of available width
-            1: { cellWidth: availableWidth * 0.2 }, // 20% of available width
-            2: { cellWidth: availableWidth * 0.2 }, // 20% of available width
-            3: { cellWidth: availableWidth * 0.2 }  // 20% of available width
+            0: { cellWidth: availableWidth * 0.25 }, // Medicine - 25%
+            1: { cellWidth: availableWidth * 0.15 }, // Potency - 15%
+            2: { cellWidth: availableWidth * 0.12 }, // Period - 12%
+            3: { cellWidth: availableWidth * 0.18 }, // Remarks - 18%
+            4: { cellWidth: availableWidth * 0.10 }, // Repeat Start - 10%
+            5: { cellWidth: availableWidth * 0.10 }, // Repeat End - 10%
+            6: { cellWidth: availableWidth * 0.10 }  // Repeat Type - 10%
           },
           headStyles: { 
             fillColor: [34, 197, 94],
@@ -445,13 +431,11 @@ export class NewPDFGenerator {
     // ========== NO DOCTOR SIGNATURE (as requested) ==========
     // Doctor signature section removed as per requirements
 
-    console.log('PDF Generator: Adding watermark and footer');
     this.addWatermark(doc);
     this.addFooter(doc);
-    
-    console.log('PDF Generator: Converting to blob');
+
     const blob = doc.output("blob");
-    console.log('PDF Generator: PDF generation completed successfully');
+
     return blob;
   }
 
@@ -464,42 +448,7 @@ export class NewPDFGenerator {
     return this.generatePatientPDF(consultation);
   }
 
-  /**
-   * Draw Caduceus symbol (medical staff with snakes and wings)
-   */
-  private drawCaduceus(doc: any, centerX: number, centerY: number, size: number): void {
-    const scale = size / 50;
-    
-    // Save graphics state
-    doc.saveGraphicsState();
-    
-    // Set line properties
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(1 * scale);
-    
-    // Draw staff (vertical line)
-    doc.line(centerX, centerY - 20 * scale, centerX, centerY + 20 * scale);
-    
-    // Draw wings (top)
-    doc.line(centerX - 8 * scale, centerY - 15 * scale, centerX, centerY - 20 * scale);
-    doc.line(centerX + 8 * scale, centerY - 15 * scale, centerX, centerY - 20 * scale);
-    
-    // Draw snakes (simplified with lines and circles)
-    // Left snake
-    doc.line(centerX - 5 * scale, centerY - 10 * scale, centerX - 8 * scale, centerY);
-    doc.line(centerX - 8 * scale, centerY, centerX - 5 * scale, centerY + 10 * scale);
-    doc.circle(centerX - 6 * scale, centerY - 5 * scale, 1 * scale);
-    doc.circle(centerX - 7 * scale, centerY + 5 * scale, 1 * scale);
-    
-    // Right snake  
-    doc.line(centerX + 5 * scale, centerY - 10 * scale, centerX + 8 * scale, centerY);
-    doc.line(centerX + 8 * scale, centerY, centerX + 5 * scale, centerY + 10 * scale);
-    doc.circle(centerX + 6 * scale, centerY - 5 * scale, 1 * scale);
-    doc.circle(centerX + 7 * scale, centerY + 5 * scale, 1 * scale);
-    
-    // Restore graphics state
-    doc.restoreGraphicsState();
-  }
+  // Removed drawCaduceus function - no longer needed for cleaner design
 
   /**
    * Add checkbox options in columns
@@ -583,23 +532,19 @@ export class NewPDFGenerator {
    */
   private async getImageAsBase64(imagePath: string, maxSize: number = 50): Promise<string> {
     try {
-      console.log('Loading and optimizing image for PDF:', imagePath);
-      
+
       const response = await fetch(imagePath);
-      console.log('Fetch response status:', response.status, response.statusText);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.statusText} (${response.status})`);
       }
       
       const blob = await response.blob();
-      console.log('Original blob size:', blob.size, 'bytes');
-      
+
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
-          console.log('Image loaded, original dimensions:', img.width, 'x', img.height);
-          
+
           // Always optimize for PDF (reduce size to prevent 80MB PDFs)
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
@@ -633,18 +578,18 @@ export class NewPDFGenerator {
           
           // Convert to base64 with PNG format to preserve quality and transparency
           const base64 = canvas.toDataURL('image/png', 1.0).split(',')[1];
-          console.log('Optimized image, base64 length:', base64.length, 'dimensions:', width, 'x', height);
+
           resolve(base64);
         };
         img.onerror = () => {
-          console.error('Image load error');
+
           reject(new Error('Failed to load image'));
         };
         img.src = URL.createObjectURL(blob);
       });
     } catch (error) {
-      console.error('Error converting image to Base64:', error);
-      console.error('Image path that failed:', imagePath);
+
+
       throw error;
     }
   }
@@ -658,7 +603,7 @@ export class NewPDFGenerator {
       const result = await PrescriptionDrugService.getPrescriptionDrugs(consultationId);
       return result || [];
     } catch (error) {
-      console.error('Error fetching prescription drugs:', error);
+
       return [];
     }
   }

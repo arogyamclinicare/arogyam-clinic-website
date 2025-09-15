@@ -109,7 +109,7 @@ export function AdminDashboard() {
       const { data, error } = await (getSupabaseAdmin() as any)
         .from('consultations')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }); // Newest first
       
       if (error) {
         setError(error.message);
@@ -189,7 +189,7 @@ export function AdminDashboard() {
   // Don't fetch consultations immediately - only when user interacts
   // This prevents the admin client from being created at component mount
   
-  const [activeTab, setActiveTab] = useState<'new_entry' | 'interacting' | 'live_patients' | 'staff_management'>('new_entry');
+  const [activeTab, setActiveTab] = useState<'new_entry' | 'interacting' | 'live_patients' | 'todays_appointments' | 'completed_appointments' | 'staff_management'>('new_entry');
   
   // Load consultations when user switches to a tab that needs them
   useEffect(() => {
@@ -345,19 +345,39 @@ export function AdminDashboard() {
     if (status === 'reachinglead') {
       return 'text-orange-600 bg-orange-100';
     }
-    return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'text-gray-600 bg-gray-100';
+    // Handle appointment statuses
+    switch (status) {
+      case 'follow_up':
+        return 'text-yellow-600 bg-yellow-100';
+      case 'in_progress':
+        return 'text-blue-600 bg-blue-100';
+      case 'cancelled':
+        return 'text-gray-600 bg-gray-100';
+      default:
+        return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'text-gray-600 bg-gray-100';
+    }
   };
 
   const getStatusIcon = (status: string) => {
     if (status === 'reachinglead') {
       return <Users className="w-4 h-4" />;
     }
-    const IconName = STATUS_ICONS[status as keyof typeof STATUS_ICONS];
-    switch (IconName) {
-      case 'CheckCircle': return <CheckCircle className="w-4 h-4" />;
-      case 'Clock': return <Clock className="w-4 h-4" />;
-      case 'AlertCircle': return <AlertCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
+    // Handle appointment statuses
+    switch (status) {
+      case 'follow_up':
+        return <Bell className="w-4 h-4" />;
+      case 'in_progress':
+        return <Clock className="w-4 h-4" />;
+      case 'cancelled':
+        return <X className="w-4 h-4" />;
+      default:
+        const IconName = STATUS_ICONS[status as keyof typeof STATUS_ICONS];
+        switch (IconName) {
+          case 'CheckCircle': return <CheckCircle className="w-4 h-4" />;
+          case 'Clock': return <Clock className="w-4 h-4" />;
+          case 'AlertCircle': return <AlertCircle className="w-4 h-4" />;
+          default: return <Clock className="w-4 h-4" />;
+        }
     }
   };
 
@@ -383,6 +403,30 @@ export function AdminDashboard() {
       setEditingConsultation(null);
     }
     return result;
+  };
+
+  // New function specifically for updating consultation status from dropdown
+  const handleUpdateConsultationStatus = async (consultationId: string, newStatus: string) => {
+    try {
+      const result = await updateConsultation(consultationId, { status: newStatus });
+      if (result.success) {
+        // Update the consultations list with the new status
+        setConsultations(prev => 
+          prev.map(consultation => 
+            consultation.id === consultationId 
+              ? { ...consultation, status: newStatus }
+              : consultation
+          )
+        );
+        return { success: true };
+      } else {
+
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+
+      return { success: false, error: 'Failed to update status' };
+    }
   };
 
   // Database search function
@@ -455,18 +499,63 @@ export function AdminDashboard() {
     return result;
   };
 
+  // New function for deleting consultation directly by ID (for cancelled appointments)
+  const handleDeleteConsultationById = async (consultationId: string) => {
+    try {
+      const result = await deleteConsultation(consultationId);
+      if (result.success) {
+        // Remove from consultations list
+        setConsultations(prev => prev.filter(c => c.id !== consultationId));
+        return { success: true };
+      } else {
+
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+
+      return { success: false, error: 'Failed to delete consultation' };
+    }
+  };
+
+  // Function to handle patient contact (for follow-up actions)
+  const handleContactPatient = (consultation: Consultation) => {
+    // Create contact options
+    const contactOptions = [];
+    
+    if (consultation.phone) {
+      contactOptions.push(`📞 Call: ${consultation.phone}`);
+    }
+    
+    if (consultation.email) {
+      contactOptions.push(`📧 Email: ${consultation.email}`);
+    }
+    
+    if (contactOptions.length === 0) {
+      setNotificationMessage(`No contact information available for ${consultation.name}`);
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
+      return;
+    }
+    
+    // Show contact information
+    const contactInfo = contactOptions.join('\n');
+    setNotificationMessage(`Contact ${consultation.name}:\n${contactInfo}`);
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 5000);
+  };
+
   // Function to confirm a patient (move from New Entries to Interacting)
   const handleConfirmPatient = async (consultation: Consultation) => {
     try {
       // Validate status transition
-      if (!isValidStatusTransition(consultation.status as any, CONSULTATION_STATUS.IN_PROGRESS)) {
+      if (!isValidStatusTransition(consultation.status as any, CONSULTATION_STATUS.CONFIRMED)) {
         return { 
           success: false, 
-          error: `Cannot change status from ${consultation.status} to ${CONSULTATION_STATUS.IN_PROGRESS}` 
+          error: `Cannot change status from ${consultation.status} to ${CONSULTATION_STATUS.CONFIRMED}` 
         };
       }
 
-      const result = await updateConsultationStatus(consultation.id, CONSULTATION_STATUS.IN_PROGRESS);
+      const result = await updateConsultationStatus(consultation.id, CONSULTATION_STATUS.CONFIRMED);
       if (result.success) {
         // Show success notification
         setNotificationMessage(`Patient ${consultation.name} confirmed and moved to Interacting!`);
@@ -950,6 +1039,20 @@ Keep these credentials safe!
                 color: 'purple'
               },
               { 
+                id: 'todays_appointments', 
+                name: "Today's Appointments", 
+                icon: Calendar, 
+                description: 'Appointments for today & tomorrow',
+                color: 'emerald'
+              },
+              { 
+                id: 'completed_appointments', 
+                name: 'Completed Appointments', 
+                icon: CheckCircle, 
+                description: 'Past due appointments',
+                color: 'red'
+              },
+              { 
                 id: 'staff_management', 
                 name: 'Staff Management', 
                 icon: Users, 
@@ -969,6 +1072,10 @@ Keep these credentials safe!
                     return 'bg-gradient-to-b from-green-50 to-green-100 border-b-4 border-green-500 text-green-700';
                   case 'live_patients':
                     return 'bg-gradient-to-b from-purple-50 to-purple-100 border-b-4 border-purple-500 text-purple-700';
+                  case 'todays_appointments':
+                    return 'bg-gradient-to-b from-emerald-50 to-emerald-100 border-b-4 border-emerald-500 text-emerald-700';
+                  case 'completed_appointments':
+                    return 'bg-gradient-to-b from-red-50 to-red-100 border-b-4 border-red-500 text-red-700';
                   case 'staff_management':
                     return 'bg-gradient-to-b from-orange-50 to-orange-100 border-b-4 border-orange-500 text-orange-700';
                   default:
@@ -984,6 +1091,10 @@ Keep these credentials safe!
                     return 'bg-green-100 text-green-600';
                   case 'live_patients':
                     return 'bg-purple-100 text-purple-600';
+                  case 'todays_appointments':
+                    return 'bg-emerald-100 text-emerald-600';
+                  case 'completed_appointments':
+                    return 'bg-red-100 text-red-600';
                   case 'staff_management':
                     return 'bg-orange-100 text-orange-600';
                   default:
@@ -1379,19 +1490,11 @@ Keep these credentials safe!
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(consultation.status)}`}>
                             {getStatusIcon(consultation.status)}
                             <span className="ml-1">
-                              {consultation.status === 'reachinglead' && (consultation as any).is_lead ? 'LEAD' : 
-                               consultation.status === 'reachinglead' && !(consultation as any).is_lead ? 'REACHING' :
-                               consultation.status}
+                              {consultation.status === 'reachinglead' ? 'LEAD' : consultation.status}
                             </span>
-                            {/* Lead indicator icon */}
+                            {/* Lead indicator icon - show 📞 for LEAD status */}
                             {consultation.status === 'reachinglead' && (
-                              <span className="ml-1">
-                                {(consultation as any).is_lead ? (
-                                  <span className="text-green-500" title="Staff has talked to patient">📞</span>
-                                ) : (
-                                  <span className="text-yellow-500" title="Staff has not talked to patient yet">⏳</span>
-                                )}
-                              </span>
+                              <span className="ml-1 text-orange-500">📞</span>
                             )}
                           </span>
                         </td>
@@ -1428,7 +1531,7 @@ Keep these credentials safe!
                             >
                               <option value={CONSULTATION_STATUS.PENDING}>{STATUS_LABELS[CONSULTATION_STATUS.PENDING]}</option>
                               <option value={CONSULTATION_STATUS.CONFIRMED}>{STATUS_LABELS[CONSULTATION_STATUS.CONFIRMED]}</option>
-                              <option value="reachinglead">Reaching Lead</option>
+                              <option value="reachinglead">LEAD/REACHED</option>
                               <option value={CONSULTATION_STATUS.IN_PROGRESS}>{STATUS_LABELS[CONSULTATION_STATUS.IN_PROGRESS]}</option>
                               <option value={CONSULTATION_STATUS.COMPLETED}>{STATUS_LABELS[CONSULTATION_STATUS.COMPLETED]}</option>
                               <option value={CONSULTATION_STATUS.CANCELLED}>{STATUS_LABELS[CONSULTATION_STATUS.CANCELLED]}</option>
@@ -1521,11 +1624,7 @@ Keep these credentials safe!
                   <div className="ml-3">
                     <p className="text-xs font-medium text-gray-600">Total Live Patients</p>
                                             <p className="text-2xl font-bold text-purple-600">
-                          {consultations.filter(c => [
-                            CONSULTATION_STATUS.CONFIRMED, 
-                            CONSULTATION_STATUS.COMPLETED
-                            // Note: FOLLOW_UP entries now go to Interacting section
-                          ].includes(c.status as any)).length}
+                          {consultations.filter(c => c.status === CONSULTATION_STATUS.COMPLETED).length}
                         </p>
                   </div>
                 </div>
@@ -1558,12 +1657,8 @@ Keep these credentials safe!
                           return true; // searchResults are already filtered
                         }
                         
-                        // If not searching, show only confirmed and completed entries
-                        return [
-                          CONSULTATION_STATUS.CONFIRMED, 
-                          CONSULTATION_STATUS.COMPLETED
-                          // Note: FOLLOW_UP entries now go to Interacting section
-                        ].includes(c.status as any);
+                        // If not searching, show only completed entries (moved from Interacting after doctor consultation)
+                        return c.status === CONSULTATION_STATUS.COMPLETED;
                       })
                       .slice(0, 15)
                       .map((consultation) => (
@@ -1671,11 +1766,7 @@ Keep these credentials safe!
                         </td>
                       </tr>
                     ))}
-                    {consultations.filter(c => [
-                      CONSULTATION_STATUS.CONFIRMED, 
-                      CONSULTATION_STATUS.COMPLETED
-                      // Note: FOLLOW_UP entries now go to Interacting section
-                    ].includes(c.status as any)).length === 0 && (
+                    {consultations.filter(c => c.status === CONSULTATION_STATUS.COMPLETED).length === 0 && (
                       <tr>
                         <td colSpan={6} className="px-6 py-12 text-center">
                           <div className="text-gray-500">
@@ -1690,6 +1781,327 @@ Keep these credentials safe!
                     )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Today's Appointments Tab */}
+        {activeTab === 'todays_appointments' && (
+          <div className="space-y-4">
+            <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-bold text-emerald-900">📅 Today's Appointments</h2>
+                  <p className="text-emerald-700 text-sm">Appointments scheduled for today & tomorrow</p>
+                </div>
+                <div className="text-sm text-emerald-600 font-medium">
+                  {consultations.filter(c => {
+                    if (!c.next_appointment_date) return false;
+                    if (c.status === 'completed') return false; // Exclude completed appointments
+                    const today = new Date().toISOString().split('T')[0];
+                    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    return c.next_appointment_date === today || c.next_appointment_date === tomorrow;
+                  }).length} appointments today & tomorrow
+                </div>
+              </div>
+            </div>
+
+            {/* Today's Appointments Table */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-emerald-100">
+                <h3 className="text-lg font-semibold text-emerald-900">Today's & Tomorrow's Schedule</h3>
+                <p className="text-emerald-700 text-xs">All appointments scheduled for today and tomorrow</p>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Appointment Time</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {consultations
+                      .filter(consultation => {
+                        if (!consultation.next_appointment_date) return false;
+                        if (consultation.status === 'completed') return false; // Exclude completed appointments
+                        const today = new Date().toISOString().split('T')[0];
+                        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                        return consultation.next_appointment_date === today || consultation.next_appointment_date === tomorrow;
+                      })
+                      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                      .map((consultation) => (
+                        <tr key={consultation.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-8 w-8">
+                                <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                                  <span className="text-sm font-medium text-emerald-600">
+                                    {consultation.name?.charAt(0)?.toUpperCase() || '?'}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="ml-3">
+                                <div className="text-sm font-medium text-gray-900">{consultation.name || 'Unknown'}</div>
+                                <div className="text-sm text-gray-500">
+                                  {consultation.age && consultation.gender 
+                                    ? `Age: ${consultation.age} | ${consultation.gender}`
+                                    : consultation.age 
+                                    ? `Age: ${consultation.age}`
+                                    : consultation.gender 
+                                    ? consultation.gender
+                                    : 'No details provided'
+                                  }
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{consultation.phone || 'N/A'}</div>
+                            <div className="text-sm text-gray-500">{consultation.email || 'no email provided'}</div>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(consultation.status)}`}>
+                              {getStatusIcon(consultation.status)}
+                              <span className="ml-1">{consultation.status}</span>
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {consultation.next_appointment_date ? (
+                              <div className="flex items-center space-x-2">
+                                <span>{new Date(consultation.next_appointment_date).toLocaleDateString()}</span>
+                                {consultation.next_appointment_date === new Date().toISOString().split('T')[0] ? (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                    Today
+                                  </span>
+                                ) : consultation.next_appointment_date === new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] ? (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Tomorrow
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : 'Not scheduled'}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                            <select
+                              value={consultation.status}
+                              onChange={async (e) => {
+                                const newStatus = e.target.value;
+
+                                if (newStatus === 'cancelled') {
+                                  // Move to recycle bin
+                                  const result = await handleDeleteConsultationById(consultation.id);
+                                  if (result.success) {
+                                    setNotificationMessage(`Patient ${consultation.name} appointment cancelled and moved to recycle bin!`);
+                                  } else {
+                                    setNotificationMessage(`Failed to cancel appointment: ${result.error}`);
+                                  }
+                                } else if (newStatus === 'completed') {
+                                  // Move to Completed Appointments
+                                  const result = await handleUpdateConsultationStatus(consultation.id, newStatus);
+                                  if (result.success) {
+                                    setNotificationMessage(`Patient ${consultation.name} appointment completed and moved to Completed Appointments!`);
+                                  } else {
+                                    setNotificationMessage(`Failed to update status: ${result.error}`);
+                                  }
+                                } else {
+                                  // Stay in Today's Appointments (Follow-up Required, Rescheduled, No Show)
+                                  const result = await handleUpdateConsultationStatus(consultation.id, newStatus);
+                                  if (result.success) {
+                                    setNotificationMessage(`Patient ${consultation.name} status updated to ${newStatus}!`);
+                                  } else {
+                                    setNotificationMessage(`Failed to update status: ${result.error}`);
+                                  }
+                                }
+                                setShowNotification(true);
+                                setTimeout(() => setShowNotification(false), 3000);
+                              }}
+                              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="follow_up">Follow-up Required</option>
+                              <option value="in_progress">In Progress</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+                
+                {consultations.filter(c => {
+                  if (!c.next_appointment_date) return false;
+                  if (c.status === 'completed') return false; // Exclude completed appointments
+                  const today = new Date().toISOString().split('T')[0];
+                  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                  return c.next_appointment_date === today || c.next_appointment_date === tomorrow;
+                }).length === 0 && (
+                  <div className="text-center py-12">
+                    <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-lg font-medium text-gray-900 mb-2">No Appointments Today or Tomorrow</p>
+                    <p className="text-gray-500">All clear for today and tomorrow! Check other tabs for upcoming appointments.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Completed Appointments Tab */}
+        {activeTab === 'completed_appointments' && (
+          <div className="space-y-4">
+            <div className="bg-red-50 rounded-lg p-3 border border-red-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-bold text-red-900">✅ Completed Appointments</h2>
+                  <p className="text-red-700 text-sm">Past due appointments that need attention</p>
+                </div>
+                <div className="text-sm text-red-600 font-medium">
+                  {consultations.filter(c => {
+                    // Show completed appointments OR overdue appointments
+                    if (c.status === 'completed') return true;
+                    if (!c.next_appointment_date) return false;
+                    const today = new Date().toISOString().split('T')[0];
+                    return c.next_appointment_date < today;
+                  }).length} completed & overdue appointments
+                </div>
+              </div>
+            </div>
+
+            {/* Completed Appointments Table */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-red-50 to-red-100">
+                <h3 className="text-lg font-semibold text-red-900">Completed & Overdue Appointments</h3>
+                <p className="text-red-700 text-xs">Completed appointments and appointments past their scheduled date</p>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Scheduled Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days Overdue</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {consultations
+                      .filter(consultation => {
+                        // Show completed appointments OR overdue appointments
+                        if (consultation.status === 'completed') return true;
+                        if (!consultation.next_appointment_date) return false;
+                        const today = new Date().toISOString().split('T')[0];
+                        return consultation.next_appointment_date < today;
+                      })
+                      .sort((a, b) => new Date(a.next_appointment_date || '').getTime() - new Date(b.next_appointment_date || '').getTime())
+                      .map((consultation) => {
+                        const daysOverdue = consultation.next_appointment_date 
+                          ? Math.floor((new Date().getTime() - new Date(consultation.next_appointment_date).getTime()) / (1000 * 60 * 60 * 24))
+                          : 0;
+                        
+                        return (
+                          <tr key={consultation.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-8 w-8">
+                                  <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
+                                    <span className="text-sm font-medium text-red-600">
+                                      {consultation.name?.charAt(0)?.toUpperCase() || '?'}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="ml-3">
+                                  <div className="text-sm font-medium text-gray-900">{consultation.name || 'Unknown'}</div>
+                                  <div className="text-sm text-gray-500">ID: {consultation.id}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">{consultation.phone || 'N/A'}</div>
+                              <div className="text-sm text-gray-500">{consultation.email || 'N/A'}</div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(consultation.status)}`}>
+                                {getStatusIcon(consultation.status)}
+                                <span className="ml-1">{consultation.status}</span>
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                              {consultation.next_appointment_date ? new Date(consultation.next_appointment_date).toLocaleDateString() : 'Not scheduled'}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {consultation.status === 'completed' ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  ✅ Completed
+                                </span>
+                              ) : (
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  daysOverdue > 7 ? 'bg-red-100 text-red-800' : 
+                                  daysOverdue > 3 ? 'bg-orange-100 text-orange-800' : 
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {daysOverdue} day{daysOverdue !== 1 ? 's' : ''} overdue
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-2">
+                              <button
+                                onClick={() => handleEditConsultation(consultation)}
+                                className="text-blue-600 hover:text-blue-900"
+                                title="Reschedule Appointment"
+                              >
+                                <Calendar className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleContactPatient(consultation)}
+                                className="text-green-600 hover:text-green-900"
+                                title="Contact Patient"
+                              >
+                                <Mail className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  // Mark as completed
+                                  handleSaveConsultation({
+                                    ...consultation,
+                                    status: 'completed'
+                                  });
+                                }}
+                                className="text-emerald-600 hover:text-emerald-900"
+                                title="Mark as Completed"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+                
+                {consultations.filter(c => {
+                  // Show completed appointments OR overdue appointments
+                  if (c.status === 'completed') return true;
+                  if (!c.next_appointment_date) return false;
+                  const today = new Date().toISOString().split('T')[0];
+                  return c.next_appointment_date < today;
+                }).length === 0 && (
+                  <div className="text-center py-12">
+                    <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-lg font-medium text-gray-900 mb-2">No Completed or Overdue Appointments</p>
+                    <p className="text-gray-500">Great! All appointments are up to date.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

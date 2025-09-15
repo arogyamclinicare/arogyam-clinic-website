@@ -53,8 +53,10 @@ export async function verifyPassword(password: string, _hash: string): Promise<b
   try {
     // Browser-compatible password verification
     // In production, this should be done server-side with proper bcrypt
-    const expectedPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'Admin123';
-    return password === expectedPassword;
+    // SECURITY: Use hashed password verification instead of plain text
+    const expectedPasswordHash = import.meta.env.VITE_ADMIN_PASSWORD_HASH;
+    // SECURITY: This is a placeholder - proper bcrypt verification should be done server-side
+    return false; // Disabled for security - use proper server-side authentication
   } catch (error) {
     return false;
   }
@@ -101,7 +103,7 @@ export function isSessionValid(session: AdminSession): boolean {
  */
 export function getAdminCredentials(): AdminCredentials {
   const email = import.meta.env.VITE_ADMIN_EMAIL || 'admin@arogyam.com';
-  const passwordHash = import.meta.env.VITE_ADMIN_PASSWORD_HASH || 'browser_compatible_hash';
+  const passwordHash = import.meta.env.VITE_ADMIN_PASSWORD_HASH;
   
   return {
     email,

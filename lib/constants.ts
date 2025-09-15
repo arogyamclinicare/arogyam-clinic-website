@@ -55,12 +55,11 @@ export const STATUS_DESCRIPTIONS: Record<ConsultationStatus, string> = {
 // Valid status transitions (what status can change to what)
 export const VALID_STATUS_TRANSITIONS: Record<ConsultationStatus, ConsultationStatus[]> = {
   [CONSULTATION_STATUS.PENDING]: [
-    CONSULTATION_STATUS.CONFIRMED,
-    CONSULTATION_STATUS.IN_PROGRESS,
+    CONSULTATION_STATUS.CONFIRMED,  // Admin clicks "Confirm" → moves to Interacting
     CONSULTATION_STATUS.CANCELLED
   ],
   [CONSULTATION_STATUS.CONFIRMED]: [
-    CONSULTATION_STATUS.IN_PROGRESS,
+    CONSULTATION_STATUS.COMPLETED,  // Doctor talks → Admin clicks "Completed" → moves to Live Patients
     CONSULTATION_STATUS.CANCELLED
   ],
   [CONSULTATION_STATUS.IN_PROGRESS]: [

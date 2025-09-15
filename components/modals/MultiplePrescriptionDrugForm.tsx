@@ -18,20 +18,20 @@ interface PrescriptionDrugFormData {
   potency: string;
   period: number | null;
   remarks: string;
+  repeat_start: string;
+  repeat_end: string;
+  repeat_type: string;
 }
 
 export function MultiplePrescriptionDrugForm({ 
+  consultationId,
   initialPrescriptions = [], 
   onPrescriptionsUpdate 
 }: MultiplePrescriptionDrugFormProps) {
   const [drugTemplates, setDrugTemplates] = useState<DrugTemplate[]>([]);
   const [prescriptions, setPrescriptions] = useState<PrescriptionDrugFormData[]>([]);
-  const [searchQueries, setSearchQueries] = useState<{ [key: number]: string }>({
-    // Empty block
-  });
-  const [isInputFocused, setIsInputFocused] = useState<{ [key: number]: boolean }>({
-    // Empty block
-  });
+  const [searchQueries, setSearchQueries] = useState<{ [key: number]: string }>({});
+  const [isInputFocused, setIsInputFocused] = useState<{ [key: number]: boolean }>({});
   const [error, setError] = useState<string | null>(null);
 
   // Initialize prescriptions from props
@@ -42,9 +42,21 @@ export function MultiplePrescriptionDrugForm({
         drug_name: p.drug_name,
         potency: p.potency || '',
         period: p.period,
-        remarks: p.remarks || ''
+        remarks: p.remarks || '',
+        repeat_start: p.repetition_frequency?.toString() || '',
+        repeat_end: p.repetition_interval?.toString() || '',
+        repeat_type: p.repetition_unit || ''
       }));
       setPrescriptions(formattedPrescriptions);
+      
+      // Initialize search queries with existing drug names
+      const initialSearchQueries: { [key: number]: string } = {};
+      formattedPrescriptions.forEach((prescription, index) => {
+        if (prescription.drug_name) {
+          initialSearchQueries[index] = prescription.drug_name;
+        }
+      });
+      setSearchQueries(initialSearchQueries);
     } else {
       // Start with one empty prescription
       addNewPrescription();
@@ -78,9 +90,15 @@ export function MultiplePrescriptionDrugForm({
       drug_name: '',
       potency: '',
       period: 0,
-      remarks: ''
+      remarks: '',
+      repeat_start: '',
+      repeat_end: '',
+      repeat_type: ''
     };
+    const newIndex = prescriptions.length;
     setPrescriptions(prev => [...prev, newPrescription]);
+    // Initialize empty search query for the new prescription
+    setSearchQueries(prev => ({ ...prev, [newIndex]: '' }));
   };
 
   const removePrescription = (index: number) => {
@@ -112,11 +130,13 @@ export function MultiplePrescriptionDrugForm({
     // Notify parent component of changes
     const updatedPrescriptions = [...prescriptions];
     updatedPrescriptions[index] = { ...updatedPrescriptions[index], [field]: value };
-    onPrescriptionsUpdate(updatedPrescriptions as PrescriptionDrug[]);
+    onPrescriptionsUpdate(updatedPrescriptions as unknown as PrescriptionDrug[]);
   };
 
   const handleSearchChange = (index: number, query: string) => {
     setSearchQueries(prev => ({ ...prev, [index]: query }));
+    // Also update the prescription drug_name as user types
+    updatePrescription(index, 'drug_name', query);
   };
 
   const handleInputFocus = (index: number) => {
@@ -131,8 +151,11 @@ export function MultiplePrescriptionDrugForm({
   };
 
   const selectDrug = (index: number, drug: DrugTemplate) => {
+    // Update the prescription with the selected drug
     updatePrescription(index, 'drug_name', drug.drug_name);
+    // Update the search query to show the selected drug name
     setSearchQueries(prev => ({ ...prev, [index]: drug.drug_name }));
+    // Close the dropdown
     setIsInputFocused(prev => ({ ...prev, [index]: false }));
   };
 
@@ -153,13 +176,21 @@ export function MultiplePrescriptionDrugForm({
       drug_name: '',
       potency: '',
       period: 0,
-      remarks: ''
+      remarks: '',
+      repeat_start: '',
+      repeat_end: '',
+      repeat_type: ''
     };
     updatePrescription(index, 'drug_name', resetPrescription.drug_name);
     updatePrescription(index, 'potency', resetPrescription.potency);
     updatePrescription(index, 'period', resetPrescription.period);
     updatePrescription(index, 'remarks', resetPrescription.remarks);
+    updatePrescription(index, 'repeat_start', resetPrescription.repeat_start);
+    updatePrescription(index, 'repeat_end', resetPrescription.repeat_end);
+    updatePrescription(index, 'repeat_type', resetPrescription.repeat_type);
+    // Reset search query and close dropdown
     setSearchQueries(prev => ({ ...prev, [index]: '' }));
+    setIsInputFocused(prev => ({ ...prev, [index]: false }));
   };
 
   return (
@@ -223,7 +254,7 @@ export function MultiplePrescriptionDrugForm({
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    value={searchQueries[index] || prescription.drug_name}
+                    value={searchQueries[index] !== undefined ? searchQueries[index] : prescription.drug_name}
                     onChange={(e) => handleSearchChange(index, e.target.value)}
                     onFocus={() => handleInputFocus(index)}
                     onBlur={() => handleInputBlur(index)}
@@ -234,11 +265,14 @@ export function MultiplePrescriptionDrugForm({
                 
                 {/* Dropdown */}
                 {isInputFocused[index] && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                     {getFilteredDrugs(index).map((drug) => (
                       <div
                         key={drug.id}
-                        onClick={() => selectDrug(index, drug)}
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // Prevent input blur
+                          selectDrug(index, drug);
+                        }}
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
                       >
                         <div className="font-medium text-gray-900">{drug.drug_name}</div>
@@ -289,6 +323,70 @@ export function MultiplePrescriptionDrugForm({
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+            </div>
+
+            {/* Repetition Section */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Repetition
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Repeat Start */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Repeat Start
+                  </label>
+                  <select
+                    value={prescription.repeat_start}
+                    onChange={(e) => handleInputChange(index, 'repeat_start', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="LA">LA</option>
+                  </select>
+                </div>
+
+                {/* Repeat End */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Repeat End
+                  </label>
+                  <select
+                    value={prescription.repeat_end}
+                    onChange={(e) => handleInputChange(index, 'repeat_end', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select</option>
+                    {Array.from({ length: 39 }, (_, i) => i + 1).map(num => (
+                      <option key={num} value={num.toString()}>{num}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Repeat Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Repeat Type
+                  </label>
+                  <select
+                    value={prescription.repeat_type}
+                    onChange={(e) => handleInputChange(index, 'repeat_type', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select</option>
+                    <option value="Week">Week</option>
+                    <option value="Days">Days</option>
+                    <option value="Hrs">Hrs</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Drug Details Grid - Second Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
 
               {/* Remarks */}
               <div className="md:col-span-2 lg:col-span-3">

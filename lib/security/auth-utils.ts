@@ -28,7 +28,6 @@ export class PasswordSecurity {
       const inputHash = await this.hashPassword(password);
       return inputHash === hash;
     } catch (error) {
-      console.error('Password verification error:', error);
       return false;
     }
   }
@@ -46,7 +45,6 @@ export class PasswordSecurity {
       const hash = await this.hashPassword(password + salt);
       return `${salt}:${hash}`;
     } catch (error) {
-      console.error('Hash generation error:', error);
       throw new Error('Failed to generate secure hash');
     }
   }
@@ -65,7 +63,6 @@ export class PasswordSecurity {
       const inputHash = await this.hashPassword(password + salt);
       return inputHash === hash;
     } catch (error) {
-      console.error('Secure hash verification error:', error);
       return false;
     }
   }
@@ -222,7 +219,6 @@ export class RateLimiting {
         return new Map(Object.entries(data));
       }
     } catch (error) {
-      console.error('Error reading rate limit data:', error);
     }
     return new Map();
   }
@@ -235,7 +231,6 @@ export class RateLimiting {
       const obj = Object.fromEntries(data);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(obj));
     } catch (error) {
-      console.error('Error saving rate limit data:', error);
     }
   }
 
@@ -265,7 +260,6 @@ export class RateLimiting {
         this.saveRateLimitData(data);
       }
     } catch (error) {
-      console.error('Error cleaning up rate limit data:', error);
     }
   }
 
@@ -418,7 +412,6 @@ export class SessionManager {
       // Store refresh token in localStorage
       localStorage.setItem(this.REFRESH_KEY, refreshToken);
     } catch (error) {
-      console.error('Error storing session:', error);
     }
   }
 
@@ -440,7 +433,6 @@ export class SessionManager {
 
       return session.data;
     } catch (error) {
-      console.error('Error getting session:', error);
       this.clearSession();
       return null;
     }
@@ -486,7 +478,6 @@ export class SessionManager {
       // For now, we'll just return true if token is valid
       return true;
     } catch (error) {
-      console.error('Error refreshing session:', error);
       return false;
     }
   }

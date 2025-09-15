@@ -105,8 +105,48 @@ const getSegmentsForService = (serviceType: string) => {
     ];
   } else if (serviceType === 'aesthetics') {
     return [
-      { value: 'general', label: 'General' },
-      { value: 'specialist', label: 'Specialist' }
+      { value: 'AI SKIN PRO', label: 'AI SKIN PRO' },
+      { value: 'AI SKIN PRO-BRIGHT', label: 'AI SKIN PRO-BRIGHT' },
+      { value: 'B-FIT SUGA CONTROL', label: 'B-FIT SUGA CONTROL' },
+      { value: 'B-FIT WEIGHT MANAGEMENT', label: 'B-FIT WEIGHT MANAGEMENT' },
+      { value: 'DERMAHEAL', label: 'DERMAHEAL' },
+      { value: 'GROHAIR', label: 'GROHAIR' },
+      { value: 'GROHAIR- HAIR BOOSTER', label: 'GROHAIR- HAIR BOOSTER' },
+      { value: 'HAIR BOOSTER', label: 'HAIR BOOSTER' },
+      { value: 'HVT', label: 'HVT' },
+      { value: 'LASER', label: 'LASER' },
+      { value: 'MFIT ANXIETY', label: 'MFIT ANXIETY' },
+      { value: 'MFIT DEPRESSION', label: 'MFIT DEPRESSION' },
+      { value: 'MFIT STRESS', label: 'MFIT STRESS' },
+      { value: 'NEW HAIR', label: 'NEW HAIR' },
+      { value: 'NEW HAIR- HAIR BOOSTER', label: 'NEW HAIR- HAIR BOOSTER' },
+      { value: 'QUIKHAIR', label: 'QUIKHAIR' },
+      { value: 'SKIN', label: 'SKIN' },
+      { value: 'SKIN BRIGHTENING', label: 'SKIN BRIGHTENING' },
+      { value: 'SKIN CLEARING', label: 'SKIN CLEARING' },
+      { value: 'SKIN REJUVENATION', label: 'SKIN REJUVENATION' },
+      { value: 'SKIN TIGHTENING', label: 'SKIN TIGHTENING' },
+      { value: 'STM CELL- HAIR BOOSTER', label: 'STM CELL- HAIR BOOSTER' },
+      { value: 'STMCELL', label: 'STMCELL' },
+      { value: 'XOGEN', label: 'XOGEN' },
+      { value: 'AI HAIR PRO', label: 'AI HAIR PRO' },
+      { value: 'AI HAIR PRO-GH', label: 'AI HAIR PRO-GH' },
+      { value: 'AI HAIR PRO-NH', label: 'AI HAIR PRO-NH' },
+      { value: 'AI HAIR PRO-STM', label: 'AI HAIR PRO-STM' },
+      { value: 'AI SKIN PRO-CLEAR', label: 'AI SKIN PRO-CLEAR' },
+      { value: 'AI SKIN PRO-RENEU', label: 'AI SKIN PRO-RENEU' },
+      { value: 'AI SKIN PRO-YOUTH', label: 'AI SKIN PRO-YOUTH' },
+      { value: 'BFIT INCLINIC', label: 'BFIT INCLINIC' },
+      { value: 'LASER ARMS', label: 'LASER ARMS' },
+      { value: 'LASER CHIN UPPER', label: 'LASER CHIN UPPER' },
+      { value: 'LASER FULL BODY', label: 'LASER FULL BODY' },
+      { value: 'LASER LEGS', label: 'LASER LEGS' },
+      { value: 'LASER LOWER FACE', label: 'LASER LOWER FACE' },
+      { value: 'LASER-MEDIUM PARTS', label: 'LASER-MEDIUM PARTS' },
+      { value: 'LASER-SMALL PARTS', label: 'LASER-SMALL PARTS' },
+      { value: 'LASER-WHOLE BODY', label: 'LASER-WHOLE BODY' },
+      { value: 'MFIT STUDENT EXAM STRESS', label: 'MFIT STUDENT EXAM STRESS' },
+      { value: 'XOGEN ADVANCE', label: 'XOGEN ADVANCE' }
     ];
   } else if (serviceType === 'consultation') {
     return [
@@ -116,53 +156,514 @@ const getSegmentsForService = (serviceType: string) => {
   return [];
 };
 
-const getSubSegmentsForSegment = (_serviceType: string, segment: string) => {
-  // Define sub-segments based on actual database data
+const getSubSegmentsForSegment = (serviceType: string, segment: string) => {
+  // Define sub-segments based on actual medical data for Homeopathy service
   const subSegmentMap: { [key: string]: { value: string; label: string }[] } = {
     'allergy': [
-      { value: 'allergic_rhinitis', label: 'Allergic Rhinitis' },
-      { value: 'skin_allergy', label: 'Skin Allergy' },
-      { value: 'food_allergy', label: 'Food Allergy' }
+      { value: 'allergic_rhinitis', label: 'ALLERGIC RHINITIS' },
+      { value: 'asthma', label: 'ASTHMA' },
+      { value: 'gluten_intolerance', label: 'GLUTEN INTOLERANCE' },
+      { value: 'lactose_intolerance', label: 'LACTOSE INTOLERANCE' },
+      { value: 'protein_allergy', label: 'PROTEIN ALLERGY' }
+    ],
+    'ano_rectal_disorder': [
+      { value: 'piles_fissure_fistula', label: 'PILES /FISSURE / FISTULA' }
+    ],
+    'anorectal_disease': [
+      { value: 'piles_fissure_fistula', label: 'PILES /FISSURE / FISTULA' }
+    ],
+    'b_fit_weight_management': [
+      // No options as specified
+    ],
+    'cancer_malignancy': [
+      { value: 'na', label: 'NA' }
+    ],
+    'cardiovascular': [
+      { value: 'hyperlipidemia', label: 'HYPERLIPIDEMIA' },
+      { value: 'hypertension', label: 'HYPERTENSION' },
+      { value: 'ischaemic_heart_disease', label: 'ISCHAEMIC HEART DISEASE/ LEFT VENTRICULAR FAILURE' },
+      { value: 'pulmonary_hypertension', label: 'PULMONARY HYPERTENSION' },
+      { value: 'restrictive_cardiomyopathy', label: 'RESTRICTIVE CARDIOMYOPATHY' },
+      { value: 'rheumatic_heart_disease', label: 'RHEUMATIC HEART DISEASE' }
     ],
     'children_disorders': [
-      { value: 'growth', label: 'Growth' },
-      { value: 'behavioral', label: 'Behavioral' },
-      { value: 'developmental', label: 'Developmental' }
+      { value: 'attention_deficit_disorder', label: 'ATTENTION DEFICIT DISORDER' },
+      { value: 'autism', label: 'AUTISM' },
+      { value: 'bed_wetting', label: 'BED WETTING' },
+      { value: 'congenital_neurological_problems', label: 'CONGENITAL/NEUROLOGICAL PROBLEMS' },
+      { value: 'gastrointestinal_disorder', label: 'GASTROINTESTINAL DISORDER' },
+      { value: 'growth', label: 'GROWTH' },
+      { value: 'memory', label: 'MEMORY' },
+      { value: 'poor_appetite', label: 'POOR APPETITE' },
+      { value: 'poor_immunity', label: 'POOR IMMUNITY' }
+    ],
+    'circulatory_disorder': [
+      { value: 'dvt', label: 'DVT' },
+      { value: 'haemangioma', label: 'HAEMANGIOMA' },
+      { value: 'varicose_veins', label: 'VARICOSE VEINS' }
+    ],
+    'cns': [
+      { value: 'cerebral_palsy', label: 'CEREBRAL PALSY' },
+      { value: 'epilepsy', label: 'EPILEPSY' },
+      { value: 'vertigo', label: 'VERTIGO' }
     ],
     'de_addiction': [
-      { value: 'digital_addiction', label: 'Digital Addiction' },
-      { value: 'substance_addiction', label: 'Substance Addiction' },
-      { value: 'gambling_addiction', label: 'Gambling Addiction' }
+      { value: 'alcoholism', label: 'ALCOHOLISM' },
+      { value: 'digital_addiction', label: 'DIGITAL ADDICTION' },
+      { value: 'substance_addiction', label: 'SUBSTANCE ADDICTION' }
     ],
     'dentition': [
-      { value: 'caries', label: 'Caries' },
-      { value: 'gum_disease', label: 'Gum Disease' },
-      { value: 'tooth_eruption', label: 'Tooth Eruption' }
+      { value: 'caries', label: 'CARIES' }
+    ],
+    'endocrine': [
+      { value: 'thyroid_disorders', label: 'THYROID DISORDERS' },
+      { value: 'type_1_diabetes_mellitus', label: 'TYPE 1 DIABETES MELLITUS' },
+      { value: 'type_2_diabetes_mellitus', label: 'TYPE 2 DIABETES MELLITUS' }
     ],
     'ent': [
-      { value: 'thyroid_disorders', label: 'Thyroid Disorders' },
-      { value: 'hearing_problems', label: 'Hearing Problems' },
-      { value: 'sinus_issues', label: 'Sinus Issues' }
+      { value: 'nasal_polyps', label: 'NASAL POLYPS' },
+      { value: 'otitis_media', label: 'OTITIS MEDIA' },
+      { value: 'tinnitus', label: 'TINNITUS' }
     ],
     'gastrointestinal': [
-      { value: 'dyspepsia_indigestion', label: 'Dyspepsia/Indigestion' },
-      { value: 'ibs', label: 'IBS' },
-      { value: 'acid_reflux', label: 'Acid Reflux' }
+      { value: 'acid_reflux', label: 'ACID REFLUX' },
+      { value: 'budd_chiari_syndrome', label: 'BUDD CHIARI SYNDROME' },
+      { value: 'chronic_amoebiasis', label: 'CHRONIC AMOEBIASIS' },
+      { value: 'cirrhosis_of_liver', label: 'CIRRHOSIS OF LIVER' },
+      { value: 'constipation', label: 'CONSTIPATION' },
+      { value: 'crohns_disease', label: 'CROHN\'S DISEASE' },
+      { value: 'cryptogenic_liver_disease', label: 'CRYPTOGENIC LIVER DISEASE' },
+      { value: 'diarrhoea', label: 'DIARRHOEA' },
+      { value: 'duodenitis', label: 'DUODENITIS' },
+      { value: 'dyspepsia_indigestion', label: 'DYSPEPSIA / INDIGESTION' },
+      { value: 'gall_bladder_disease', label: 'GALL BLADDER DISEASE' },
+      { value: 'gastritis', label: 'GASTRITIS' },
+      { value: 'heart_burn', label: 'HEART BURN' },
+      { value: 'hiatus_hernia', label: 'HIATUS HERNIA' },
+      { value: 'inflammatory_bowel_disease', label: 'INFLAMMATORY BOWEL DISEASE' },
+      { value: 'liver_fibrosis', label: 'LIVER FIBROSIS' },
+      { value: 'non_ulcer_dyspepsia', label: 'NON ULCER DYSPEPSIA' },
+      { value: 'peptic_ulcers', label: 'PEPTIC ULCERS' },
+      { value: 'recurrent_apthae', label: 'RECURRENT APTHAE' },
+      { value: 'ulcerative_colitis', label: 'ULCERATIVE COLITIS' }
+    ],
+    'haematological': [
+      { value: 'aplastic_anaemia', label: 'APLASTIC ANAEMIA' },
+      { value: 'chronic_myeloid_leukaemia', label: 'CHRONIC MYELOID LEUKAEMIA' },
+      { value: 'non_hodgkins_lymphoma', label: 'NON-HODGKINS LYMPHOMA' },
+      { value: 'thalassaemia', label: 'THALASSAEMIA' },
+      { value: 'von_willebrands_disease', label: 'VON WILLEBRANDS DISEASE' }
+    ],
+    'hair': [
+      { value: 'androgenetic_alopecia_female', label: 'Androgenetic Alopecia Female' },
+      { value: 'androgenetic_alopecia_male', label: 'Androgenetic Alopecia Male' },
+      { value: 'canities', label: 'CANITIES' },
+      { value: 'nits_pediculosis_capitis', label: 'NITS/ PEDICULOSIS CAPITIS' },
+      { value: 'patchy_hair_loss', label: 'PATCHY HAIR LOSS' },
+      { value: 'telogen_effluvium', label: 'TELOGEN EFFLUVIUM' },
+      { value: 'trichotillomania', label: 'TRICHOTILLOMANIA' },
+      { value: 'wooly_hair_syndrome', label: 'WOOLY HAIR SYNDROME' }
+    ],
+    'mindfit': [
+      { value: 'others', label: 'OTHERS' }
+    ],
+    'musculoskeletal_system': [
+      { value: 'ankylosing_spondylitis', label: 'ANKYLOSING SPONDYLITIS' },
+      { value: 'arthritis', label: 'ARTHRITIS' },
+      { value: 'backache', label: 'BACKACHE' },
+      { value: 'ganglion', label: 'GANGLION' },
+      { value: 'gout', label: 'GOUT' },
+      { value: 'lumbago', label: 'LUMBAGO' },
+      { value: 'mixed_connective_tissue_disease', label: 'MIXED CONNECTIVE TISSUE DISEASE' },
+      { value: 'multiple_sclerosis', label: 'MULTIPLE SCLEROSIS' },
+      { value: 'muscular_dystrophy_myopathy', label: 'MUSCULAR DYSTRYOPHY OR MYOPATHY' },
+      { value: 'prolapsed_intervertebral_disc', label: 'PROLAPSED INTERVERTEBRAL DISC (PID)' },
+      { value: 'rheumatoid_arthritis', label: 'RHEUMATOID ARTHRITIS' },
+      { value: 'stills_disease', label: 'STILLS DISEASE' },
+      { value: 'systematic_lupus_erythematosus', label: 'SYSTEMATIC LUPUS ERYTHEMATOSUS' }
+    ],
+    'neurological': [
+      { value: 'alzheimers', label: 'ALZHEIMERS' },
+      { value: 'ataxia', label: 'ATAXIA' },
+      { value: 'bells_palsy', label: 'BELL\'S PALSY' },
+      { value: 'cerebral_space_occupying_lesion', label: 'CEREBRAL SPACE OCCUPYING LESION' },
+      { value: 'cervical_spondylitis', label: 'CERVICAL SPONDYLITIS' },
+      { value: 'epilepsy', label: 'EPILEPSY' },
+      { value: 'guillain_barre_syndrome', label: 'GUILLAIN BARRE SYNDROME' },
+      { value: 'parkinsons_disease', label: 'PARKINSONS DISEASE' },
+      { value: 'petit_mal_epilepsy', label: 'PETIT MAL EPILEPSY' },
+      { value: 'spastic_cerebral_palsy', label: 'SPASTIC CEREBRAL PALSY' },
+      { value: 'trigeminal_neuralgia', label: 'TRIGEMINAL NEURALGIA' }
+    ],
+    'ophthalmological_disorder': [
+      { value: 'central_serous_retinopathy', label: 'CENTRAL SEROUS RETINOPATHY' },
+      { value: 'myopia', label: 'MYOPIA' }
+    ],
+    'pain_management': [
+      { value: 'achilles_tendinitis_pain', label: 'ACHILLES TENDINITIS PAIN ( ANKLE PAIN)' },
+      { value: 'ankylosing_spondylosis_pain', label: 'ANKYLOSING SPONDYLOSIS PAIN' },
+      { value: 'appendicitis_pain', label: 'APPENDICITIS PAIN' },
+      { value: 'blepharitis_pain', label: 'BLEPAHARITIS PAIN' },
+      { value: 'carpal_tunnel_syndrome_pain', label: 'CARPAL TUNNEL SYNDROME PAIN' },
+      { value: 'cervical_spondylosis_pain', label: 'CERVICAL SPONDYLOSIS PAIN' },
+      { value: 'cluster_headache_pain', label: 'CLUSTER HEADACHE PAIN' },
+      { value: 'conjunctivitis_pain', label: 'CONJUNCTIVITIS PAIN' },
+      { value: 'dental_pain', label: 'DENTAL PAIN' },
+      { value: 'encephalitis_pain', label: 'ENCEPHALITIS PAIN' },
+      { value: 'facial_neuralgia_pain', label: 'FACIAL NEURALGIA PAIN' },
+      { value: 'fibromyalgia_pain', label: 'FIBROMYELGIA PAIN' },
+      { value: 'frozen_shoulder_pain', label: 'FROZEN SHOULER PAIN' },
+      { value: 'gall_bladder_colic_pain', label: 'GALL BLADDER COLIC PAIN' },
+      { value: 'gastritis_pain', label: 'GASTRITIS PAIN' },
+      { value: 'gout_pain', label: 'GOUT PAIN' },
+      { value: 'growing_pain', label: 'GROWING PAIN ( PAIN IN LEGS /KNEE IN KIDS)' },
+      { value: 'hairline_fracture_pain', label: 'HAIRLINE FRACTURE PAIN' },
+      { value: 'hip_pain_sacro_ilitis', label: 'HIP PAIN / SACRO ILITIS PAIN ( SERO NEGATIVE SPONDYLOARTHROPATHY)' },
+      { value: 'iritis_pain', label: 'IRITIS PAIN' },
+      { value: 'juvenile_ra_pain', label: 'JUVENILE RA PAIN' },
+      { value: 'labyrinthitis_pain', label: 'LABYNTHINITIS PAIN' },
+      { value: 'lumbar_prolapse_disc_pain', label: 'LUMBAR PROLAPSE DISC PAIN ( SCIATICA)' },
+      { value: 'lumbar_spondylosis_pain', label: 'LUMBAR SPONDYLOSIS PAIN' },
+      { value: 'mastoiditis_pain', label: 'MASTOIDITIS PAIN' },
+      { value: 'meningitis_pain', label: 'MENINGITIS PAIN' },
+      { value: 'migraine_pain', label: 'MIGRAINE PAIN' },
+      { value: 'neuralgia_pain', label: 'NEURALGIA PAIN' },
+      { value: 'optic_neuritis_pain', label: 'OPTIC NEURITIS PAIN' },
+      { value: 'osteo_arthritis_pain', label: 'OSTEO ARTHRITIS PAIN' },
+      { value: 'osteo_malacia_pain', label: 'OSTEO MALACIA PAIN' },
+      { value: 'osteomyelitis_pain', label: 'OSTEOMYELITIS PAIN' },
+      { value: 'otitis_media_pain', label: 'OTITIS MEDIA PAIN' },
+      { value: 'peripheral_neuritis_pain', label: 'PERIPHERAL NEURITIS PAIN' },
+      { value: 'phantom_pain', label: 'PHANTOM PAIN (POST AMPUTATION)' },
+      { value: 'plantar_fasciitis_pain', label: 'PLANTAR FASCIITIS ( PAIN IN HEELS)' },
+      { value: 'post_radiation_pain', label: 'POST RADIATION PAIN' },
+      { value: 'post_surgical_pain', label: 'POST SURGICAL PAIN' },
+      { value: 'post_traumatic_pain', label: 'POST TRAUMATIC PAIN' },
+      { value: 'renal_colic_pain', label: 'RENAL COLIC PAIN' },
+      { value: 'rheumatoid_arthritis_pain', label: 'RHEUMATOID ARTHRITIS PAIN' },
+      { value: 'rib_pain', label: 'RIB PAIN (COSTOCHONDRITIS)' },
+      { value: 'scalp_folliculitis_pain', label: 'SCALP FOLLICULITIS PAIN' },
+      { value: 'sinusitis_pain', label: 'SINUSITIS PAIN' },
+      { value: 'sprain_pain', label: 'SPRAIN PAIN' },
+      { value: 'stye_pain', label: 'STYE PAIN' },
+      { value: 'tennis_elbow_pain', label: 'TENNIS ELBOW PAIN' },
+      { value: 'tension_headache_pain', label: 'TENSION HEADACHE PAIN' },
+      { value: 'tmj_syndrome_pain', label: 'TMJ SYNDROME PAIN' },
+      { value: 'trapezitis_pain', label: 'TRAPEZITIS PAIN' },
+      { value: 'trigeminal_neuralgia_pain', label: 'TRIGEMINAL NERUALGIA PAIN' },
+      { value: 'uveitis_pain', label: 'UVEITIS PAIN' }
+    ],
+    'post_covid_ailments': [
+      { value: 'na', label: 'NA' }
+    ],
+    'psychiatric': [
+      { value: 'anxiety_neurosis', label: 'ANXIETY NEUROSIS' },
+      { value: 'conversion_reaction', label: 'CONVERSION REACTION' },
+      { value: 'mental_retardation', label: 'MENTAL RETARDATION' },
+      { value: 'panic_disorder', label: 'PANIC DISORDER' },
+      { value: 'schizophrenia', label: 'SCHIZOPHRENIA' }
+    ],
+    'renal': [
+      { value: 'acute_renal_failure', label: 'ACUTE RENAL FAILURE' },
+      { value: 'chronic_cystitis', label: 'CHRONIC CYSTITIS' },
+      { value: 'chronic_renal_failure', label: 'CHRONIC RENAL FAILURE' },
+      { value: 'glomerular_nephritis', label: 'GLOMERULAR NEPHRITIS' },
+      { value: 'nephritic_syndrome', label: 'NEPHRITIC SYNDROME' },
+      { value: 'polycystic_renal_disease', label: 'POLYCYSTIC RENAL DISEASE' },
+      { value: 'renal_calculus', label: 'RENAL CALCULUS' },
+      { value: 'renal_stones', label: 'RENAL STONES' },
+      { value: 'simple_renal_cyst', label: 'SIMPLE RENAL CYST' },
+      { value: 'urinary_tract_infection', label: 'URINARY TRACT INFECTION' }
+    ],
+    'respiratory': [
+      { value: 'allergic_bronchitis', label: 'ALLERGIC BRONCHITIS' },
+      { value: 'aspergillosis', label: 'ASPERGILLOSIS' },
+      { value: 'bronchiectasis', label: 'BRONCHIECTASIS' },
+      { value: 'chronic_bronchitis', label: 'CHRONIC BRONCHITIS' },
+      { value: 'chronic_laryngitis', label: 'CHRONIC LARYNGITIS' },
+      { value: 'copd', label: 'COPD' },
+      { value: 'cystic_fibrosis', label: 'CYSTIC FIBROSIS' },
+      { value: 'interstitial_lung_disease', label: 'INTERSTITIAL LUNG DISEASE' },
+      { value: 'pulmonary_kochs', label: 'PULMONARY KOCHS' },
+      { value: 'recurrent_pharyngitis', label: 'RECURRENT PHARYNGITIS' },
+      { value: 'sarcoidosis', label: 'SARCOIDOSIS' },
+      { value: 'sinusitis', label: 'SINUSITIS' },
+      { value: 'sleep_apnoea', label: 'SLEEP APNOEA' },
+      { value: 'tonsillitis', label: 'TONSILLITIS' },
+      { value: 'wegeners_granulomatosis', label: 'WEGENERS GRANULOMATOSIS PROTOCOL' }
+    ],
+    'rheumatology': [
+      { value: 'juvenile_rheumatic_arthritis', label: 'JUVENIAL RHEUMATIC ARTHRITIS' },
+      { value: 'rheumatic_fever', label: 'RHEUMATIC FEVER' }
+    ],
+    'sexual_health': [
+      { value: 'erectile_dysfunction', label: 'ERECTILE DYSFUNCTION' },
+      { value: 'female_sexual_health', label: 'FEMALE SEXUAL HEALTH' },
+      { value: 'genital_warts', label: 'GENITAL WARTS' },
+      { value: 'genital_herpes', label: 'GENTIAL HERPES' },
+      { value: 'male_infertility', label: 'MALE INFERTILITY' },
+      { value: 'male_sexual_health', label: 'MALE SEXUAL HEALTH' },
+      { value: 'premature_ejaculation', label: 'PREMATURE EJACULATION' },
+      { value: 'syphilis', label: 'SYPHILIS' },
+      { value: 'varicocele', label: 'VARICOCELE' }
+    ],
+    'skin': [
+      { value: 'acne', label: 'ACNE' },
+      { value: 'acne_rosacea', label: 'ACNE ROSACEA' },
+      { value: 'acrochordons', label: 'ACROCORDONS' },
+      { value: 'acrokeratosis_verruciformis', label: 'ACROKERATOSIS VERRUCIFORMIS' },
+      { value: 'acropigmentation', label: 'ACROPIGMENTATION' },
+      { value: 'amyloidosis', label: 'AMYLOIDOSIS' },
+      { value: 'ashy_dermatosis', label: 'ASHY DERMATOSIS' },
+      { value: 'atopic_dermatitis', label: 'ATOPIC DERMATITIS' },
+      { value: 'bed_sores', label: 'BED SORES / DECUBITUS ULCERS' },
+      { value: 'bromhidrosis', label: 'BROMHIDROSIS' },
+      { value: 'bullous_pemphigoid', label: 'BULLOUS PEMPHIGOID' },
+      { value: 'carbuncle', label: 'CARBUNCLE' },
+      { value: 'chalazion', label: 'CHALAZION' },
+      { value: 'chicken_pox', label: 'CHICKEN POX' },
+      { value: 'chilblains', label: 'CHILBLAINS' },
+      { value: 'cicatrix', label: 'CICATRIX' },
+      { value: 'corns', label: 'CORNS' },
+      { value: 'cutaneous_candidiasis', label: 'CUTANEOUS CANDIDIASIS' },
+      { value: 'dandruff', label: 'DANDRUFF' },
+      { value: 'dariers_disease', label: 'DARIERS DISEASE' },
+      { value: 'dermatitis_herpetiformis', label: 'DERMATITIS HERPETIFORMIS' },
+      { value: 'dermatomyositis', label: 'DERMATOMYOSITIS' },
+      { value: 'dermatosis_papulosa_nigra', label: 'DERMATOSIS PAPULOSA NIGRA' },
+      { value: 'eczema', label: 'ECZEMA' },
+      { value: 'epidermolysis_bullosa', label: 'EPIDERMOLYSIS BULLOSA' },
+      { value: 'eruptive_xanthoma', label: 'ERUPTIVE XANTHOMA' },
+      { value: 'folliculitis_decalvans', label: 'FOLLICULITIS DECALVANS' },
+      { value: 'freckles', label: 'FRECKLES' },
+      { value: 'fungal', label: 'FUNGAL' },
+      { value: 'granuloma_annulare', label: 'GRANULOMA ANNULARE' },
+      { value: 'hansens', label: 'HANSENS' },
+      { value: 'henoch_schonlein_purpura', label: 'HENOCH-SCHONLEIN PURPURA' },
+      { value: 'herpes_simplex', label: 'HERPES SIMPLEX' },
+      { value: 'herpes_zoster', label: 'HERPES ZOSTER' },
+      { value: 'hidradenitis_suppurativa', label: 'HIDRADENITIS SUPPURATIVA' },
+      { value: 'hyperhidrosis', label: 'HYPERHIDROSIS' },
+      { value: 'hyperpigmentation', label: 'HYPERPIGMENTATION' },
+      { value: 'ichthyosis', label: 'ICTHYOSIS' },
+      { value: 'idiopathic_guttate_hypomelanosis', label: 'IDIOPATHIC GUTTATE HYPOMELANOSIS' },
+      { value: 'keloids', label: 'KELOIDS' },
+      { value: 'keratoderma', label: 'KERATODERMA' },
+      { value: 'keratosis_pilaris', label: 'KERATOSIS PILARIS' },
+      { value: 'lentigenes', label: 'LENTIGENES' },
+      { value: 'leprosy_ulcer', label: 'LEPROSY ULCER' },
+      { value: 'lichen_planus', label: 'LICHEN PLANUS' },
+      { value: 'lichen_striatus', label: 'LICHEN STRIATUS' },
+      { value: 'lipoid_proteinosis', label: 'LIPOID PROTEINOSIS' },
+      { value: 'lipoma', label: 'LIPOMA' },
+      { value: 'lupus', label: 'LUPUS' },
+      { value: 'macular_amyloidosis', label: 'MACULAR AMYLOIDOSIS' },
+      { value: 'melasma', label: 'MELASMA' },
+      { value: 'milia', label: 'MILIA' },
+      { value: 'miliaria', label: 'MILIARIA' },
+      { value: 'moles', label: 'MOLES' },
+      { value: 'molluscum_contagiosum', label: 'MOLLUSCUM CONTAGIOSUM' },
+      { value: 'morphoea', label: 'MORPHOEA' },
+      { value: 'neurofibromatosis', label: 'NEUROFIBROMATOSIS' },
+      { value: 'nevus', label: 'NEVUS' },
+      { value: 'onychomycosis', label: 'ONYCHOMYCOSIS' },
+      { value: 'papilloma', label: 'PAPILLOMA' },
+      { value: 'papular_sarcoidosis', label: 'PAPULAR SARCOIDOSIS' },
+      { value: 'pemphigus', label: 'PEMPHIGUS' },
+      { value: 'phrynoderma', label: 'PHRYNODERMA' },
+      { value: 'pityriasis_alba', label: 'PITYRIASIS ALBA' },
+      { value: 'pityriasis_rubra_pilaris', label: 'PITYRIASIS RUBRA PILARIS' },
+      { value: 'pityriasis_versicolor', label: 'PITYRIASIS VERSICOLOR' },
+      { value: 'plantar_warts', label: 'PLANTAR WARTS' },
+      { value: 'pleva', label: 'PLEVA' },
+      { value: 'polymorphous_light_eruption', label: 'POLYMORPHOUS LIGHT ERUPTION' },
+      { value: 'pompholyx', label: 'POMPHOYLX' },
+      { value: 'prokeratosis', label: 'PROKERATOSIS' },
+      { value: 'prurigo_nodularis', label: 'PRURIGO NODULARIS' },
+      { value: 'psoriasis', label: 'PSORIASIS' },
+      { value: 'scabies', label: 'SCABIES' },
+      { value: 'schambergs_purpura', label: 'SCHAMBERGS PURPURA' },
+      { value: 'scleroderma', label: 'SCLERODERMA' },
+      { value: 'sebaceous_cyst', label: 'SEBACIOUS CYST' },
+      { value: 'seborrhoeic_dermatitis', label: 'SEBORRHOEIC DERMATITIS' },
+      { value: 'stretch_marks', label: 'STRETCH MARKS/STRIAE DISTENSAE' },
+      { value: 'subcorneal_pustular_dermatosis', label: 'SUBCORNEAL PUSTULAR DERMATOSIS' },
+      { value: 'tinea', label: 'TINEA' },
+      { value: 'tuberous_sclerosis', label: 'TUBEROUS SCLEROSIS' },
+      { value: 'urticaria', label: 'URTICARIA' },
+      { value: 'vasculitis', label: 'VASCULITIS' },
+      { value: 'vitiligo', label: 'VITILIGO' },
+      { value: 'warts', label: 'WARTS' },
+      { value: 'xanthelasma', label: 'XANTHELASMA' },
+      { value: 'xeroderma_pigmentosum', label: 'XERODERMA PIGMENTOSUM' }
+    ],
+    'speech_disorder': [
+      { value: 'stammering', label: 'STAMMERING' }
+    ],
+    'stress_management': [
+      { value: 'anxiety', label: 'ANXIETY' },
+      { value: 'depression', label: 'DEPRESSION' },
+      { value: 'insomnia', label: 'INSOMIA' },
+      { value: 'irritable_bowel_syndrome', label: 'IRRITABLE BOWEL SYNDROME' },
+      { value: 'migraine', label: 'MIGRAINE' }
+    ],
+    'teen_and_adolescence': [
+      { value: 'addictions', label: 'ADDICTIONS' },
+      { value: 'anorexia_bulimia', label: 'ANOREXIA /BULIMIA' }
     ],
     'urinary': [
-      { value: 'kidney_stones', label: 'Kidney Stones' },
-      { value: 'uti', label: 'UTI' },
-      { value: 'prostate_issues', label: 'Prostate Issues' }
+      { value: 'benign_prostatic_hypertrophy', label: 'BENIGN PROSTATIC HYPERTROPHY (BPH)' },
+      { value: 'kidney_stones', label: 'KIDNEY STONES' },
+      { value: 'stress_incontinence', label: 'STRESS INCONTINENCE' },
+      { value: 'urinary_tract_infection', label: 'URINARY TRACT INFECTION' }
     ],
     'weight_management': [
-      { value: 'under_weight', label: 'Under Weight' },
-      { value: 'over_weight', label: 'Over Weight' },
-      { value: 'obesity', label: 'Obesity' }
+      { value: 'obesity', label: 'OBESITY' },
+      { value: 'weight_management', label: 'WEIGHT MANAGEMENT' }
+    ],
+    'womens_health': [
+      { value: 'dysmenorrhea', label: 'DYSMENORRHEA' },
+      { value: 'endometriosis', label: 'ENDOMETRIOSIS' },
+      { value: 'fibroadenoma', label: 'FIBROADENOMA' },
+      { value: 'infertility', label: 'INFERTILITY' },
+      { value: 'leucorrhoea', label: 'LEUCORRHOEA' },
+      { value: 'menopause', label: 'MENOPAUSE' },
+      { value: 'osteoporosis', label: 'OSTEOPOROSIS' },
+      { value: 'pcos', label: 'PCOS' },
+      { value: 'pms', label: 'PMS' },
+      { value: 'pregnancy', label: 'PREGNANCY' },
+      { value: 'thyroid_disorders', label: 'THYROID DISORDERS' },
+      { value: 'uterine_fibroids', label: 'UTERINE FIBROIDS' },
+      { value: 'uterine_prolapse', label: 'UTERINE PROLAPSE' },
+      { value: 'vaginal_prolapse', label: 'VAGINAL PROLAPSE' }
     ],
     'general': [
       { value: 'general_consultation', label: 'General Consultation' },
       { value: 'health_checkup', label: 'Health Checkup' }
-    ]
+    ],
+    // Aesthetics sub-segments
+    'AI SKIN PRO': [
+      { value: 'ACNE', label: 'ACNE' },
+      { value: 'HYPERPIGMENTATION', label: 'HYPERPIGMENTATION' },
+      { value: 'MELASMA', label: 'MELASMA' },
+      { value: 'PREMATURE AGEING', label: 'PREMATURE AGEING' }
+    ],
+    'AI SKIN PRO-BRIGHT': [
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    'B-FIT SUGA CONTROL': [
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    'B-FIT WEIGHT MANAGEMENT': [
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    'DERMAHEAL': [
+      { value: 'DERMATITIS', label: 'DERMATITIS' },
+      { value: 'PSORIASIS', label: 'PSORIASIS' },
+      { value: 'VITILIGO', label: 'VITILIGO' }
+    ],
+    'GROHAIR': [
+      { value: 'AGA FEMALE', label: 'AGA FEMALE' },
+      { value: 'AGA MALE', label: 'AGA MALE' },
+      { value: 'ATE', label: 'ATE' },
+      { value: 'CTE', label: 'CTE' },
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    'GROHAIR- HAIR BOOSTER': [
+      { value: 'AGA FEMALE', label: 'AGA FEMALE' },
+      { value: 'AGA MALE', label: 'AGA MALE' },
+      { value: 'ATE', label: 'ATE' },
+      { value: 'CTE', label: 'CTE' }
+    ],
+    'HAIR BOOSTER': [
+      { value: 'AGA FEMALE', label: 'AGA FEMALE' },
+      { value: 'AGA MALE', label: 'AGA MALE' },
+      { value: 'ATE', label: 'ATE' },
+      { value: 'CTE', label: 'CTE' }
+    ],
+    'HVT': [
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    'LASER': [
+      { value: 'HAIR REMOVAL', label: 'HAIR REMOVAL' },
+      { value: 'PCOD', label: 'PCOD' }
+    ],
+    'MFIT ANXIETY': [
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    'MFIT DEPRESSION': [
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    'MFIT STRESS': [
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    'NEW HAIR': [
+      { value: 'AGA FEMALE', label: 'AGA FEMALE' },
+      { value: 'AGA MALE', label: 'AGA MALE' },
+      { value: 'ATE', label: 'ATE' },
+      { value: 'CTE', label: 'CTE' }
+    ],
+    'NEW HAIR- HAIR BOOSTER': [
+      { value: 'AGA FEMALE', label: 'AGA FEMALE' },
+      { value: 'AGA MALE', label: 'AGA MALE' },
+      { value: 'ATE', label: 'ATE' },
+      { value: 'CTE', label: 'CTE' }
+    ],
+    'QUIKHAIR': [
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    'SKIN': [
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    'SKIN BRIGHTENING': [
+      { value: 'HYPERPIGMENTATION', label: 'HYPERPIGMENTATION' },
+      { value: 'MELASMA', label: 'MELASMA' },
+      { value: 'SUN TANNING', label: 'SUN TANNING' }
+    ],
+    'SKIN CLEARING': [
+      { value: 'ACNE', label: 'ACNE' }
+    ],
+    'SKIN REJUVENATION': [
+      { value: 'UNEVEN SKIN TONE', label: 'UNEVEN SKIN TONE' }
+    ],
+    'SKIN TIGHTENING': [
+      { value: 'PREMATURE AGEING', label: 'PREMATURE AGEING' }
+    ],
+    'STM CELL- HAIR BOOSTER': [
+      { value: 'AGA FEMALE', label: 'AGA FEMALE' },
+      { value: 'AGA MALE', label: 'AGA MALE' },
+      { value: 'ATE', label: 'ATE' },
+      { value: 'CTE', label: 'CTE' }
+    ],
+    'STMCELL': [
+      { value: 'AGA FEMALE', label: 'AGA FEMALE' },
+      { value: 'AGA MALE', label: 'AGA MALE' },
+      { value: 'ATE', label: 'ATE' },
+      { value: 'CTE', label: 'CTE' },
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    'XOGEN': [
+      { value: 'OTHERS', label: 'OTHERS' }
+    ],
+    // Services with no sub-options
+    'AI HAIR PRO': [],
+    'AI HAIR PRO-GH': [],
+    'AI HAIR PRO-NH': [],
+    'AI HAIR PRO-STM': [],
+    'AI SKIN PRO-CLEAR': [],
+    'AI SKIN PRO-RENEU': [],
+    'AI SKIN PRO-YOUTH': [],
+    'BFIT INCLINIC': [],
+    'LASER ARMS': [],
+    'LASER CHIN UPPER': [],
+    'LASER FULL BODY': [],
+    'LASER LEGS': [],
+    'LASER LOWER FACE': [],
+    'LASER-MEDIUM PARTS': [],
+    'LASER-SMALL PARTS': [],
+    'LASER-WHOLE BODY': [],
+    'MFIT STUDENT EXAM STRESS': [],
+    'XOGEN ADVANCE': []
   };
 
   return subSegmentMap[segment] || [];
@@ -216,9 +717,15 @@ export function ConsultationEditModal({
 
 
   // Memoized callback for multiple prescription updates
-  const handleMultiplePrescriptionsUpdate = useCallback((prescriptions: PrescriptionDrug[]) => {
-
-    setMultiplePrescriptions(prescriptions);
+  const handleMultiplePrescriptionsUpdate = useCallback((prescriptions: any[]) => {
+    // Map the form data to the database format
+    const mappedPrescriptions = prescriptions.map(p => ({
+      ...p,
+      repetition_frequency: p.repeat_start ? parseInt(p.repeat_start) : null,
+      repetition_interval: p.repeat_end ? parseInt(p.repeat_end) : null,
+      repetition_unit: p.repeat_type || null
+    }));
+    setMultiplePrescriptions(mappedPrescriptions);
   }, []);
 
   // Load multiple prescriptions when consultation changes
@@ -484,7 +991,7 @@ export function ConsultationEditModal({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('PDF Generation Error:', error);
+
       alert(`Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     } finally {
       setIsGeneratingPDF(false);
@@ -508,7 +1015,7 @@ export function ConsultationEditModal({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('PDF Generation Error:', error);
+
       alert(`Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     } finally {
       setIsGeneratingPDF(false);

@@ -65,8 +65,6 @@ class AIDevelopmentWorkflow {
   }
 
   async runWorkflow(type, options = {}) {
-    console.log(`🚀 Starting ${type} workflow...`);
-    
     const workflow = this.config.workflows[type];
     if (!workflow) {
       throw new Error(`Unknown workflow type: ${type}`);
@@ -79,13 +77,9 @@ class AIDevelopmentWorkflow {
     if (workflow.autoCommit) {
       await this.autoCommit(type, options);
     }
-
-    console.log(`✅ ${type} workflow completed successfully!`);
   }
 
   async executeStep(step, options) {
-    console.log(`📋 Executing step: ${step}`);
-    
     switch (step) {
       case 'plan':
         await this.generatePlan(options);
@@ -112,55 +106,43 @@ class AIDevelopmentWorkflow {
         await this.validateChanges(options);
         break;
       default:
-        console.log(`⚠️ Unknown step: ${step}`);
     }
   }
 
   async generatePlan(options) {
     const prompt = `Create a detailed development plan for: ${options.description || 'new feature'}`;
-    console.log(`🤖 AI Planning: ${prompt}`);
     // This would integrate with Cursor's AI API
   }
 
   async setupDatabase(options) {
-    console.log('🗄️ Setting up database schema...');
     // This would use Supabase MCP tools
   }
 
   async generateComponents(options) {
-    console.log('⚛️ Generating React components...');
     // This would use Cursor's Composer
   }
 
   async generateTests(options) {
-    console.log('🧪 Generating tests...');
     // This would use the testing MCP tools
   }
 
   async generateDocs(options) {
-    console.log('📚 Generating documentation...');
     // This would use documentation MCP tools
   }
 
   async analyzeCode(options) {
-    console.log('🔍 Analyzing code...');
     // This would use codebase analysis tools
   }
 
   async implementFix(options) {
-    console.log('🔧 Implementing fix...');
     // This would use Cursor's Composer
   }
 
   async validateChanges(options) {
-    console.log('✅ Validating changes...');
-    
     // Run quality checks
     try {
       execSync('npm run quality:check', { stdio: 'inherit' });
-      console.log('✅ Quality checks passed');
     } catch (error) {
-      console.error('❌ Quality checks failed');
       throw error;
     }
   }
@@ -169,7 +151,6 @@ class AIDevelopmentWorkflow {
     const message = `feat: ${type} - ${options.description || 'automated changes'}`;
     try {
       execSync(`git add . && git commit -m "${message}"`, { stdio: 'inherit' });
-      console.log(`📝 Auto-committed: ${message}`);
     } catch (error) {
       console.log('⚠️ Auto-commit failed (no changes to commit)');
     }
@@ -189,8 +170,6 @@ class AIDevelopmentWorkflow {
   }
 
   async runQualityCheck() {
-    console.log('🔍 Running comprehensive quality check...');
-    
     const checks = [
       'npm run type-check',
       'npm run lint',
@@ -202,9 +181,7 @@ class AIDevelopmentWorkflow {
     for (const check of checks) {
       try {
         execSync(check, { stdio: 'inherit' });
-        console.log(`✅ ${check} passed`);
       } catch (error) {
-        console.error(`❌ ${check} failed`);
         throw error;
       }
     }
@@ -230,25 +207,12 @@ if (require.main === module) {
       workflow.runQualityCheck();
       break;
     default:
-      console.log(`
-🚀 AI Development Workflow
-
-Usage:
-  node scripts/ai-development-workflow.js <command> [options]
-
-Commands:
-  feature <name> <description>  - Create a new feature
-  bugfix <description>          - Fix a bug
-  refactor <description>        - Refactor code
-  quality                       - Run quality checks
-
-Examples:
-  node scripts/ai-development-workflow.js feature "appointment-scheduling" "Add appointment booking system"
-  node scripts/ai-development-workflow.js bugfix "Fix authentication timeout issue"
-  node scripts/ai-development-workflow.js quality
-      `);
   }
 }
 
 module.exports = AIDevelopmentWorkflow;
+
+
+
+
 

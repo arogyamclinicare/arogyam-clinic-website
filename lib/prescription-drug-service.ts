@@ -10,17 +10,12 @@ export class PrescriptionDrugService {
    */
   static async getPrescriptionDrugs(consultationId: string): Promise<any[]> {
     try {
-      console.log('Fetching prescription drugs for consultation:', consultationId);
-      
       // First try to get from prescription_drugs table (new approach)
       const { data: prescriptionData, error: prescriptionError } = await getSupabaseAdmin()
         .from('prescription_drugs')
         .select('*')
         .eq('consultation_id', consultationId)
         .order('created_at', { ascending: true });
-
-      console.log('Prescription drugs query result:', { prescriptionData, prescriptionError });
-
       if (!prescriptionError && prescriptionData && prescriptionData.length > 0) {
         return prescriptionData;
       }

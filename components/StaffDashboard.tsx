@@ -165,7 +165,7 @@ const StaffDashboard: React.FC = () => {
       const { data: consultationsData, error: consultationsError } = await supabase
         .from('consultations')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }); // Newest first
 
       if (consultationsError) {
     // Empty block

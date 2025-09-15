@@ -46,7 +46,7 @@ export function PrescriptionDrugForm({ initialPrescription, onPrescriptionUpdate
       prescription_remarks: ''
     };
   });
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialPrescription?.drug_name || '');
   const [isInputFocused, setIsInputFocused] = useState(false);
   const isInitializing = useRef(true);
 
@@ -58,6 +58,13 @@ export function PrescriptionDrugForm({ initialPrescription, onPrescriptionUpdate
       isInitializing.current = false;
     }, 100);
   }, []);
+
+  // Update search query when initial prescription changes
+  useEffect(() => {
+    if (initialPrescription?.drug_name) {
+      setSearchQuery(initialPrescription.drug_name);
+    }
+  }, [initialPrescription]);
 
 
 
@@ -136,7 +143,7 @@ export function PrescriptionDrugForm({ initialPrescription, onPrescriptionUpdate
             <div className="relative">
               <input
                 type="text"
-                value={currentPrescription.drug_name}
+                value={searchQuery !== undefined ? searchQuery : currentPrescription.drug_name}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   handleInputChange('drug_name', e.target.value);
@@ -161,9 +168,10 @@ export function PrescriptionDrugForm({ initialPrescription, onPrescriptionUpdate
                  {filteredTemplates.slice(0, 50).map((template) => (
                    <div
                      key={template.id}
-                     onClick={() => {
+                     onMouseDown={(e) => {
+                       e.preventDefault(); // Prevent input blur
                        handleInputChange('drug_name', template.drug_name);
-                       setSearchQuery('');
+                       setSearchQuery(template.drug_name);
                        setIsInputFocused(false);
                      }}
                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"

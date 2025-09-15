@@ -83,3 +83,7 @@ echo "1. Update the configuration file with your API keys"
 echo "2. Restart Cursor to load the new MCP tools"
 echo "3. Test the tools with: @mcp list available tools"
 
+
+
+
+
