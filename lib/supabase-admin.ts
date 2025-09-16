@@ -7,7 +7,7 @@ import type { Database } from './supabase'
 let supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://mvmbbpjtyrjmoccoajmt.supabase.co'
 // SECURITY: Service role key should NEVER be in client-side code
 // This should only be used in server-side/admin contexts
-let supabaseServiceKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+let supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
 
 // Environment variables loaded securely
 
@@ -16,7 +16,7 @@ if (!supabaseUrl) {
   throw new Error('Missing VITE_SUPABASE_URL environment variable')
 }
 if (!supabaseServiceKey) {
-  throw new Error('Missing VITE_SUPABASE_ANON_KEY environment variable')
+  throw new Error('Missing VITE_SUPABASE_SERVICE_ROLE_KEY environment variable')
 }
 
 // Singleton pattern to ensure only one admin client is ever created

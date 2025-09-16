@@ -219,15 +219,15 @@ export class NewPDFGenerator {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     
-    // Line 1: Sub-Finding — Clinical Finding (same line like Patient Information)
-    const subFindingX = margin;
-    const clinicalFindingX = margin + 200;
-    
-    doc.text("Sub-Finding —", subFindingX, y);
-    doc.text(consultation.sub_segment || "________________", subFindingX + 100, y);
+    // Line 1: Clinical Finding — Sub-Finding (same line like Patient Information)
+    const clinicalFindingX = margin;
+    const subFindingX = margin + 200;
     
     doc.text("Clinical Finding —", clinicalFindingX, y);
     doc.text(consultation.segment || "________________", clinicalFindingX + 100, y);
+    
+    doc.text("Sub-Finding —", subFindingX, y);
+    doc.text(consultation.sub_segment || "________________", subFindingX + 100, y);
 
     y += 40;
 

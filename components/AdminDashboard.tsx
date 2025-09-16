@@ -204,12 +204,82 @@ export function AdminDashboard() {
     }
   }, [activeTab]);
 
-  // DISABLED REAL-TIME SUBSCRIPTION TO PREVENT CROSS-CONTAMINATION
-  // Real-time updates were causing leads to move between sections incorrectly
-  // Manual updates will handle all state changes properly
+  // Set up real-time subscription for live updates
   useEffect(() => {
-    // Set status to indicate manual mode
-    setRealtimeStatus('manual');
+    let channel: any = null;
+    
+    const setupRealtime = async () => {
+      try {
+        setRealtimeStatus('connecting');
+        const client = getSupabaseAdmin();
+        channel = client
+          .channel('admin-consultations-changes')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'consultations'
+            },
+            (payload) => {
+              console.log('Admin Dashboard: Realtime update received:', payload);
+              // Handle different types of changes
+              if (payload.eventType === 'INSERT') {
+                // Add new consultation to the list
+                const newConsultation = payload.new as Consultation;
+                setConsultations(prev => [newConsultation, ...prev]);
+                console.log('Admin Dashboard: New consultation added:', newConsultation.name);
+              } else if (payload.eventType === 'UPDATE') {
+                // Update existing consultation
+                const updatedConsultation = payload.new as Consultation;
+                setConsultations(prev => 
+                  prev.map(consultation => 
+                    consultation.id === updatedConsultation.id ? updatedConsultation : consultation
+                  )
+                );
+                console.log('Admin Dashboard: Consultation updated:', updatedConsultation.name);
+              } else if (payload.eventType === 'DELETE') {
+                // Remove deleted consultation
+                const deletedId = payload.old.id;
+                setConsultations(prev => prev.filter(consultation => consultation.id !== deletedId));
+                console.log('Admin Dashboard: Consultation deleted:', deletedId);
+              }
+            }
+          )
+          .subscribe((status) => {
+            console.log('Admin Dashboard: Realtime subscription status:', status);
+            if (status === 'SUBSCRIBED') {
+              console.log('Admin Dashboard: Successfully connected to realtime');
+              setRealtimeStatus('connected');
+            } else if (status === 'CHANNEL_ERROR') {
+              console.error('Admin Dashboard: Realtime channel error');
+              setRealtimeStatus('error');
+            } else if (status === 'TIMED_OUT') {
+              console.error('Admin Dashboard: Realtime connection timed out');
+              setRealtimeStatus('error');
+            } else if (status === 'CLOSED') {
+              console.log('Admin Dashboard: Realtime connection closed');
+              setRealtimeStatus('disconnected');
+            }
+          });
+      } catch (error) {
+        console.error('Admin Dashboard: Error setting up realtime:', error);
+        setRealtimeStatus('error');
+      }
+    };
+
+    // Delay real-time setup to avoid immediate client creation
+    const timer = setTimeout(() => {
+      setupRealtime();
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(timer);
+      if (channel) {
+        console.log('Admin Dashboard: Unsubscribing from realtime');
+        channel.unsubscribe();
+      }
+    };
   }, []);
   const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
