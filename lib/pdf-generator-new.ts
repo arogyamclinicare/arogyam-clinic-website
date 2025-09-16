@@ -42,13 +42,13 @@ export class NewPDFGenerator {
     }
 
     const doc = new jsPDF({ unit: "pt", format: "a4" });
-    const margin = 50; // Increased margin for better spacing
+    const margin = 35; // Reduced margin for more space
     const pageWidth = doc.internal.pageSize.getWidth();
-    const availableWidth = pageWidth - (margin * 2); // 495 points available
+    const availableWidth = pageWidth - (margin * 2); // 525 points available
     let y = margin;
 
     // ========== HEADER SECTION ==========
-    const iconSize = 60; // Icon size maintaining original proportions
+    const iconSize = 45; // Reduced icon size for more compact layout
     const headerY = y;
     
     // Load Arogyam icon (left) with better error handling
@@ -103,35 +103,35 @@ export class NewPDFGenerator {
 
     // Clinic name (positioned right next to icon) - Elegant medical font
     doc.setFont("times", "bold"); // Times font for more elegant, medical appearance
-    doc.setFontSize(16); // Smaller, more refined size
+    doc.setFontSize(14); // Reduced from 16 to 14 for more compact layout
     doc.setTextColor(0, 0, 0);
-    doc.text("AROGYAM HOMOEOPATHIC CLINIC", margin + iconSize + 15, headerY + 20);
+    doc.text("AROGYAM HOMOEOPATHIC CLINIC", margin + iconSize + 12, headerY + 16);
 
     // Tagline (aligned with clinic name)
     doc.setFont("helvetica", "italic");
-    doc.setFontSize(10);
+    doc.setFontSize(9); // Reduced from 10 to 9
     doc.setTextColor(100, 100, 100);
-    doc.text("A Place of Natural Healing", margin + iconSize + 15, headerY + 35);
+    doc.text("A Place of Natural Healing", margin + iconSize + 12, headerY + 28);
 
     // Contact info (aligned with clinic name)
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
+    doc.setFontSize(7); // Reduced from 8 to 7
     doc.setTextColor(0, 0, 0);
     doc.text("Phone: 9430030564 | Email: arogyamclinicare@gmail.com | Website: arogyamhomeo.com", 
-             margin + iconSize + 15, headerY + 50);
+             margin + iconSize + 12, headerY + 38);
 
     // Add a professional line separator
-    y = headerY + iconSize + 20; // Adjusted spacing for icon
+    y = headerY + iconSize + 12; // Reduced spacing for more compact layout
     doc.setDrawColor(34, 197, 94); // Green color
     doc.setLineWidth(1);
     doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
-    y += 20;
+    y += 15; // Reduced spacing
 
-    y += 30; // Adjusted spacing for proper layout with icon
+    y += 20; // Reduced spacing for more compact layout
 
     // ========== PATIENT INFORMATION SECTION ==========
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
+    doc.setFontSize(12); // Reduced from 14 to 12
     doc.setTextColor(0, 0, 0);
     doc.text("Patient Information", margin, y);
     
@@ -140,11 +140,11 @@ export class NewPDFGenerator {
     doc.setDrawColor(0, 0, 0);
     doc.line(margin, y + 3, margin + textWidth, y + 3);
     
-    y += 30;
+    y += 20; // Reduced from 30 to 20
 
     // Compact patient info layout
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
+    doc.setFontSize(10); // Reduced from 11 to 10
     
     // Line 1: Name — Age — Gender
     const nameX = margin;
@@ -160,7 +160,7 @@ export class NewPDFGenerator {
     doc.text("Gender —", genderX, y);
     doc.text(consultation.gender || "____", genderX + 60, y);
 
-    y += 25;
+    y += 18; // Reduced from 25 to 18
 
     // Line 2: Mobile — Email (less space)
     doc.text("Mobile —", nameX, y);
@@ -169,11 +169,11 @@ export class NewPDFGenerator {
     doc.text("Email —", ageX, y);
     doc.text(consultation.email || "________________", ageX + 50, y);
 
-    y += 40;
+    y += 25; // Reduced from 40 to 25
 
     // ========== APPOINTMENT DETAILS SECTION ==========
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
+    doc.setFontSize(12); // Reduced from 14 to 12
     doc.text("Appointment Details", margin, y);
     
     // Add underline for section header
@@ -181,10 +181,10 @@ export class NewPDFGenerator {
     doc.setDrawColor(0, 0, 0);
     doc.line(margin, y + 3, margin + appointmentTextWidth, y + 3);
     
-    y += 25;
+    y += 18; // Reduced from 25 to 18
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
+    doc.setFontSize(10); // Reduced from 11 to 10
     
     doc.text("Pt. Id. —", margin, y);
     // Generate proper patient ID format: PAT-2025-XXXX-XXXX
@@ -202,11 +202,11 @@ export class NewPDFGenerator {
     doc.text("Next Appointment —", margin + 200, y);
     doc.text(this.formatDate(consultation.next_appointment_date) || "Not scheduled", margin + 350, y);
 
-    y += 40;
+    y += 25; // Reduced from 40 to 25
 
     // ========== MEDICAL EVALUATION SECTION ==========
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
+    doc.setFontSize(12); // Reduced from 14 to 12
     doc.text("Medical Evaluation", margin, y);
     
     // Add underline for section header
@@ -214,10 +214,10 @@ export class NewPDFGenerator {
     doc.setDrawColor(0, 0, 0);
     doc.line(margin, y + 3, margin + medicalTextWidth, y + 3);
     
-    y += 25;
+    y += 18; // Reduced from 25 to 18
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
+    doc.setFontSize(10); // Reduced from 11 to 10
     
     // Line 1: Clinical Finding — Sub-Finding (same line like Patient Information)
     const clinicalFindingX = margin;
@@ -229,11 +229,11 @@ export class NewPDFGenerator {
     doc.text("Sub-Finding —", subFindingX, y);
     doc.text(consultation.sub_segment || "________________", subFindingX + 100, y);
 
-    y += 40;
+    y += 25; // Reduced from 40 to 25
 
     // ========== PRESCRIPTION DETAILS SECTION ==========
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
+    doc.setFontSize(12); // Reduced from 14 to 12
     doc.text("Prescription Details", margin, y);
     
     // Add underline for section header
@@ -241,7 +241,7 @@ export class NewPDFGenerator {
     doc.setDrawColor(0, 0, 0);
     doc.line(margin, y + 3, margin + prescriptionTextWidth, y + 3);
     
-    y += 25;
+    y += 18; // Reduced from 25 to 18
 
     // Prescription table with only required columns
     try {
@@ -265,8 +265,8 @@ export class NewPDFGenerator {
           body: tableData,
           theme: "striped",
           styles: { 
-            fontSize: 7, 
-            cellPadding: 3,
+            fontSize: 6, // Reduced from 7 to 6 for more compact layout
+            cellPadding: 2, // Reduced from 3 to 2
             halign: 'left',
             valign: 'middle',
             lineColor: [200, 200, 200],
@@ -290,7 +290,7 @@ export class NewPDFGenerator {
           tableWidth: availableWidth
         });
 
-        y = (doc as any).lastAutoTable.finalY + 20;
+        y = (doc as any).lastAutoTable.finalY + 15; // Reduced spacing after table
       } else {
         // Empty prescription table
         autoTable(doc, {
@@ -299,8 +299,8 @@ export class NewPDFGenerator {
           body: [["", "", "", "", "", "", ""]],
           theme: "striped",
           styles: { 
-            fontSize: 7, 
-            cellPadding: 3,
+            fontSize: 6, // Reduced from 7 to 6 for more compact layout
+            cellPadding: 2, // Reduced from 3 to 2
             halign: 'left',
             valign: 'middle',
             lineColor: [200, 200, 200],
@@ -323,7 +323,7 @@ export class NewPDFGenerator {
           margin: { left: margin, right: margin },
           tableWidth: availableWidth
         });
-        y = (doc as any).lastAutoTable.finalY + 20;
+        y = (doc as any).lastAutoTable.finalY + 15; // Reduced spacing after table
       }
     } catch (error) {
       errorHandler.handlePDFError(error, undefined, consultation.id);
