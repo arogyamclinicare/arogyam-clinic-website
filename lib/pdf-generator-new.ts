@@ -252,16 +252,16 @@ export class NewPDFGenerator {
         const tableData = prescriptionData.map(drug => [
           drug.drug_name || "",
           drug.potency || "",
-          drug.period || "", 
-          drug.remarks || "",
+          drug.period || "",
           drug.repetition_frequency || "",
           drug.repetition_interval || "",
-          drug.repetition_unit || ""
+          drug.repetition_unit || "",
+          drug.remarks || ""
         ]);
 
         autoTable(doc, {
           startY: y,
-          head: [["Medicine", "Potency", "Period", "Remarks", "Repeat Start", "Repeat End", "Repeat Type"]],
+          head: [["Medicine", "Potency", "Period", "Repeat Start", "Repeat End", "Repeat Type", "Remarks"]],
           body: tableData,
           theme: "striped",
           styles: { 
@@ -276,10 +276,10 @@ export class NewPDFGenerator {
             0: { cellWidth: availableWidth * 0.25 }, // Medicine - 25%
             1: { cellWidth: availableWidth * 0.15 }, // Potency - 15%
             2: { cellWidth: availableWidth * 0.12 }, // Period - 12%
-            3: { cellWidth: availableWidth * 0.18 }, // Remarks - 18%
-            4: { cellWidth: availableWidth * 0.10 }, // Repeat Start - 10%
-            5: { cellWidth: availableWidth * 0.10 }, // Repeat End - 10%
-            6: { cellWidth: availableWidth * 0.10 }  // Repeat Type - 10%
+            3: { cellWidth: availableWidth * 0.10 }, // Repeat Start - 10%
+            4: { cellWidth: availableWidth * 0.10 }, // Repeat End - 10%
+            5: { cellWidth: availableWidth * 0.10 }, // Repeat Type - 10%
+            6: { cellWidth: availableWidth * 0.18 }  // Remarks - 18%
           },
           headStyles: { 
             fillColor: [34, 197, 94],
@@ -295,7 +295,7 @@ export class NewPDFGenerator {
         // Empty prescription table
         autoTable(doc, {
           startY: y,
-          head: [["Medicine", "Potency", "Period", "Remarks", "Repeat Start", "Repeat End", "Repeat Type"]],
+          head: [["Medicine", "Potency", "Period", "Repeat Start", "Repeat End", "Repeat Type", "Remarks"]],
           body: [["", "", "", "", "", "", ""]],
           theme: "striped",
           styles: { 
@@ -310,10 +310,10 @@ export class NewPDFGenerator {
             0: { cellWidth: availableWidth * 0.25 }, // Medicine - 25%
             1: { cellWidth: availableWidth * 0.15 }, // Potency - 15%
             2: { cellWidth: availableWidth * 0.12 }, // Period - 12%
-            3: { cellWidth: availableWidth * 0.18 }, // Remarks - 18%
-            4: { cellWidth: availableWidth * 0.10 }, // Repeat Start - 10%
-            5: { cellWidth: availableWidth * 0.10 }, // Repeat End - 10%
-            6: { cellWidth: availableWidth * 0.10 }  // Repeat Type - 10%
+            3: { cellWidth: availableWidth * 0.10 }, // Repeat Start - 10%
+            4: { cellWidth: availableWidth * 0.10 }, // Repeat End - 10%
+            5: { cellWidth: availableWidth * 0.10 }, // Repeat Type - 10%
+            6: { cellWidth: availableWidth * 0.18 }  // Remarks - 18%
           },
           headStyles: { 
             fillColor: [34, 197, 94],
