@@ -1226,7 +1226,7 @@ Keep these credentials safe!
                       <div className="ml-3">
                         <p className="text-xs font-medium text-gray-600">New Requests</p>
                         <p className="text-2xl font-bold text-blue-600">
-                          {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING && !c.next_appointment_date).length}
+                          {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING).length}
                         </p>
                       </div>
                     </div>
@@ -1256,7 +1256,7 @@ Keep these credentials safe!
                       <div className="ml-3">
                         <p className="text-xs font-medium text-gray-600">Ready to Confirm</p>
                         <p className="text-2xl font-bold text-green-600">
-                          {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING && !c.next_appointment_date).length}
+                          {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING).length}
                         </p>
                       </div>
                     </div>
@@ -1292,11 +1292,7 @@ Keep these credentials safe!
                           
                         // If not searching, show only pending entries
                         // MAIN ADMIN WORKFLOW - completely separate from appointment workflow
-                        // EXCLUDE consultations that have been moved to appointment workflow (have next_appointment_date)
-                        if (c.next_appointment_date) {
-                          return false; // Don't show in New Entries if consultation has been moved to appointment workflow
-                        }
-                        
+                        // Show all pending consultations regardless of appointment status
                         return c.status === CONSULTATION_STATUS.PENDING;
                         })
                         .slice(0, 10)
@@ -1370,7 +1366,7 @@ Keep these credentials safe!
                           </td>
                         </tr>
                       ))}
-                      {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING && !c.next_appointment_date).length === 0 && (
+                      {consultations.filter(c => c.status === CONSULTATION_STATUS.PENDING).length === 0 && (
                         <tr>
                           <td colSpan={4} className="px-4 py-8 text-center">
                             <div className="text-gray-500">
@@ -1509,11 +1505,7 @@ Keep these credentials safe!
                         
                         // If not searching, show confirmed, reachinglead, in_progress, and follow_up entries in Interacting section
                         // MAIN ADMIN WORKFLOW - completely separate from appointment workflow
-                        // EXCLUDE consultations that have been moved to appointment workflow (have next_appointment_date)
-                        if (consultation.next_appointment_date) {
-                          return false; // Don't show in Interacting if consultation has been moved to appointment workflow
-                        }
-                        
+                        // Show all consultations with these statuses regardless of appointment status
                         return (consultation.status === 'confirmed' || 
                                 consultation.status === 'reachinglead' ||
                                 consultation.status === 'in_progress' ||
@@ -1697,7 +1689,7 @@ Keep these credentials safe!
                   <div className="ml-3">
                     <p className="text-xs font-medium text-gray-600">Total Live Patients</p>
                                             <p className="text-2xl font-bold text-purple-600">
-                          {consultations.filter(c => c.status === CONSULTATION_STATUS.COMPLETED && !c.next_appointment_date).length}
+                          {consultations.filter(c => c.status === CONSULTATION_STATUS.COMPLETED).length}
                         </p>
                   </div>
                 </div>
@@ -1732,11 +1724,7 @@ Keep these credentials safe!
                         
                         // If not searching, show only completed entries (moved from Interacting after doctor consultation)
                         // MAIN ADMIN WORKFLOW - completely separate from appointment workflow
-                        // EXCLUDE consultations that have been moved to appointment workflow (have next_appointment_date)
-                        if (c.next_appointment_date) {
-                          return false; // Don't show in Live Patients if consultation has been moved to appointment workflow
-                        }
-                        
+                        // Show all completed consultations regardless of appointment status
                         return c.status === CONSULTATION_STATUS.COMPLETED;
                       })
                       .slice(0, 15)
@@ -1845,7 +1833,7 @@ Keep these credentials safe!
                         </td>
                       </tr>
                     ))}
-                    {consultations.filter(c => c.status === CONSULTATION_STATUS.COMPLETED && !c.next_appointment_date).length === 0 && (
+                    {consultations.filter(c => c.status === CONSULTATION_STATUS.COMPLETED).length === 0 && (
                       <tr>
                         <td colSpan={6} className="px-6 py-12 text-center">
                           <div className="text-gray-500">

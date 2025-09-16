@@ -14,7 +14,8 @@ import {
   UserPlus,
   LogOut,
   Eye,
-  Plus
+  Plus,
+  RefreshCw
 } from 'lucide-react';
 import { validateStaffSession, clearStaffSession } from '../lib/secure-auth';
 import { getSupabaseAdmin } from '../lib/supabase-admin';
@@ -46,6 +47,8 @@ interface Consultation {
   patient_id: string;
   is_lead?: boolean;
   lead_marked_at?: string;
+  next_appointment_date?: string | null;
+  appointment_status?: string | null;
 }
 
 interface Patient {
@@ -68,6 +71,7 @@ const StaffDashboard: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'new_entries' | 'interacting'>('new_entries');
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'connected' | 'error' | 'disconnected'>('disconnected');
 
   // Helper function to format time in Indian 12-hour format
   const formatTimeToIndian = (timeString: string) => {
@@ -104,6 +108,7 @@ const StaffDashboard: React.FC = () => {
     
     const setupRealtime = async () => {
       try {
+        setRealtimeStatus('connecting');
         const client = getSupabaseAdmin();
         channel = client
           .channel('staff-consultations-changes')
@@ -115,11 +120,13 @@ const StaffDashboard: React.FC = () => {
               table: 'consultations'
             },
             (payload) => {
+              console.log('Staff Dashboard: Realtime update received:', payload);
               // Handle different types of changes
               if (payload.eventType === 'INSERT') {
                 // Add new consultation to the list
                 const newConsultation = payload.new as Consultation;
                 setConsultations(prev => [newConsultation, ...prev]);
+                console.log('Staff Dashboard: New consultation added:', newConsultation.name);
               } else if (payload.eventType === 'UPDATE') {
                 // Update existing consultation
                 const updatedConsultation = payload.new as Consultation;
@@ -128,19 +135,35 @@ const StaffDashboard: React.FC = () => {
                     consultation.id === updatedConsultation.id ? updatedConsultation : consultation
                   )
                 );
+                console.log('Staff Dashboard: Consultation updated:', updatedConsultation.name);
               } else if (payload.eventType === 'DELETE') {
                 // Remove deleted consultation
                 const deletedId = payload.old.id;
                 setConsultations(prev => prev.filter(consultation => consultation.id !== deletedId));
+                console.log('Staff Dashboard: Consultation deleted:', deletedId);
               }
             }
           )
           .subscribe((status) => {
-    // Empty block
-  });
+            console.log('Staff Dashboard: Realtime subscription status:', status);
+            if (status === 'SUBSCRIBED') {
+              console.log('Staff Dashboard: Successfully connected to realtime');
+              setRealtimeStatus('connected');
+            } else if (status === 'CHANNEL_ERROR') {
+              console.error('Staff Dashboard: Realtime channel error');
+              setRealtimeStatus('error');
+            } else if (status === 'TIMED_OUT') {
+              console.error('Staff Dashboard: Realtime connection timed out');
+              setRealtimeStatus('error');
+            } else if (status === 'CLOSED') {
+              console.log('Staff Dashboard: Realtime connection closed');
+              setRealtimeStatus('disconnected');
+            }
+          });
       } catch (error) {
-    // Empty block
-  }
+        console.error('Staff Dashboard: Error setting up realtime:', error);
+        setRealtimeStatus('error');
+      }
     };
 
     // Delay real-time setup to avoid immediate client creation
@@ -151,6 +174,7 @@ const StaffDashboard: React.FC = () => {
     return () => {
       clearTimeout(timer);
       if (channel) {
+        console.log('Staff Dashboard: Unsubscribing from realtime');
         channel.unsubscribe();
       }
     };
@@ -297,14 +321,14 @@ const StaffDashboard: React.FC = () => {
 
   // Filter consultations based on selected tab
   const newEntries = consultations.filter(consultation => 
-    consultation.status === 'pending' && !consultation.next_appointment_date &&
+    consultation.status === 'pending' &&
     (consultation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
      consultation.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
      consultation.phone.includes(searchTerm))
   );
 
   const interactingConsultations = consultations.filter(consultation => 
-    (consultation.status === 'confirmed' || consultation.status === 'reachinglead') && !consultation.next_appointment_date &&
+    (consultation.status === 'confirmed' || consultation.status === 'reachinglead') &&
     (consultation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
      consultation.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
      consultation.phone.includes(searchTerm))
@@ -343,6 +367,26 @@ const StaffDashboard: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Real-time Status Indicator */}
+              <div className="flex items-center space-x-2 bg-gray-100 rounded-lg px-3 py-1 border border-gray-200">
+                <div className={`w-2 h-2 rounded-full ${
+                  realtimeStatus === 'connected' ? 'bg-green-400 animate-pulse' :
+                  realtimeStatus === 'connecting' ? 'bg-yellow-400 animate-pulse' :
+                  realtimeStatus === 'error' ? 'bg-red-400' :
+                  'bg-gray-400'
+                }`}></div>
+                <span className={`text-xs font-medium ${
+                  realtimeStatus === 'connected' ? 'text-green-700' :
+                  realtimeStatus === 'connecting' ? 'text-yellow-700' :
+                  realtimeStatus === 'error' ? 'text-red-700' :
+                  'text-gray-600'
+                }`}>
+                  {realtimeStatus === 'connected' ? 'Live' :
+                   realtimeStatus === 'connecting' ? 'Connecting...' :
+                   realtimeStatus === 'error' ? 'Error' :
+                   'Offline'}
+                </span>
+              </div>
               <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
                 {staff.role.replace('_', ' ').toUpperCase()}
               </span>
@@ -405,6 +449,16 @@ const StaffDashboard: React.FC = () => {
               />
             </div>
             <div className="flex space-x-3">
+              {/* Manual Refresh Button */}
+              <Button
+                onClick={loadData}
+                variant="outline"
+                size="sm"
+                className="text-gray-600 border-gray-300 hover:bg-gray-50 h-10 px-4 rounded-md"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </Button>
               {/* Add New Consultation Button - Only if staff has permission */}
               {staff?.permissions?.canAddConsultations && (
                 <Button
