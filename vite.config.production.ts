@@ -152,7 +152,7 @@ function generateCSP(): string {
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-    "frame-src 'self' https://maps.google.com https://maps.googleapis.com",
+        "frame-src 'self' https://maps.google.com https://maps.googleapis.com https://www.google.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
