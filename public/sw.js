@@ -96,21 +96,38 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Handle navigation preload properly
+  if (event.preloadResponse) {
+    event.respondWith(
+      event.preloadResponse.then(response => {
+        if (response) {
+          return response;
+        }
+        return handleRequest(request, url);
+      })
+    );
+  } else {
+    event.respondWith(handleRequest(request, url));
+  }
+});
+
+// Centralized request handler
+async function handleRequest(request, url) {
   // Handle different types of requests
   if (url.origin === self.location.origin) {
     // Same origin requests
-    event.respondWith(handleSameOriginRequest(request));
+    return handleSameOriginRequest(request);
   } else if (url.origin.includes('supabase.co')) {
     // Supabase API requests
-    event.respondWith(handleSupabaseRequest(request));
+    return handleSupabaseRequest(request);
   } else if (url.origin.includes('fonts.googleapis.com') || url.origin.includes('fonts.gstatic.com')) {
     // Google Fonts
-    event.respondWith(handleFontRequest(request));
+    return handleFontRequest(request);
   } else {
     // Other external requests
-    event.respondWith(handleExternalRequest(request));
+    return handleExternalRequest(request);
   }
-});
+}
 
 // Handle same origin requests
 async function handleSameOriginRequest(request) {
