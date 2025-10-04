@@ -75,7 +75,7 @@ export const SECURITY_CONFIG = {
     FONT_SRC: ["'self'", "https://fonts.gstatic.com"],
     IMG_SRC: ["'self'", "data:", "https:", "blob:"],
     CONNECT_SRC: ["'self'", "https:", "wss:", "ws:"],
-    FRAME_SRC: ["'none"],
+    FRAME_SRC: ["'self", "https://maps.google.com", "https://maps.googleapis.com"],
     OBJECT_SRC: ["'none"],
     BASE_URI: ["'self"],
     FORM_ACTION: ["'self"]
