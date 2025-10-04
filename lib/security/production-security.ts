@@ -72,7 +72,7 @@ class SecurityHardening {
       if (this.config.enableXFrameOptions) {
         const meta = document.createElement('meta');
         meta.httpEquiv = 'X-Frame-Options';
-        meta.content = 'DENY';
+        meta.content = 'SAMEORIGIN';
         document.head.appendChild(meta);
       }
 

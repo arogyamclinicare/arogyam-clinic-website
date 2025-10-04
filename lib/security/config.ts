@@ -60,7 +60,7 @@ export const SECURITY_CONFIG = {
   // Security Headers
   HEADERS: {
     X_CONTENT_TYPE_OPTIONS: 'nosniff',
-    X_FRAME_OPTIONS: 'DENY',
+    X_FRAME_OPTIONS: 'SAMEORIGIN',
     X_XSS_PROTECTION: '1; mode=block',
     REFERRER_POLICY: 'strict-origin-when-cross-origin',
     PERMISSIONS_POLICY: 'camera=(), microphone=(), geolocation=()',
