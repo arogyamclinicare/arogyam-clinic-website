@@ -94,3 +94,9 @@ echo "3. Test the tools with: @mcp list available tools"
 
 
 
+
+
+
+
+
+
