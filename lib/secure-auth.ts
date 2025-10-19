@@ -107,7 +107,7 @@ export function isSessionValid(session: AdminSession): boolean {
  */
 export function getAdminCredentials(): AdminCredentials {
   const email = import.meta.env.VITE_ADMIN_EMAIL || 'admin@arogyam.com';
-  const passwordHash = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
+  const passwordHash = import.meta.env.VITE_ADMIN_PASSWORD;
   
   return {
     email,

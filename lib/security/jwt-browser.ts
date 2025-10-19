@@ -17,8 +17,8 @@ const base64UrlDecode = (str: string): string => {
 
 // Browser-compatible JWT utilities
 export class JWTUtils {
-  private static readonly JWT_SECRET = import.meta.env.VITE_JWT_SECRET || 'fallback-secret-change-in-production';
-  private static readonly REFRESH_SECRET = import.meta.env.VITE_JWT_REFRESH_SECRET || 'fallback-refresh-secret-change-in-production';
+  private static readonly JWT_SECRET = import.meta.env.VITE_JWT_SECRET;
+  private static readonly REFRESH_SECRET = import.meta.env.VITE_JWT_REFRESH_SECRET;
 
   /**
    * Generate JWT token (simplified for browser)

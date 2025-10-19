@@ -4,7 +4,7 @@ import type { Database } from './supabase'
 // Admin Supabase client with service role key for bypassing RLS
 // SECURITY: Service role key should NEVER be exposed in client-side code
 // This is a temporary fallback - in production, use server-side API endpoints
-let supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://mvmbbpjtyrjmoccoajmt.supabase.co'
+let supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 // SECURITY: Service role key should NEVER be in client-side code
 // This should only be used in server-side/admin contexts
 let supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
