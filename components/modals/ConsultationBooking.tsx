@@ -267,10 +267,9 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
     }
   };
 
-  const getTomorrowDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
   };
 
   const getStepTitle = () => {
@@ -569,7 +568,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                   <input
                     type="date"
                     required
-                    min={getTomorrowDate()}
+                    min={getTodayDate()}
                     value={bookingData.preferredDate}
                     onChange={(e) => handleInputChange('preferredDate', e.target.value)}
                     className={`w-full px-4 py-4 text-base border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 touch-manipulation ${
@@ -577,7 +576,7 @@ export function ConsultationBooking({ isOpen, onClose, treatmentType = 'General 
                     }`}
                     aria-describedby="date-help date-error"
                   />
-                  <div id="date-help" className="sr-only">Select your preferred consultation date (must be tomorrow or later)</div>
+                  <div id="date-help" className="sr-only">Select your preferred consultation date (today or later)</div>
                   {validationErrors.preferred_date && (
                     <div id="date-error" className="text-red-600 text-sm mt-1 flex items-center">
                       <AlertCircle className="w-4 h-4 mr-1" />

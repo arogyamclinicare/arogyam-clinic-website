@@ -45,7 +45,7 @@ const dateSchema = z.string()
       today.setHours(0, 0, 0, 0);
       return selectedDate >= today;
     },
-    'Preferred date must be tomorrow or in the future'
+    'Preferred date must be today or in the future'
   );
 
 // Main consultation booking validation schema - UPDATED for basic clinic

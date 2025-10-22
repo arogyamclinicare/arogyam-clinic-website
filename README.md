@@ -66,11 +66,6 @@ A comprehensive healthcare management system built with React, TypeScript, and S
    http://localhost:3000
    ```
 
-## 🔑 Admin Access
-
-- **URL**: `http://localhost:3000/admin`
-- **Email**: `admin@arogyam.com`
-- **Password**: `Admin123` (change in production!)
 
 ## 📁 Project Structure
 
