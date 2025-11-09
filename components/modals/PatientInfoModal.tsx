@@ -283,7 +283,7 @@ export const PatientInfoModal: React.FC<PatientInfoModalProps> = ({
           )}
 
           {/* Additional Notes */}
-          {(consultation.notes || consultation.remarks || consultation.manual_case_type) && (
+          {(consultation.notes || consultation.remarks) && (
             <div className="mt-6 space-y-4">
               <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
                 Additional Notes
@@ -304,15 +304,6 @@ export const PatientInfoModal: React.FC<PatientInfoModalProps> = ({
                     <p className="text-sm font-medium text-gray-900 mb-2">Remarks</p>
                     <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
                       {consultation.remarks}
-                    </p>
-                  </div>
-                )}
-                
-                {consultation.manual_case_type && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 mb-2">Manual Case Type</p>
-                    <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
-                      {consultation.manual_case_type}
                     </p>
                   </div>
                 )}

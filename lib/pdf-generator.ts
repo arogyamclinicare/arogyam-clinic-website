@@ -330,11 +330,10 @@ export class PDFGenerator {
       ["Medicines", consultation.medicines_prescribed || "Not specified"]
     ]);
 
-    // ========= SERVICE INFO (INCLUDES CASE TYPE FOR ADMIN) =========
+    // ========= SERVICE INFO =========
     addTable("Service Classification", [
       ["Service", consultation.service_type || "Homoeopathy"],
-      ["Segment", consultation.segment || "General"],
-      ["Case Type", consultation.case_type || "Normal"]
+      ["Segment", consultation.segment || "General"]
     ]);
 
     // ========= ADDITIONAL NOTES & INSTRUCTIONS =========

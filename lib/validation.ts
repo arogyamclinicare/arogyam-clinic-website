@@ -100,20 +100,8 @@ export const consultationBaseSchema = z.object({
     .nullable()
     .transform(val => val?.trim() || null),
   
-  case_type: z.enum(['', 'difficult_case', 'normal_case', 'rare_difficult_case', 'rare_case'], {
-    errorMap: () => ({ message: 'Please select a valid case type' })
-  }).optional()
-    .nullable()
-    .transform(val => val === '' ? null : val),
-  
   remarks: z.string()
     .max(1000, 'Remarks too long (max 1000 characters)')
-    .optional()
-    .nullable()
-    .transform(val => val?.trim() || null),
-  
-  manual_case_type: z.string()
-    .max(200, 'Manual case type too long (max 200 characters)')
     .optional()
     .nullable()
     .transform(val => val?.trim() || null),
@@ -290,20 +278,8 @@ export const consultationUpdateSchema = z.object({
     .nullable()
     .transform(val => val?.trim() || null),
   
-  case_type: z.enum(['', 'difficult_case', 'normal_case', 'rare_difficult_case', 'rare_case'], {
-    errorMap: () => ({ message: 'Please select a valid case type' })
-  }).optional()
-    .nullable()
-    .transform(val => val === '' ? null : val),
-  
   remarks: z.string()
     .max(1000, 'Remarks too long (max 1000 characters)')
-    .optional()
-    .nullable()
-    .transform(val => val?.trim() || null),
-  
-  manual_case_type: z.string()
-    .max(200, 'Manual case type too long (max 200 characters)')
     .optional()
     .nullable()
     .transform(val => val?.trim() || null),

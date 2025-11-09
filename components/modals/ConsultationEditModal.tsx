@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { 
   X, 
-  Pill, 
-  Stethoscope,
   Save,
   Trash2,
   FileText,
@@ -12,20 +10,8 @@ import {
   Download,
   Plus
 } from 'lucide-react';
-// Service options and related functions based on actual database data
-const serviceOptions = [
-  { value: 'consultation', label: 'Consultation' },
-  { value: 'homeopathy', label: 'Homeopathy' },
-  { value: 'aesthetics', label: 'Aesthetics' }
-];
+// Service type is now defaulted to 'homeopathy' - no longer user-selectable
 
-const caseTypeOptions = [
-  { value: '', label: 'Select Case Type' },
-  { value: 'normal_case', label: 'Normal Case' },
-  { value: 'difficult_case', label: 'Difficult Case' },
-  { value: 'rare_case', label: 'Rare Case' },
-  { value: 'rare_difficult_case', label: 'Rare & Difficult Case' }
-];
 
 const associatedSegmentOptions = [
   // Complete list of Associated Segments
@@ -703,11 +689,11 @@ export function ConsultationEditModal({
   isReadOnly = false
 }: ConsultationEditModalProps) {
   const [formData, setFormData] = useState<Partial<ConsultationUpdate>>({
-    // Empty block
+    service_type: 'homeopathy' // Default to homeopathy
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'details' | 'prescription' | 'notes' | 'services' | 'drugs' | 'investigations'>('details');
+  const [activeTab, setActiveTab] = useState<'services' | 'drugs' | 'investigations'>('services');
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [prescriptionData, setPrescriptionData] = useState<Partial<ConsultationUpdate>>({
     // Empty block
@@ -771,14 +757,12 @@ export function ConsultationEditModal({
         next_appointment_date: consultation.next_appointment_date || '',
         patient_concerns: consultation.patient_concerns || '',
         doctor_observations: consultation.doctor_observations || '',
-        service_type: consultation.service_type || '',
+        service_type: consultation.service_type || 'homeopathy',
         unit_doctor: consultation.unit_doctor || '',
         segment: consultation.segment || '',
         sub_segment: consultation.sub_segment || '',
         sub_sub_segment_text: consultation.sub_sub_segment_text || '',
-        case_type: consultation.case_type || '',
         remarks: consultation.remarks || '',
-        manual_case_type: consultation.manual_case_type || '',
         associated_segments: consultation.associated_segments || [],
         pathological_investigations: consultation.pathological_investigations || [],
         radio_diagnosis: consultation.radio_diagnosis || [],
@@ -803,8 +787,8 @@ export function ConsultationEditModal({
   }, [consultation]);
 
   const handleInputChange = (field: keyof ConsultationUpdate, value: any) => {
-    // Handle service field dependencies
-    if (field === 'service_type' || field === 'segment') {
+    // Handle segment field dependencies (service_type is now fixed to 'homeopathy')
+    if (field === 'segment') {
       const updatedData = resetDependentFields(formData, field);
       updatedData[field] = value;
       setFormData(updatedData);
@@ -903,9 +887,9 @@ export function ConsultationEditModal({
         cleanedFormData.dosage_instructions = null;
       }
       
-      // Clean up service fields
-      if (cleanedFormData.service_type === '') {
-        cleanedFormData.service_type = null;
+      // Service type is always set to 'homeopathy' by default
+      if (!cleanedFormData.service_type || cleanedFormData.service_type === '') {
+        cleanedFormData.service_type = 'homeopathy';
       }
       if (cleanedFormData.segment === '') {
         cleanedFormData.segment = null;
@@ -916,14 +900,8 @@ export function ConsultationEditModal({
       if (cleanedFormData.sub_sub_segment_text === '') {
         cleanedFormData.sub_sub_segment_text = null;
       }
-      if (cleanedFormData.case_type === '') {
-        cleanedFormData.case_type = null;
-      }
       if (cleanedFormData.remarks === '') {
         cleanedFormData.remarks = null;
-      }
-      if (cleanedFormData.manual_case_type === '') {
-        cleanedFormData.manual_case_type = null;
       }
       if (!cleanedFormData.associated_segments || cleanedFormData.associated_segments.length === 0) {
         cleanedFormData.associated_segments = null;
@@ -1054,9 +1032,6 @@ export function ConsultationEditModal({
           {/* Tab Navigation */}
           <div className="flex space-x-1 mt-4">
             {[
-              { id: 'details', name: 'Details', icon: FileText },
-              { id: 'prescription', name: 'Prescription', icon: Pill },
-              { id: 'notes', name: 'Notes', icon: Stethoscope },
               { id: 'services', name: 'Services', icon: Settings },
               { id: 'drugs', name: 'Prescription Drugs', icon: Plus },
               { id: 'investigations', name: 'Investigations', icon: Settings }
@@ -1082,175 +1057,6 @@ export function ConsultationEditModal({
 
         {/* Content */}
         <div className="p-3 sm:p-4 lg:p-6 overflow-y-auto flex-1">
-          {activeTab === 'details' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-              
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                                     <select
-                     value={formData.status || ''}
-                     onChange={(e) => handleInputChange('status', e.target.value)}
-                     disabled={isReadOnly}
-                     className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                   >
-                     <option value={CONSULTATION_STATUS.PENDING}>{STATUS_LABELS[CONSULTATION_STATUS.PENDING]}</option>
-                     <option value={CONSULTATION_STATUS.CONFIRMED}>{STATUS_LABELS[CONSULTATION_STATUS.CONFIRMED]}</option>
-                     <option value={CONSULTATION_STATUS.IN_PROGRESS}>{STATUS_LABELS[CONSULTATION_STATUS.IN_PROGRESS]}</option>
-                     <option value={CONSULTATION_STATUS.COMPLETED}>{STATUS_LABELS[CONSULTATION_STATUS.COMPLETED]}</option>
-                     <option value={CONSULTATION_STATUS.CANCELLED}>{STATUS_LABELS[CONSULTATION_STATUS.CANCELLED]}</option>
-                     <option value={CONSULTATION_STATUS.FOLLOW_UP}>{STATUS_LABELS[CONSULTATION_STATUS.FOLLOW_UP]}</option>
-                   </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Next Appointment Date</label>
-                  <input
-                    type="date"
-                    value={formData.next_appointment_date || ''}
-                    onChange={(e) => handleInputChange('next_appointment_date', e.target.value)}
-                    readOnly={isReadOnly}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Patient Concerns</label>
-                <textarea
-                  rows={3}
-                  value={formData.patient_concerns || ''}
-                  onChange={(e) => handleInputChange('patient_concerns', e.target.value)}
-                  readOnly={isReadOnly}
-                  placeholder="Document patient's main concerns..."
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Doctor's Observations</label>
-                <textarea
-                  rows={3}
-                  value={formData.doctor_observations || ''}
-                  onChange={(e) => handleInputChange('doctor_observations', e.target.value)}
-                  placeholder="Document your clinical observations..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'prescription' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Prescription & Treatment</h3>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Diagnosis</label>
-                <input
-                  type="text"
-                  value={formData.diagnosis || ''}
-                  onChange={(e) => handleInputChange('diagnosis', e.target.value)}
-                  placeholder="Enter diagnosis..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Symptoms</label>
-                <textarea
-                  rows={2}
-                  value={formData.symptoms || ''}
-                  onChange={(e) => handleInputChange('symptoms', e.target.value)}
-                  placeholder="Document symptoms..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Medicines Prescribed</label>
-                <textarea
-                  rows={4}
-                  value={formData.medicines_prescribed || ''}
-                  onChange={(e) => handleInputChange('medicines_prescribed', e.target.value)}
-                  placeholder="Enter medicines with details, one per line or as needed..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Dosage Instructions</label>
-                <textarea
-                  rows={3}
-                  value={formData.dosage_instructions || ''}
-                  onChange={(e) => handleInputChange('dosage_instructions', e.target.value)}
-                  placeholder="Enter detailed dosage instructions..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">What are you suffering from?</label>
-                <textarea
-                  rows={3}
-                  value={formData.treatment_plan || ''}
-                  onChange={(e) => handleInputChange('treatment_plan', e.target.value)}
-                  placeholder="Enter what the patient is suffering from..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Describe it (Admin Only)</label>
-                <textarea
-                  rows={3}
-                  value={formData.describe_it || ''}
-                  onChange={(e) => handleInputChange('describe_it', e.target.value)}
-                  placeholder="Enter detailed description of the condition (admin only)..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'notes' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Notes & Follow-up</h3>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">General Notes</label>
-                <textarea
-                  rows={4}
-                  value={formData.notes || ''}
-                  onChange={(e) => handleInputChange('notes', e.target.value)}
-                  placeholder="Enter general consultation notes..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Recommendations</label>
-                <textarea
-                  rows={3}
-                  value={formData.recommendations || ''}
-                  onChange={(e) => handleInputChange('recommendations', e.target.value)}
-                  placeholder="Enter recommendations and follow-up instructions..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Follow-up Date</label>
-                <input
-                  type="date"
-                  value={formData.follow_up_date || ''}
-                  onChange={(e) => handleInputChange('follow_up_date', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          )}
-
           {activeTab === 'services' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between mb-4">
@@ -1277,23 +1083,37 @@ export function ConsultationEditModal({
                 </div>
               </div>
               
-              {/* Service Type Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Service Type *</label>
-                <select
-                  value={formData.service_type || ''}
-                  onChange={(e) => handleInputChange('service_type', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select Service Type</option>
-                  {serviceOptions.map((service) => (
-                    <option key={service.value} value={service.value}>
-                      {service.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Status and Next Appointment Date */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <select
+                    value={formData.status || ''}
+                    onChange={(e) => handleInputChange('status', e.target.value)}
+                    disabled={isReadOnly}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  >
+                    <option value={CONSULTATION_STATUS.PENDING}>{STATUS_LABELS[CONSULTATION_STATUS.PENDING]}</option>
+                    <option value={CONSULTATION_STATUS.CONFIRMED}>{STATUS_LABELS[CONSULTATION_STATUS.CONFIRMED]}</option>
+                    <option value={CONSULTATION_STATUS.IN_PROGRESS}>{STATUS_LABELS[CONSULTATION_STATUS.IN_PROGRESS]}</option>
+                    <option value={CONSULTATION_STATUS.COMPLETED}>{STATUS_LABELS[CONSULTATION_STATUS.COMPLETED]}</option>
+                    <option value={CONSULTATION_STATUS.CANCELLED}>{STATUS_LABELS[CONSULTATION_STATUS.CANCELLED]}</option>
+                    <option value={CONSULTATION_STATUS.FOLLOW_UP}>{STATUS_LABELS[CONSULTATION_STATUS.FOLLOW_UP]}</option>
+                  </select>
+                </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Next Appointment Date</label>
+                  <input
+                    type="date"
+                    value={formData.next_appointment_date || ''}
+                    onChange={(e) => handleInputChange('next_appointment_date', e.target.value)}
+                    readOnly={isReadOnly}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  />
+                </div>
+              </div>
+              
               {/* Unit Doctor Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Unit Doctor *</label>
@@ -1309,23 +1129,21 @@ export function ConsultationEditModal({
               </div>
 
               {/* Clinical Finding Selection */}
-              {formData.service_type && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Clinical Finding *</label>
-                  <select
-                    value={formData.segment || ''}
-                    onChange={(e) => handleInputChange('segment', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select Clinical Finding</option>
-                    {getSegmentsForService(formData.service_type).map((segment) => (
-                      <option key={segment.value} value={segment.value}>
-                        {segment.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Clinical Finding *</label>
+                <select
+                  value={formData.segment || ''}
+                  onChange={(e) => handleInputChange('segment', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select Clinical Finding</option>
+                  {getSegmentsForService(formData.service_type || 'homeopathy').map((segment) => (
+                    <option key={segment.value} value={segment.value}>
+                      {segment.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               {/* Sub-Finding Selection */}
               {formData.segment && (
@@ -1337,7 +1155,7 @@ export function ConsultationEditModal({
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Select Sub-Finding</option>
-                    {getSubSegmentsForSegment(formData.service_type!, formData.segment).map((subSegment) => (
+                    {getSubSegmentsForSegment(formData.service_type || 'homeopathy', formData.segment).map((subSegment) => (
                       <option key={subSegment.value} value={subSegment.value}>
                         {subSegment.label}
                       </option>
@@ -1358,42 +1176,15 @@ export function ConsultationEditModal({
                 />
               </div>
 
-              {/* Case Type Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Case Type</label>
-                <select
-                  value={formData.case_type || ''}
-                  onChange={(e) => handleInputChange('case_type', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {caseTypeOptions.map((caseType) => (
-                    <option key={caseType.value} value={caseType.value}>
-                      {caseType.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
-              {/* Manual Case Type Input */}
+              {/* General Notes */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Manual Case Type</label>
-                <textarea
-                  rows={2}
-                  value={formData.manual_case_type || ''}
-                  onChange={(e) => handleInputChange('manual_case_type', e.target.value)}
-                  placeholder="Enter custom case type if needed..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Remarks */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">General Notes</label>
                 <textarea
                   rows={4}
                   value={formData.remarks || ''}
                   onChange={(e) => handleInputChange('remarks', e.target.value)}
-                  placeholder="Enter additional remarks, observations, or notes..."
+                  placeholder="Enter additional notes, observations, or comments..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
